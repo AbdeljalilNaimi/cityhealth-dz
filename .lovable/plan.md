@@ -1,220 +1,137 @@
 
 
-# CityHealth -- Provider Advertising Module
+# Health Content Hub -- Research & Scientific Publications
 
 ## Overview
 
-This plan upgrades the existing basic ad system (Firestore-based `MedicalAdsManager`) into a full-featured, premium advertising module with engagement features (likes, saves, reports), a dedicated public feed page, filtering/search, and monetization-ready structure.
+A new module enabling providers to publish medical research and articles, creating a professional medical publication platform within CityHealth. The implementation follows the existing Ads module pattern (database tables, service layer, UI components) but with an academic/editorial design direction.
 
-## Architecture Decision
+## Database Schema (Lovable Cloud)
 
-**Database:** Supabase (Lovable Cloud) for the new ads system. The current Firestore-based ads service will be replaced. Supabase provides proper RLS, relational tables for likes/saves/reports, and simpler querying with filters.
+### New Tables
 
-**Storage:** Existing `provider-images` bucket for ad cover images.
+**1. `research_articles`** -- Main publications table
+- `id` (uuid, PK)
+- `provider_id` (text, NOT NULL) -- Firebase UID of the author
+- `provider_name` (text, NOT NULL)
+- `provider_avatar` (text)
+- `provider_type` (text) -- specialty
+- `provider_city` (text)
+- `title` (text, NOT NULL)
+- `abstract` (text, NOT NULL)
+- `content` (text, NOT NULL) -- Rich text / HTML
+- `category` (text, NOT NULL) -- e.g. cardiology, pediatrics, etc.
+- `tags` (text[], default '{}')
+- `doi` (text, nullable) -- Optional DOI reference
+- `pdf_url` (text, nullable) -- Optional attached PDF
+- `status` (text, default 'pending') -- pending | approved | rejected | suspended
+- `is_featured` (boolean, default false)
+- `is_verified_provider` (boolean, default false)
+- `views_count` (integer, default 0)
+- `reactions_count` (integer, default 0)
+- `saves_count` (integer, default 0)
+- `rejection_reason` (text, nullable)
+- `created_at` (timestamptz, default now())
+- `updated_at` (timestamptz, default now())
 
----
+**2. `article_reactions`** -- Provider-only reactions
+- `id` (uuid, PK)
+- `article_id` (uuid, FK to research_articles)
+- `user_id` (text, NOT NULL) -- Only providers can react
+- `reaction_type` (text, default 'like') -- For future expansion (insightful, important, etc.)
+- `created_at` (timestamptz, default now())
+- Unique constraint on (article_id, user_id)
 
-## 1. Database Schema (Supabase Migrations)
+**3. `article_saves`** -- Any authenticated user can save
+- `id` (uuid, PK)
+- `article_id` (uuid, FK to research_articles)
+- `user_id` (text, NOT NULL)
+- `created_at` (timestamptz, default now())
+- Unique constraint on (article_id, user_id)
 
-### Table: `ads`
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid PK | |
-| provider_id | text | Firebase UID |
-| provider_name | text | |
-| provider_avatar | text | nullable |
-| provider_type | text | Specialty badge |
-| provider_city | text | Location badge |
-| title | text | |
-| short_description | text | Preview text (max 200 chars) |
-| full_description | text | Expandable content |
-| image_url | text | Required cover image |
-| status | text | pending/approved/rejected/suspended |
-| is_featured | boolean | Admin can toggle |
-| is_verified_provider | boolean | |
-| views_count | integer | Default 0 |
-| likes_count | integer | Default 0 |
-| saves_count | integer | Default 0 |
-| rejection_reason | text | nullable |
-| expires_at | timestamptz | nullable |
-| created_at | timestamptz | Default now() |
-| updated_at | timestamptz | Default now() |
-
-### Table: `ad_likes`
-| Column | Type |
-|--------|------|
-| id | uuid PK |
-| ad_id | uuid FK -> ads |
-| user_id | text |
-| created_at | timestamptz |
-| UNIQUE(ad_id, user_id) |
-
-### Table: `ad_saves`
-| Column | Type |
-|--------|------|
-| id | uuid PK |
-| ad_id | uuid FK -> ads |
-| user_id | text |
-| created_at | timestamptz |
-| UNIQUE(ad_id, user_id) |
-
-### Table: `ad_reports`
-| Column | Type |
-|--------|------|
-| id | uuid PK |
-| ad_id | uuid FK -> ads |
-| reporter_id | text |
-| reason | text |
-| details | text nullable |
-| status | text | Default 'pending' |
-| created_at | timestamptz |
+**4. `article_views`** -- Track views per article
+- `id` (uuid, PK)
+- `article_id` (uuid, FK to research_articles)
+- `viewer_id` (text, nullable) -- nullable for anonymous views
+- `created_at` (timestamptz, default now())
 
 ### RLS Policies
-- `ads`: Public SELECT for approved ads; provider INSERT/UPDATE/DELETE for own ads; admin full access
-- `ad_likes`: Public SELECT; authenticated INSERT/DELETE own
-- `ad_saves`: Public SELECT; authenticated INSERT/DELETE own
-- `ad_reports`: Authenticated INSERT; admin SELECT/UPDATE
+- All tables: public SELECT (read access for feed)
+- INSERT/DELETE on reactions: open (provider-only check enforced at app level, consistent with existing ads pattern)
+- INSERT/DELETE on saves: open
+- INSERT on views: open
+- INSERT/UPDATE/DELETE on articles: open (provider ownership enforced at app level, matching ads pattern)
 
-### Triggers
-- On `ad_likes` INSERT/DELETE: update `ads.likes_count`
-- On `ad_saves` INSERT/DELETE: update `ads.saves_count`
+### Database Functions & Triggers
+- `update_article_reactions_count()` -- trigger on article_reactions INSERT/DELETE to update reactions_count
+- `update_article_saves_count()` -- trigger on article_saves INSERT/DELETE to update saves_count
 
----
-
-## 2. New Files
+## File Structure
 
 ### Service Layer
-**`src/services/adsService.ts`** -- Complete CRUD + engagement service using Supabase:
-- `createAd()`, `updateAd()`, `deleteAd()`
-- `getApprovedAds(filters)` with search, specialty, location, sort (newest/popular/featured)
-- `toggleLike()`, `toggleSave()`, `reportAd()`
-- `getUserLikes()`, `getUserSaves()`
-- `incrementViews()`
-- `getProviderAds(providerId)`
-- `adminApprove()`, `adminReject()`, `adminFeature()`
-- Profanity filter integration on create/update
+- **`src/services/researchService.ts`** -- CRUD, queries, engagement (reactions, saves, views), admin moderation. Mirrors `adsService.ts` pattern.
 
-### Public Feed Page
-**`src/pages/AdsPage.tsx`** -- Dedicated "/annonces" page:
-- Search bar at top
-- Filter chips: Specialty, Location, Newest, Popular, Sponsored/Featured
-- Responsive feed layout: single column on mobile, 2-col on tablet, 3-col on desktop
-- Each card is an `AdCard` component
-- Infinite scroll or "Load More" pagination
+### Pages
+- **`src/pages/ResearchHubPage.tsx`** -- Main hub with search, filters, featured section, article feed
+- **`src/pages/ArticleDetailPage.tsx`** -- Full article reading page with side panel (desktop), reading progress indicator
 
-### Ad Card Component
-**`src/components/ads/AdCard.tsx`** -- Premium card design:
-- Cover image with aspect ratio (16:9)
-- Overlay badges: "Sponsorise" (featured), "Verifie" (verified provider), "Nouveau" (< 7 days), "Offre Limitee" (has expiry)
-- Provider avatar + name + specialty badge + location
-- Title + short description (truncated)
-- Engagement bar: Like (heart + count), Save (bookmark), Share (copy link), Report (flag)
-- Subtle hover animation (lift + shadow)
-- Design tokens: 14px radius, 24px padding, soft shadow, #F5F7FA bg, #0ABAB5 accent
+### Components
+- **`src/components/research/ArticleCard.tsx`** -- Card for the feed (title, abstract preview, author block, date, reaction count, save, views)
+- **`src/components/research/ArticleDetailView.tsx`** -- Full article body renderer with structured formatting
+- **`src/components/research/ArticleEditor.tsx`** -- Rich text editor for creating/editing articles (uses existing TipTap dependency)
+- **`src/components/research/FeaturedResearch.tsx`** -- Featured articles carousel/section at top of hub
+- **`src/components/research/ArticleFilters.tsx`** -- Category filter, sort options, search bar
+- **`src/components/research/ProviderArticlesManager.tsx`** -- Provider dashboard tab: list articles, create/edit/delete, view analytics
+- **`src/components/research/ArticleSidePanel.tsx`** -- Desktop side panel with react/save/share actions + reading progress
 
-### Ad Detail Dialog
-**`src/components/ads/AdDetailDialog.tsx`** -- Expandable full view:
-- Full image
-- Full description
-- Provider profile link
-- All engagement actions
-- Publication date + expiry
+### Integration Points
 
-### Provider Ad Manager (Redesigned)
-**`src/components/ads/ProviderAdsManager.tsx`** -- Replace existing `MedicalAdsManager`:
-- Create ad form with image upload (required), title, short/full description, optional expiry
-- My ads list with status, analytics (views, likes)
-- Edit/Delete actions
-- Active ads limit indicator (max 5 active ads per provider)
-- Profanity validation on submit
+**Provider Dashboard** (`ProviderDashboard.tsx`):
+- Add a new tab "Publications" with the `ProviderArticlesManager` component
+- Add a `BookOpen` icon tab trigger alongside existing tabs (Ads, Giving, etc.)
 
-### Admin Moderation (Enhanced)
-**`src/components/admin/AdsModeration.tsx`** -- Replace existing `MedicalAdsModeration`:
-- Table with preview, approve, reject, feature toggle, suspend
-- Report queue tab
-- Search/filter
+**Citizen Dashboard** (`PatientDashboard.tsx`):
+- Add a "Saved Articles" section linking to saved research articles
 
-### Saved Ads Section
-**`src/components/ads/SavedAdsSection.tsx`** -- For citizen dashboard:
-- Grid of saved ads
-- Remove from saved
+**Navigation** (`AntigravityHeader.tsx`):
+- Add "Recherche Medicale" link to the main navigation
 
----
+**Routing** (`App.tsx`):
+- `/research` -- ResearchHubPage
+- `/research/:articleId` -- ArticleDetailPage
 
-## 3. Modified Files
+## Key Implementation Details
 
-### `src/App.tsx`
-- Add route: `/annonces` -> `AdsPage` (public)
+### Rich Text Editor
+The project already has `@tiptap/react` and `@tiptap/starter-kit` installed. The article editor will use TipTap with extensions for headings (H1-H3), lists, blockquotes (for citations), and basic formatting. This reuses the existing `RichTextEditor` component pattern from provider registration.
 
-### `src/components/layout/Header.tsx`
-- Add "Annonces" link under Services nav section
+### Content Rendering
+Article content stored as HTML from TipTap. Rendered using `dangerouslySetInnerHTML` with DOMPurify sanitization (already installed as a dependency). Prose-optimized CSS for academic reading width (~700px centered).
 
-### `src/pages/ProviderDashboard.tsx`
-- Replace `MedicalAdsManager` import with new `ProviderAdsManager`
-- Remove old Firestore-based ads tab content
+### PDF Attachment
+Upload to the existing `pdfs` storage bucket. Display as a downloadable section at the bottom of the article.
 
-### `src/pages/PatientDashboard.tsx`
-- Add "Mes Annonces Sauvegardees" tab with `SavedAdsSection`
+### Access Control (App-Level)
+- **Publish/Edit/Delete**: Check `profile.userType === 'provider'` before showing editor
+- **React**: Check `profile.userType === 'provider'` before allowing reactions
+- **Save**: Any authenticated user
+- **Read**: Public (no auth required)
+- **Admin moderation**: Check `profile.userType === 'admin'` for approve/reject/feature/remove
 
-### `src/components/homepage/MedicalAdsCarousel.tsx`
-- Replace mock data with real Supabase query for featured/approved ads
+### Reading Progress Indicator
+A thin progress bar at the top of the article detail page that fills as the user scrolls through the content. Implemented with a scroll event listener.
 
-### `src/pages/AdminDashboard.tsx`
-- Replace `MedicalAdsModeration` with new `AdsModeration`
+### Categories
+Reuse existing provider specialty categories from `providerCategoryConfig.ts` plus general medical research categories (Public Health, Clinical Research, Pharmacology, etc.).
 
----
+## Implementation Order
 
-## 4. Design Specifications
-
-```text
-Card Layout:
-+----------------------------------+
-|  [Cover Image 16:9]              |
-|  [Badge: Sponsorise] [Verifie]   |
-+----------------------------------+
-|  [Avatar] Provider Name          |
-|  Specialty . Location            |
-|                                  |
-|  Title (bold, 18px)              |
-|  Short description (14px, muted) |
-|                                  |
-|  [Heart 24] [Bookmark] [Share]   |
-|  [Flag]              12 Jan 2026 |
-+----------------------------------+
-
-Tokens:
-- bg: #F5F7FA (page), white (cards)
-- radius: 14px (rounded-2xl)
-- shadow: shadow-sm hover:shadow-md
-- accent: #0ABAB5 (primary)
-- padding: 24px (p-6)
-- font: system (Inter via Tailwind)
-```
-
----
-
-## 5. Implementation Order
-
-1. Database migration (create tables, RLS, triggers)
-2. `adsService.ts` (Supabase service layer)
-3. `AdCard.tsx` + `AdDetailDialog.tsx` (UI components)
-4. `AdsPage.tsx` (public feed with filters)
-5. `ProviderAdsManager.tsx` (provider create/manage)
-6. `SavedAdsSection.tsx` (citizen saved ads)
-7. `AdsModeration.tsx` (admin panel)
-8. Route + navigation integration (App.tsx, Header, dashboards)
-9. Update `MedicalAdsCarousel.tsx` to use real data
-10. Remove old Firestore ads service references
-
----
-
-## 6. Quality Controls
-
-- Max 5 active ads per provider (enforced in service + UI)
-- Image required, validated type (jpg/png/webp), max 5MB
-- Profanity filter on title + descriptions (existing `profanityFilter.ts`)
-- Input validation with zod schemas
-- Responsive: 1-col mobile, 2-col tablet, 3-col desktop
-- Engagement animations: heart fill on like, bookmark fill on save
-- View count incremented on card expand (debounced)
+1. Create database tables, functions, and triggers via migration
+2. Create `researchService.ts` (CRUD, queries, engagement, admin)
+3. Create UI components (ArticleCard, ArticleEditor, ArticleFilters, FeaturedResearch, ArticleSidePanel, ArticleDetailView, ProviderArticlesManager)
+4. Create ResearchHubPage and ArticleDetailPage
+5. Add routes to App.tsx
+6. Integrate into Provider Dashboard (new "Publications" tab)
+7. Add navigation link in header
+8. Add "Saved Articles" to Citizen Dashboard
 
