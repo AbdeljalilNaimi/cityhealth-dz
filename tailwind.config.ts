@@ -119,6 +119,10 @@ const config: Config = {
           '0%, 100%': { boxShadow: '0 0 20px var(--glow-color, rgba(59, 130, 246, 0.5))' },
           '50%': { boxShadow: '0 0 40px var(--glow-color, rgba(59, 130, 246, 0.8)), 0 0 60px var(--glow-color, rgba(59, 130, 246, 0.4))' },
         },
+        marquee: {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -135,6 +139,7 @@ const config: Config = {
         'heartbeat': 'heartbeat 1s ease-in-out infinite',
         'spin-slow': 'spin 2s linear infinite',
         'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+        marquee: 'marquee 30s linear infinite',
       },
     }
   },
