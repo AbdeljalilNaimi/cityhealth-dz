@@ -20,13 +20,37 @@ const AntigravityIndex = () => {
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       <AntigravityHero />
-      <EmergencyBanner />
-      <HowItWorksSection />
+
+      <div id="urgences">
+        <EmergencyBanner />
+      </div>
+
+      <div id="assistant-ia">
+        <HowItWorksSection />
+      </div>
+
       <ServicesGrid />
-      <AnimatedMapSection />
-      <FeaturedProviders />
-      <TestimonialsSlider />
-      <ProviderCTA />
+
+      <div id="recherche-medecins">
+        <div id="carte-interactive">
+          <AnimatedMapSection />
+        </div>
+      </div>
+
+      <div id="recherche-medicale">
+        <FeaturedProviders />
+      </div>
+
+      <div id="avis-idees">
+        <TestimonialsSlider />
+      </div>
+
+      <div id="annonces">
+        <div id="publicite">
+          <ProviderCTA />
+        </div>
+      </div>
+
       <Footer />
     </div>
   );
