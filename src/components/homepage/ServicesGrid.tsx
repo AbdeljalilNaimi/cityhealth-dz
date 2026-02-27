@@ -1,6 +1,6 @@
 import {
-  Search, MapPin, HeartPulse, Bot, Star, Megaphone,
-  FileText, Gift, Droplets, Phone, ArrowRight
+  SearchCheck, MapPinned, Siren, BrainCircuit, MessageSquareHeart, Megaphone,
+  BookOpenCheck, HandHeart, HeartHandshake, PhoneCall, ArrowRight
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { LucideIcon } from 'lucide-react';
@@ -15,19 +15,19 @@ interface ServiceCard {
 }
 
 const row1Services: ServiceCard[] = [
-  { title: 'Don Gratuit', description: 'Offrez ou trouvez de l\'aide communautaire gratuite', route: '/citizen/provide', icon: Gift },
-  { title: 'Don de Sang', description: 'Sauvez des vies en donnant votre sang', route: '/blood-donation', icon: Droplets },
-  { title: 'Recherche', description: 'Trouvez le bon médecin ou spécialiste', route: '/search', icon: Search },
-  { title: 'Carte Interactive', description: 'Explorez les établissements autour de vous', route: '/map/providers', icon: MapPin },
-  { title: 'Urgences', description: 'Accès rapide aux services d\'urgence 24/7', route: '/emergency', icon: HeartPulse },
-  { title: 'Assistante IA', description: 'Évaluez vos symptômes avec l\'IA', route: '/medical-assistant', icon: Bot },
+  { title: 'Don Gratuit', description: 'Offrez ou trouvez de l\'aide communautaire gratuite', route: '/citizen/provide', icon: HeartHandshake },
+  { title: 'Don de Sang', description: 'Sauvez des vies en donnant votre sang', route: '/blood-donation', icon: HandHeart },
+  { title: 'Recherche', description: 'Trouvez le bon médecin ou spécialiste', route: '/search', icon: SearchCheck },
+  { title: 'Carte Interactive', description: 'Explorez les établissements autour de vous', route: '/map/providers', icon: MapPinned },
+  { title: 'Urgences', description: 'Accès rapide aux services d\'urgence 24/7', route: '/emergency', icon: Siren },
+  { title: 'Assistante IA', description: 'Évaluez vos symptômes avec l\'IA', route: '/medical-assistant', icon: BrainCircuit },
 ];
 
 const row2Services: ServiceCard[] = [
   { title: 'Annonces', description: 'Découvrez les offres des professionnels', route: '/annonces', icon: Megaphone },
-  { title: 'Avis & Idées', description: 'Partagez vos retours et suggestions', route: '/community', icon: Star },
-  { title: 'Documents', description: 'Guides et documentation complète', route: '/docs', icon: FileText },
-  { title: 'Contact', description: 'Besoin d\'aide ? Contactez-nous', route: '/contact', icon: Phone },
+  { title: 'Avis & Idées', description: 'Partagez vos retours et suggestions', route: '/community', icon: MessageSquareHeart },
+  { title: 'Documents', description: 'Guides et documentation complète', route: '/docs', icon: BookOpenCheck },
+  { title: 'Contact', description: 'Besoin d\'aide ? Contactez-nous', route: '/contact', icon: PhoneCall },
 ];
 
 /* ─── Single card component ─── */
