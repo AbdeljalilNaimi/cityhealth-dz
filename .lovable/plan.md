@@ -1,61 +1,99 @@
 
 
-# Redesign "Nos Services" Section -- GoodDay-Inspired Layout
+# Refonte "Nos Services" — Grille Uniforme avec Navigation par Ancres
 
-## Overview
+## Vue d'ensemble
 
-Replace the current flat grid of service cards with a visually rich, two-zone layout: large feature cards on top (primary services) and an auto-scrolling marquee ticker on the bottom (secondary services), with polished animations and hover effects.
+Remplacement complet du composant `ServicesGrid.tsx` par une grille uniforme de 8 cartes identiques (4+4), avec navigation par ancres vers les sections de la page, animations staggered, et responsive strict (4/2/1 colonnes).
 
-## Changes
+## Fichier modifie
 
-### 1. Rewrite `src/components/homepage/ServicesGrid.tsx`
+**`src/components/homepage/ServicesGrid.tsx`** — Reecriture complete
 
-The entire component will be rebuilt with three zones:
+## Structure des cartes (8 cartes identiques)
 
-**Heading Block** (centered)
-- Bold title: "Tout ce dont vous avez besoin"
-- Subtitle describing the platform
-- Subtle CTA link to `/search`
-- Fade-in on scroll using framer-motion
+### Rangee 1 — Services Primaires
+| Carte | Label | Ancre cible | Mockup |
+|-------|-------|-------------|--------|
+| Recherche Medecins | Recherche Medecins | `#recherche-medecins` | Barre de recherche + lignes de resultats |
+| Carte Interactive | Carte Interactive | `#carte-interactive` | Grille map + pins |
+| Urgences 24/7 | Urgences 24/7 | `#urgences` | Coeur pulsant + lignes status |
+| Assistant IA Sante | Assistant IA Sante | `#assistant-ia` | Bulles de chat + indicateur IA |
 
-**Top Row -- Primary Feature Cards** (3 cards in a responsive grid)
-- Services: Recherche (`/search`), Carte Interactive (`/map`), Urgences (`/map/emergency`)
-- Each card: ~280px tall, rounded-[14px], soft shadow
-- Top area (~200px): light neutral background (`bg-muted/20`) with a stylized wireframe/mockup illustration built from Lucide icons and simple shapes (e.g., search bars, map pins, pulse lines)
-- Bottom strip (~60px): white background, icon left + service name right
-- Hover: `translateY(-6px)`, deeper shadow, subtle border accent color
-- Staggered fade-in + slide-up on scroll (~100ms delay between cards)
+### Rangee 2 — Services Secondaires
+| Carte | Label | Ancre cible | Mockup |
+|-------|-------|-------------|--------|
+| Avis & Idees | Avis & Idees | `#avis-idees` | Etoiles + lignes de commentaires |
+| Recherche Medicale | Recherche Medicale | `#recherche-medicale` | Document academique stylise |
+| Annonces | Annonces | `#annonces` | Carte d'annonce miniature |
+| Publicite | Publicite | `#publicite` | Banner pub stylisee |
 
-**Bottom Row -- Secondary Services Marquee**
-- Services: Pharmacies, Laboratoires, Cliniques, Ambulances, Infirmiers, Soins a domicile, Avis & Reviews, Annonces, Generalistes, Specialistes
-- Infinite horizontal auto-scroll (CSS animation, no JS interval)
-- Each item: pill-shaped mini-card with icon + label
-- Pauses on hover (CSS `animation-play-state: paused`)
-- Content duplicated for seamless loop
+## Design de chaque carte (toutes identiques)
 
-### 2. Add marquee keyframe to `tailwind.config.ts`
+- **Hauteur fixe** : `h-[280px]` sur toutes les cartes, identique
+- **Zone mockup** (75%) : `h-[210px]`, fond `bg-muted/20`, contient l'illustration stylisee
+- **Bandeau bas** (25%) : `h-[70px]`, fond `bg-card`, icone a gauche + nom du service
+- **Coins** : `rounded-[14px]`
+- **Ombre** : `shadow-sm`
+- **Hover** : `translateY(-6px)`, `shadow-lg`, bordure accent
+- **Click** : animation `scale(0.97)` breve puis scroll vers l'ancre
 
-Add a new `marquee` keyframe and animation:
-```
-keyframes: {
-  marquee: {
-    '0%': { transform: 'translateX(0)' },
-    '100%': { transform: 'translateX(-50%)' },
-  }
-}
-animation: {
-  marquee: 'marquee 30s linear infinite',
-}
-```
+## Navigation par ancres
 
-### 3. No other files change
+- Chaque carte utilise un `<button>` (pas un `<Link>`) qui declenche `scrollIntoView({ behavior: 'smooth', block: 'start' })` avec un offset pour le header sticky
+- Implementation via `document.getElementById(anchorId)` + `window.scrollTo` avec calcul de l'offset du header (~80px)
+- Les sections cibles existantes sur la page d'accueil recevront des `id` via modification de `AntigravityIndex.tsx` (wrapper divs avec les ids)
 
-The component is self-contained. `AntigravityIndex.tsx` already imports `ServicesGrid` -- no routing or page changes needed.
+## Modification de `AntigravityIndex.tsx`
 
-## Technical Details
+Ajout de `<div id="...">` wrapper autour des sections existantes pour creer les ancres :
+- `#recherche-medecins` sur `AnimatedMapSection` (ou section recherche)
+- `#carte-interactive` sur `AnimatedMapSection`
+- `#urgences` sur `EmergencyBanner`
+- `#assistant-ia` sur une section dediee (ou lien vers `/medical-assistant`)
+- `#avis-idees` sur `TestimonialsSlider`
+- `#recherche-medicale` sur `FeaturedProviders` (ou lien vers `/research`)
+- `#annonces` sur `ProviderCTA`
+- `#publicite` sur `ProviderCTA`
 
-- **Mockup illustrations**: Built purely from Lucide icons + simple div shapes (no images needed). For example, the "Recherche" card shows a search bar wireframe with result lines; "Carte" shows map pin icons on a grid; "Urgences" shows a pulsing heart icon.
-- **Marquee**: Pure CSS animation using duplicated content inside a flex container. The parent has `overflow-hidden`, the inner flex row animates `translateX(-50%)`. On hover, `animation-play-state: paused`.
-- **Responsive**: Top row switches to single column on mobile (`grid-cols-1 md:grid-cols-3`). Marquee stays horizontal but slows down on mobile via a media query or reduced animation duration.
-- **Framer Motion**: Used for scroll-triggered staggered entrance of the top cards and heading. The marquee uses pure CSS for performance.
+Pour les sections sans equivalent direct sur la page (Assistant IA, Recherche Medicale), l'ancre scrollera vers la section la plus proche ou redirigera vers la page dediee en fallback.
+
+## Animations
+
+- **Entree** : framer-motion `whileInView`, stagger de 100ms entre chaque carte
+- **Hover** : CSS `transition-all duration-200`, `hover:-translate-y-1.5 hover:shadow-lg`
+- **Click** : framer-motion `whileTap={{ scale: 0.97 }}` puis execution du scroll
+- **Accessibilite** : `tabIndex={0}`, `onKeyDown` pour Enter/Space, style focus visible (`focus-visible:ring-2`)
+
+## Responsive
+
+- Desktop (>=1024px) : `grid-cols-4`
+- Tablet (>=768px) : `grid-cols-2`
+- Mobile (<768px) : `grid-cols-1`
+- Hauteur de carte identique a tous les breakpoints
+
+## Mockups stylises (4 nouveaux)
+
+### AssistantAIMockup
+- Deux bulles de chat (user + AI) avec icone Bot
+- Indicateur de saisie anime
+
+### ReviewsMockup
+- 5 etoiles avec remplissage partiel
+- Lignes de commentaires wireframe
+
+### ResearchMockup
+- Icone document/livre
+- Lignes de texte academique stylisees
+- Badge "DOI" miniature
+
+### AdsMockup
+- Carte d'annonce miniature avec image placeholder
+- Badge "Nouveau" + lignes de texte
+
+## Plan d'execution
+
+1. Reecrire `ServicesGrid.tsx` avec les 8 cartes uniformes, mockups, animations, et navigation par ancres
+2. Modifier `AntigravityIndex.tsx` pour ajouter les `id` d'ancrage aux sections existantes
+3. Aucun autre fichier ne change (pas de modification de tailwind config, les animations existantes suffisent)
 
