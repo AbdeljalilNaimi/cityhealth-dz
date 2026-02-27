@@ -1,71 +1,69 @@
 import {
-  Search, MapPin, HeartPulse, Bot, Star, BookOpen, Megaphone, TvMinimal,
-  Stethoscope, ArrowRight, Activity, Clock, FileText, MessageCircle,
-  Navigation, User, Gift, Droplets, Phone
+  Search, MapPin, HeartPulse, Bot, Star, Megaphone,
+  FileText, Gift, Droplets, Phone, ArrowRight
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { LucideIcon } from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageContext';
-
-/* ─── Scroll to anchor with sticky header offset ─── */
-const scrollToAnchor = (anchorId: string) => {
-  const el = document.getElementById(anchorId);
-  if (el) {
-    const offset = 80;
-    const top = el.getBoundingClientRect().top + window.scrollY - offset;
-    window.scrollTo({ top, behavior: 'smooth' });
-  }
-};
+import { useNavigate } from 'react-router-dom';
 
 /* ─── Service card data ─── */
 interface ServiceCard {
   title: string;
-  anchorId: string;
+  description: string;
+  route: string;
   icon: LucideIcon;
 }
 
 const row1Services: ServiceCard[] = [
-  { title: 'Don Gratuit', anchorId: 'don-gratuit', icon: Gift },
-  { title: 'Don de Sang', anchorId: 'don-de-sang', icon: Droplets },
-  { title: 'Recherche', anchorId: 'recherche-medecins', icon: Search },
-  { title: 'Carte Interactive', anchorId: 'carte-interactive', icon: MapPin },
-  { title: 'Urgences', anchorId: 'urgences', icon: HeartPulse },
-  { title: 'Assistante IA', anchorId: 'assistant-ia', icon: Bot },
+  { title: 'Don Gratuit', description: 'Offrez ou trouvez de l\'aide communautaire gratuite', route: '/citizen/provide', icon: Gift },
+  { title: 'Don de Sang', description: 'Sauvez des vies en donnant votre sang', route: '/blood-donation', icon: Droplets },
+  { title: 'Recherche', description: 'Trouvez le bon médecin ou spécialiste', route: '/search', icon: Search },
+  { title: 'Carte Interactive', description: 'Explorez les établissements autour de vous', route: '/map/providers', icon: MapPin },
+  { title: 'Urgences', description: 'Accès rapide aux services d\'urgence 24/7', route: '/emergency', icon: HeartPulse },
+  { title: 'Assistante IA', description: 'Évaluez vos symptômes avec l\'IA', route: '/medical-assistant', icon: Bot },
 ];
 
 const row2Services: ServiceCard[] = [
-  { title: 'Annonces Publicitaires', anchorId: 'annonces', icon: Megaphone },
-  { title: 'Avis & Idées', anchorId: 'avis-idees', icon: Star },
-  { title: 'Documents', anchorId: 'documents', icon: FileText },
-  { title: 'Contact', anchorId: 'contact', icon: Phone },
+  { title: 'Annonces', description: 'Découvrez les offres des professionnels', route: '/annonces', icon: Megaphone },
+  { title: 'Avis & Idées', description: 'Partagez vos retours et suggestions', route: '/community', icon: Star },
+  { title: 'Documents', description: 'Guides et documentation complète', route: '/docs', icon: FileText },
+  { title: 'Contact', description: 'Besoin d\'aide ? Contactez-nous', route: '/contact', icon: Phone },
 ];
 
 /* ─── Single card component ─── */
 const ServiceCardItem = ({ service }: { service: ServiceCard }) => {
+  const navigate = useNavigate();
   const IconComp = service.icon;
+
+  const handleClick = () => navigate(service.route);
+
   return (
     <button
       type="button"
-      onClick={() => scrollToAnchor(service.anchorId)}
+      onClick={handleClick}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          scrollToAnchor(service.anchorId);
+          handleClick();
         }
       }}
-      className="group flex-shrink-0 w-[180px] h-[120px] rounded-xl border border-border bg-card overflow-hidden shadow-sm transition-all duration-200 hover:-translate-y-1.5 hover:shadow-lg hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer active:scale-95 mx-2"
+      className="group flex-shrink-0 w-[220px] rounded-2xl border border-border bg-card overflow-hidden shadow-sm transition-all duration-200 hover:-translate-y-2 hover:shadow-xl hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer active:scale-[0.97] mx-2.5"
       tabIndex={0}
       aria-label={`Aller à ${service.title}`}
     >
       {/* Icon area */}
-      <div className="h-[72px] bg-muted/20 flex items-center justify-center">
-        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
-          <IconComp className="h-5 w-5 text-primary" strokeWidth={1.8} />
+      <div className="h-[90px] bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center">
+        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-200">
+          <IconComp className="h-6 w-6 text-primary" strokeWidth={1.8} />
         </div>
       </div>
-      {/* Label */}
-      <div className="h-[48px] px-3 flex items-center justify-center border-t border-border/50">
-        <span className="font-semibold text-xs text-foreground text-center leading-tight">{service.title}</span>
+      {/* Label + description */}
+      <div className="px-3.5 py-3 border-t border-border/40 text-left space-y-1">
+        <div className="flex items-center justify-between">
+          <span className="font-semibold text-sm text-foreground leading-tight">{service.title}</span>
+          <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-200" />
+        </div>
+        <p className="text-[11px] text-muted-foreground leading-snug line-clamp-2">{service.description}</p>
       </div>
     </button>
   );
@@ -73,7 +71,6 @@ const ServiceCardItem = ({ service }: { service: ServiceCard }) => {
 
 /* ─── Marquee row ─── */
 const MarqueeRow = ({ services, reverse = false }: { services: ServiceCard[]; reverse?: boolean }) => {
-  // Duplicate content for seamless loop
   const items = [...services, ...services, ...services, ...services];
 
   return (
@@ -82,7 +79,7 @@ const MarqueeRow = ({ services, reverse = false }: { services: ServiceCard[]; re
         className={`flex w-max ${reverse ? 'animate-marquee-reverse' : 'animate-marquee'} group-hover/marquee:[animation-play-state:paused]`}
       >
         {items.map((service, i) => (
-          <ServiceCardItem key={`${service.anchorId}-${i}`} service={service} />
+          <ServiceCardItem key={`${service.route}-${i}`} service={service} />
         ))}
       </div>
     </div>
@@ -111,17 +108,17 @@ export const ServicesGrid = () => {
           <h2 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
             Nos Services
           </h2>
-          <p className="mt-3 text-muted-foreground text-sm md:text-base max-w-lg mx-auto">
-            Accédez à un réseau complet de professionnels de santé, d'établissements et de services médicaux.
+          <p className="mt-3 text-muted-foreground text-sm md:text-base max-w-xl mx-auto">
+            Tous les outils santé dont vous avez besoin — recherche, urgences, don, IA et plus — réunis en un seul endroit.
           </p>
         </motion.div>
 
-        {/* Row 1 — Left to right auto-scroll */}
+        {/* Row 1 */}
         <div className="mb-6">
           <MarqueeRow services={row1Services} />
         </div>
 
-        {/* Row 2 — Right to left (reverse) auto-scroll */}
+        {/* Row 2 — reverse */}
         <div>
           <MarqueeRow services={row2Services} reverse />
         </div>
