@@ -172,7 +172,7 @@ export const MapSidebar = ({
 
       {/* ── Type Filter Pills ── */}
       {availableTypes.length > 1 && (
-        <div className="px-2 py-1.5 border-b border-border/40 flex flex-wrap gap-1">
+        <div className="px-2 py-1.5 border-b border-border/40 flex overflow-x-auto gap-1 scrollbar-none">
           {availableTypes.map(type => {
             const label = PROVIDER_TYPE_LABELS[type];
             const isActive = typeFilter === type;
@@ -181,7 +181,7 @@ export const MapSidebar = ({
                 key={type}
                 onClick={() => toggleTypeFilter(type)}
                 className={cn(
-                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium transition-all border",
+                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium transition-all border whitespace-nowrap flex-shrink-0",
                   isActive
                     ? "bg-primary text-primary-foreground border-primary shadow-sm"
                     : "bg-muted/40 text-muted-foreground border-border/40 hover:bg-accent hover:text-accent-foreground"
