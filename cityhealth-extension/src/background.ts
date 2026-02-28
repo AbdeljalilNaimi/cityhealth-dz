@@ -10,6 +10,54 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let userBloodGroup: string | null = null;
 
+interface NotificationPreferences {
+  soundEnabled: boolean;
+  quietHoursEnabled: boolean;
+  quietHoursStart: string;
+  quietHoursEnd: string;
+  maxPerHour: number;
+  urgentOnly: boolean;
+}
+
+let prefs: NotificationPreferences = {
+  soundEnabled: true,
+  quietHoursEnabled: false,
+  quietHoursStart: '22:00',
+  quietHoursEnd: '07:00',
+  maxPerHour: 0,
+  urgentOnly: false,
+};
+
+let notificationsThisHour = 0;
+let lastHourReset = Date.now();
+
+function loadPrefs() {
+  chrome.storage.local.get(['notificationPrefs'], (result) => {
+    if (result.notificationPrefs) prefs = { ...prefs, ...result.notificationPrefs };
+  });
+}
+
+function isInQuietHours(): boolean {
+  if (!prefs.quietHoursEnabled) return false;
+  const now = new Date();
+  const hhmm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const { quietHoursStart: start, quietHoursEnd: end } = prefs;
+  if (start <= end) return hhmm >= start && hhmm < end;
+  return hhmm >= start || hhmm < end; // overnight
+}
+
+function canNotify(): boolean {
+  if (isInQuietHours()) return false;
+  if (prefs.maxPerHour > 0) {
+    if (Date.now() - lastHourReset > 3600000) {
+      notificationsThisHour = 0;
+      lastHourReset = Date.now();
+    }
+    if (notificationsThisHour >= prefs.maxPerHour) return false;
+  }
+  return true;
+}
+
 // Read blood group from storage
 function loadBloodGroup() {
   chrome.storage.local.get(['bloodGroup'], (result) => {
@@ -18,17 +66,21 @@ function loadBloodGroup() {
   });
 }
 
-// Listen for storage changes (when popup syncs blood group)
+// Listen for storage changes
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && changes.bloodGroup) {
-    userBloodGroup = changes.bloodGroup.newValue || null;
-    console.log('[CityHealth BG] Blood group updated:', userBloodGroup);
+  if (area === 'local') {
+    if (changes.bloodGroup) {
+      userBloodGroup = changes.bloodGroup.newValue || null;
+    }
+    if (changes.notificationPrefs) {
+      prefs = { ...prefs, ...changes.notificationPrefs.newValue };
+    }
   }
 });
 
-// Subscribe to blood emergencies via Supabase Realtime
+// Subscribe to blood emergencies via realtime
 function subscribeToEmergencies() {
-  const channel = supabase
+  supabase
     .channel('ext-blood-emergencies')
     .on(
       'postgres_changes',
@@ -40,28 +92,24 @@ function subscribeToEmergencies() {
       },
       (payload) => {
         const emergency = payload.new as any;
-        console.log('[CityHealth BG] New emergency:', emergency);
-
         if (!userBloodGroup) return;
+        if (prefs.urgentOnly && emergency.urgency_level !== 'critical') return;
+        if (emergency.blood_type_needed !== userBloodGroup) return;
+        if (!canNotify()) return;
 
-        // Check if user's blood group matches
-        if (emergency.blood_type_needed === userBloodGroup) {
-          chrome.notifications.create(`blood-emergency-${emergency.id}`, {
-            type: 'basic',
-            iconUrl: 'icons/icon-128.png',
-            title: `🚨 Urgence Sang ${emergency.blood_type_needed}`,
-            message: `Urgence Sang ${emergency.blood_type_needed} : Besoin vital détecté. Cliquez pour aider.`,
-            priority: 2,
-            requireInteraction: true,
-          });
-        }
+        notificationsThisHour++;
+        chrome.notifications.create(`blood-emergency-${emergency.id}`, {
+          type: 'basic',
+          iconUrl: 'icons/icon-128.png',
+          title: `🚨 Urgence Sang ${emergency.blood_type_needed}`,
+          message: `Urgence Sang ${emergency.blood_type_needed} : Besoin vital détecté. Cliquez pour aider.`,
+          priority: 2,
+          requireInteraction: true,
+          silent: !prefs.soundEnabled,
+        });
       }
     )
-    .subscribe((status) => {
-      console.log('[CityHealth BG] Realtime subscription status:', status);
-    });
-
-  return channel;
+    .subscribe();
 }
 
 // Handle notification click
@@ -72,18 +120,19 @@ chrome.notifications.onClicked.addListener((notificationId) => {
   }
 });
 
-// Initialize on install / startup
+// Initialize
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('[CityHealth BG] Extension installed');
   loadBloodGroup();
+  loadPrefs();
   subscribeToEmergencies();
 });
 
 chrome.runtime.onStartup.addListener(() => {
   loadBloodGroup();
+  loadPrefs();
   subscribeToEmergencies();
 });
 
-// Also run immediately (for when service worker wakes)
 loadBloodGroup();
+loadPrefs();
 subscribeToEmergencies();
