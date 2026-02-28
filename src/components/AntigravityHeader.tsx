@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ChevronDown, Menu, Shield, Heart, LayoutDashboard, Users, Globe, Check, Stethoscope, Search, Map, Siren, Bot, Droplets, UserPlus, BookOpen, Mail, LogOut, MessageSquare, FileText, ArrowRight, type LucideIcon } from 'lucide-react';
+import { ChevronDown, Menu, Shield, Heart, LayoutDashboard, Users, Globe, Check, Stethoscope, Search, Map, Siren, Bot, Droplets, UserPlus, BookOpen, Mail, LogOut, MessageSquare, FileText, ArrowRight, Megaphone, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -75,6 +75,8 @@ export const AntigravityHeader = () => {
     { label: t('footer', 'interactiveMap'), description: 'Explorez les établissements de santé', href: '/map/providers', icon: Map },
     { label: t('footer', 'emergency247'), description: 'Accès rapide aux urgences', href: '/map/emergency', icon: Siren },
     { label: t('footer', 'aiAssistant'), description: 'Posez vos questions de santé', href: '/medical-assistant', icon: Bot },
+    { label: language === 'ar' ? 'الإعلانات' : language === 'en' ? 'Announcements' : 'Annonces', description: language === 'ar' ? 'عروض المهنيين' : language === 'en' ? 'Professional offers' : 'Offres des professionnels', href: '/annonces', icon: Megaphone },
+    { label: language === 'ar' ? 'البحث الطبي' : language === 'en' ? 'Medical Research' : 'Recherche Médicale', description: language === 'ar' ? 'مقالات ومنشورات علمية' : language === 'en' ? 'Articles and publications' : 'Articles et publications scientifiques', href: '/research', icon: BookOpen },
   ];
 
   const communauteItems: MegaMenuItem[] = [
@@ -88,7 +90,6 @@ export const AntigravityHeader = () => {
   ];
 
   const resourceItems: MegaMenuItem[] = [
-    { label: 'Recherche Médicale', description: 'Articles et publications scientifiques', href: '/research', icon: BookOpen },
     { label: t('community', 'headerLink'), description: 'Échangez avec la communauté', href: '/community', icon: MessageSquare },
     { label: t('footer', 'documentation'), description: 'Guides et documentation complète', href: '/docs', icon: FileText },
     { label: t('footer', 'contact'), description: 'Contactez notre équipe', href: '/contact', icon: Mail },

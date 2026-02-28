@@ -100,6 +100,10 @@ export const Header = () => {
       dashboardDesc: 'Gérez vos rendez-vous',
       communityAid: 'Don Gratuit',
       communityAidDesc: 'Aide communautaire gratuite',
+      announcements: 'Annonces',
+      announcementsDesc: 'Offres des professionnels',
+      research: 'Recherche Médicale',
+      researchDesc: 'Articles et publications',
       documentation: 'Documentation',
       documentationDesc: 'Guides et ressources'
     },
@@ -128,6 +132,10 @@ export const Header = () => {
       dashboardDesc: 'إدارة مواعيدك',
       communityAid: 'تبرع مجاني',
       communityAidDesc: 'مساعدة مجتمعية مجانية',
+      announcements: 'الإعلانات',
+      announcementsDesc: 'عروض المهنيين',
+      research: 'البحث الطبي',
+      researchDesc: 'مقالات ومنشورات',
       documentation: 'التوثيق',
       documentationDesc: 'أدلة وموارد'
     },
@@ -156,6 +164,10 @@ export const Header = () => {
       dashboardDesc: 'Manage appointments',
       communityAid: 'Community Aid',
       communityAidDesc: 'Free community help',
+      announcements: 'Announcements',
+      announcementsDesc: 'Professional offers',
+      research: 'Medical Research',
+      researchDesc: 'Articles and publications',
       documentation: 'Documentation',
       documentationDesc: 'Guides and resources'
     }
@@ -181,7 +193,8 @@ export const Header = () => {
         { label: texts.aiAssistant, href: '/medical-assistant', icon: Bot, description: texts.aiDesc },
         { label: texts.bloodDonation, href: '/blood-donation', icon: Droplet, description: texts.bloodDesc },
         { label: texts.communityAid, href: '/citizen/provide', icon: HeartHandshake, description: texts.communityAidDesc },
-        { label: 'Annonces Pro', href: '/annonces', icon: Search, description: 'Offres des professionnels' },
+        { label: texts.announcements, href: '/annonces', icon: Search, description: texts.announcementsDesc },
+        { label: texts.research, href: '/research', icon: FileText, description: texts.researchDesc },
       ]
     },
     {
