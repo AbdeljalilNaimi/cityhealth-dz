@@ -287,6 +287,7 @@ const ProvidersMapChild = () => {
         "bg-card/90 backdrop-blur-xl shadow-2xl rounded-2xl p-3.5",
         "flex flex-col gap-3 transition-all duration-300",
         "border border-border/40 ring-1 ring-black/[0.04] dark:ring-white/[0.04]",
+        "opacity-40 hover:opacity-100 focus-within:opacity-100",
         isRTL ? "right-4" : "left-4"
       )}>
         {/* Row 1: Search bar (full-width) */}
