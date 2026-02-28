@@ -12,6 +12,14 @@ interface EmergencyCard {
   emergency_contact_phone: string | null;
 }
 
+interface AlertEntry {
+  id: string;
+  blood_type: string;
+  provider: string;
+  urgency: string;
+  time: string;
+}
+
 export function Popup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,9 +27,13 @@ export function Popup() {
   const [bloodGroup, setBloodGroup] = useState<string | null>(null);
   const [emergencyCard, setEmergencyCard] = useState<EmergencyCard | null>(null);
   const [showCard, setShowCard] = useState(false);
+  const [showAlerts, setShowAlerts] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [authError, setAuthError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [alertCount, setAlertCount] = useState(0);
+  const [alertHistory, setAlertHistory] = useState<AlertEntry[]>([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -37,11 +49,25 @@ export function Popup() {
       if (session?.user) fetchEmergencyCard(session.user.id);
     });
 
-    chrome.storage.local.get(['bloodGroup'], (result) => {
+    chrome.storage.local.get(['bloodGroup', 'sosAlertCount', 'sosAlertHistory'], (result) => {
       if (result.bloodGroup) setBloodGroup(result.bloodGroup);
+      if (result.sosAlertCount) setAlertCount(result.sosAlertCount);
+      if (result.sosAlertHistory) setAlertHistory(result.sosAlertHistory);
     });
 
-    return () => subscription.unsubscribe();
+    // Listen for background updates to alert count
+    const listener = (changes: any, area: string) => {
+      if (area === 'local') {
+        if (changes.sosAlertCount) setAlertCount(changes.sosAlertCount.newValue || 0);
+        if (changes.sosAlertHistory) setAlertHistory(changes.sosAlertHistory.newValue || []);
+      }
+    };
+    chrome.storage.onChanged.addListener(listener);
+
+    return () => {
+      subscription.unsubscribe();
+      chrome.storage.onChanged.removeListener(listener);
+    };
   }, []);
 
   async function fetchEmergencyCard(userId: string) {
@@ -56,6 +82,13 @@ export function Popup() {
       setBloodGroup(data.blood_group || null);
       chrome.storage.local.set({ bloodGroup: data.blood_group, userId });
     }
+  }
+
+  async function handleSync() {
+    if (!user) return;
+    setSyncing(true);
+    await fetchEmergencyCard(user.id);
+    setSyncing(false);
   }
 
   async function handleLogin(e: React.FormEvent) {
@@ -86,6 +119,19 @@ export function Popup() {
 
   function openOptions() {
     chrome.runtime.openOptionsPage();
+  }
+
+  function clearAlerts() {
+    setAlertCount(0);
+    setAlertHistory([]);
+    chrome.storage.local.set({ sosAlertCount: 0, sosAlertHistory: [] });
+  }
+
+  function formatTime(iso: string) {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    } catch { return iso; }
   }
 
   if (loading) {
@@ -149,6 +195,22 @@ export function Popup() {
           <p className="text-[11px] opacity-75 truncate max-w-[180px]">{user.email}</p>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
+          {/* Alert counter */}
+          <button
+            onClick={() => setShowAlerts(!showAlerts)}
+            title="Alertes SOS"
+            className="p-1.5 rounded hover:bg-white/20 transition-colors relative"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+            </svg>
+            {alertCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                {alertCount > 9 ? '9+' : alertCount}
+              </span>
+            )}
+          </button>
           <button
             onClick={openOptions}
             title="Préférences"
@@ -168,29 +230,76 @@ export function Popup() {
         </div>
       </header>
 
-      <div className="flex-1 flex flex-col gap-3 p-4 overflow-y-auto">
-        {/* Emergency card toggle */}
-        <button
-          onClick={() => setShowCard(!showCard)}
-          className="w-full bg-red-50 border border-red-200 rounded-lg p-3 flex items-center justify-between hover:bg-red-100 transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🩸</span>
-            <div className="text-left">
-              <p className="text-[11px] text-gray-500">Groupe Sanguin</p>
-              <p className="text-base font-bold text-red-600">
-                {bloodGroup || '—'}
-                <span className="text-[10px] font-normal text-gray-400 ml-1">(Synchronisé)</span>
-              </p>
-            </div>
+      {/* Alert history panel */}
+      {showAlerts && (
+        <div className="border-b border-gray-200 bg-gray-50 px-4 py-3">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold text-gray-700">🔔 Alertes SOS récentes</p>
+            {alertCount > 0 && (
+              <button onClick={clearAlerts} className="text-[10px] text-sky-500 hover:underline">Effacer</button>
+            )}
           </div>
-          <svg
-            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            className={`transition-transform ${showCard ? 'rotate-180' : ''}`}
+          {alertHistory.length === 0 ? (
+            <p className="text-xs text-gray-400 italic">Aucune alerte reçue</p>
+          ) : (
+            <div className="flex flex-col gap-1.5 max-h-[140px] overflow-y-auto">
+              {alertHistory.map((alert) => (
+                <div key={alert.id} className="bg-white border border-gray-200 rounded-md px-2.5 py-2 flex items-start gap-2">
+                  <span className="text-red-500 text-sm mt-0.5">🚨</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-medium text-gray-700 truncate">
+                      Sang {alert.blood_type} — {alert.urgency}
+                    </p>
+                    <p className="text-[10px] text-gray-400 truncate">
+                      {alert.provider || 'Établissement inconnu'} · {formatTime(alert.time)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="flex-1 flex flex-col gap-3 p-4 overflow-y-auto">
+        {/* Emergency card toggle + sync */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowCard(!showCard)}
+            className="flex-1 bg-red-50 border border-red-200 rounded-lg p-3 flex items-center justify-between hover:bg-red-100 transition-colors"
           >
-            <path d="m6 9 6 6 6-6"/>
-          </svg>
-        </button>
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🩸</span>
+              <div className="text-left">
+                <p className="text-[11px] text-gray-500">Groupe Sanguin</p>
+                <p className="text-base font-bold text-red-600">
+                  {bloodGroup || '—'}
+                  <span className="text-[10px] font-normal text-gray-400 ml-1">(Synchronisé)</span>
+                </p>
+              </div>
+            </div>
+            <svg
+              width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              className={`transition-transform ${showCard ? 'rotate-180' : ''}`}
+            >
+              <path d="m6 9 6 6 6-6"/>
+            </svg>
+          </button>
+          <button
+            onClick={handleSync}
+            disabled={syncing}
+            title="Actualiser la carte"
+            className="bg-sky-50 border border-sky-200 rounded-lg px-3 flex items-center justify-center hover:bg-sky-100 transition-colors disabled:opacity-50"
+          >
+            <svg
+              width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              className={syncing ? 'animate-spin' : ''}
+            >
+              <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
+              <path d="M21 3v5h-5"/>
+            </svg>
+          </button>
+        </div>
 
         {/* Emergency card details */}
         {showCard && emergencyCard && (

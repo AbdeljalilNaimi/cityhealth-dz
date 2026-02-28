@@ -98,6 +98,25 @@ function subscribeToEmergencies() {
         if (!canNotify()) return;
 
         notificationsThisHour++;
+
+        // Track alert in storage for popup
+        chrome.storage.local.get(['sosAlertCount', 'sosAlertHistory'], (result) => {
+          const count = (result.sosAlertCount || 0) + 1;
+          const history = result.sosAlertHistory || [];
+          history.unshift({
+            id: emergency.id,
+            blood_type: emergency.blood_type_needed,
+            provider: emergency.provider_name || '',
+            urgency: emergency.urgency_level,
+            time: new Date().toISOString(),
+          });
+          // Keep only last 5
+          chrome.storage.local.set({
+            sosAlertCount: count,
+            sosAlertHistory: history.slice(0, 5),
+          });
+        });
+
         chrome.notifications.create(`blood-emergency-${emergency.id}`, {
           type: 'basic',
           iconUrl: 'icons/icon-128.png',
