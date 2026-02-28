@@ -19,7 +19,7 @@ import { AntigravityHeader } from "./components/AntigravityHeader";
 // Conditional header - hidden on pages with their own navigation
 const ConditionalHeader = () => {
   const location = useLocation();
-  const hiddenPrefixes = ['/admin/dashboard', '/provider/dashboard', '/docs', '/map/', '/admin/login', '/provider/login', '/citizen/login', '/citizen/register', '/provider/register', '/email-verified', '/developers/login', '/developers/register'];
+  const hiddenPrefixes = ['/admin/dashboard', '/provider/dashboard', '/docs', '/map/', '/admin/login', '/provider/login', '/citizen/login', '/citizen/register', '/provider/register', '/email-verified', '/developers/login', '/developers/register', '/developers/dashboard', '/developers/profile'];
   const shouldHide = hiddenPrefixes.some(p => location.pathname.startsWith(p));
   if (shouldHide) return null;
   return <AntigravityHeader />;

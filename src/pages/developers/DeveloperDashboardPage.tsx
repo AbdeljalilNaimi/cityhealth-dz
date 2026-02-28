@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
-import { Copy, Key, RefreshCw, XCircle, Plus, ArrowLeft, LogOut, UserCircle } from 'lucide-react';
+import { Copy, Key, RefreshCw, XCircle, Plus, ArrowLeft, LogOut, UserCircle, Code2 } from 'lucide-react';
+import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -162,21 +163,25 @@ export default function DeveloperDashboardPage() {
   if (!developerUser) return null;
 
   return (
+    <>
     <div className="min-h-screen bg-background py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-4 mb-8">
           <Button variant="ghost" size="icon" onClick={() => navigate('/developers')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-foreground">Tableau de bord Développeur</h1>
-            <p className="text-muted-foreground text-sm">Gérez vos clés API CityHealth</p>
+          <div className="flex items-center gap-2 mr-auto">
+            <Code2 className="h-5 w-5 text-primary" />
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Tableau de bord Développeur</h1>
+              <p className="text-muted-foreground text-sm">Gérez vos clés API CityHealth</p>
+            </div>
           </div>
           <Button variant="ghost" size="sm" onClick={() => navigate('/developers/profile')}>
             <UserCircle className="h-4 w-4 mr-1" /> Profil
           </Button>
           <Button variant="ghost" size="sm" onClick={async () => { await supabase.auth.signOut(); navigate('/developers/login'); }}>
-            <LogOut className="h-4 w-4 mr-1" /> Se déconnecter
+            <LogOut className="h-4 w-4 mr-1" /> Déconnexion
           </Button>
         </div>
 
@@ -311,5 +316,7 @@ export default function DeveloperDashboardPage() {
         </Dialog>
       </div>
     </div>
+    <Footer />
+    </>
   );
 }
