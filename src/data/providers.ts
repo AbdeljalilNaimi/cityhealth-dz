@@ -228,6 +228,9 @@ export interface CityHealthProvider {
   radiologyAccreditations?: string[];
   radiologistOnSite?: boolean;
 
+  // ========== PLAN TYPE ==========
+  planType?: 'basic' | 'standard' | 'premium';
+
   // ========== ACCOUNT SETTINGS ==========
   settings?: {
     emailNotifications?: boolean;

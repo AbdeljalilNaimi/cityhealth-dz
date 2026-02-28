@@ -381,7 +381,7 @@ const ProviderProfilePage = () => {
               {/* Name + Verified */}
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl md:text-2xl font-bold tracking-tight">{provider.name}</h1>
-                {isProviderVerified(provider) && <VerifiedBadge type="verified" size="md" />}
+                {isProviderVerified(provider) && <VerifiedBadge type={(provider as any).planType === 'premium' ? 'premium' : 'verified'} size="md" />}
               </div>
 
               {/* Type line */}

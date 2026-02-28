@@ -269,6 +269,9 @@ export interface ProviderDocument {
   departmentSchedules?: Record<string, { open: string; close: string }>;
   landmarkDescription?: string;
   
+  // =============== PLAN TYPE ===============
+  planType?: 'basic' | 'standard' | 'premium';
+
   // =============== STATUS & VERIFICATION ===============
   verificationStatus: VerificationStatus;
   isPublic: boolean;

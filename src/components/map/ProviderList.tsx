@@ -156,7 +156,7 @@ export const ProviderList = ({
                 <div className="flex items-start justify-between gap-1">
                   <h4 className="font-medium text-sm truncate">{provider.name}</h4>
                   {isProviderVerified(provider) && (
-                    <VerifiedBadge type="verified" size="sm" showTooltip={false} />
+                    <VerifiedBadge type={provider.planType === 'premium' ? 'premium' : 'verified'} size="sm" showTooltip={false} />
                   )}
                 </div>
                 

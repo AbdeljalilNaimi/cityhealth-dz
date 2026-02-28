@@ -93,7 +93,7 @@ export const ProviderInfoCard = memo(({ provider, onClose, userLocation, onRoute
                   <h3 className="font-semibold text-sm text-foreground truncate">
                     {provider.name}
                   </h3>
-                  {isVerified && <VerifiedBadge type="verified" size="sm" />}
+                  {isVerified && <VerifiedBadge type={(provider as any).planType === 'premium' ? 'premium' : 'verified'} size="sm" />}
                 </div>
                 <p className="text-xs text-muted-foreground truncate mt-0.5">
                   {provider.specialty || provider.type}

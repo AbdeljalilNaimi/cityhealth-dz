@@ -64,6 +64,7 @@ import {
 } from '@/services/bloodEmergencyService';
 import { supabase } from '@/lib/supabaseClient';
 import { ProviderArticlesManager } from '@/components/research/ProviderArticlesManager';
+import { SubscriptionCard } from '@/components/provider/SubscriptionCard';
 
 const getWelcomeModalKey = (providerId: string) =>
   `provider_onboarding_welcome_seen_${providerId}`;
@@ -1113,6 +1114,10 @@ export default function ProviderDashboard() {
 
           {/* Overview Tab */}
           <TabsContent value="overview">
+            {/* Subscription Card */}
+            <div className="mb-6">
+              <SubscriptionCard planType={(providerData as any)?.planType || 'basic'} />
+            </div>
             <div className="grid gap-6 lg:grid-cols-2">
               {/* ===== Blood Bank Overview Widgets ===== */}
               {isBloodCabin && (

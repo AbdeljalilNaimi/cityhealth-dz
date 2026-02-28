@@ -219,7 +219,7 @@ export const MapSidebar = ({
                         {provider.name}
                       </h4>
                       {isProviderVerified(provider) && (
-                        <VerifiedBadge type="verified" size="sm" showTooltip={false} />
+                        <VerifiedBadge type={(provider as any).planType === 'premium' ? 'premium' : 'verified'} size="sm" showTooltip={false} />
                       )}
                     </div>
 
