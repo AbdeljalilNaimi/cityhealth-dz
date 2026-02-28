@@ -325,8 +325,8 @@ const ProviderProfilePage = () => {
         </div>
       )}
 
-      {/* Hero Banner with Cover Photo */}
-      <section className={`relative h-48 md:h-64 bg-gradient-to-br ${typeConfig.gradient} overflow-hidden`}>
+      {/* Minimal Hero */}
+      <section className="relative h-40 md:h-52 bg-muted/50 overflow-hidden">
         {gallery[0] && (
           <img 
             src={gallery[0]} 
@@ -334,372 +334,220 @@ const ProviderProfilePage = () => {
             className="w-full h-full object-cover"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
         
-        {/* Back button */}
         <Button 
-          variant="secondary" 
+          variant="ghost" 
           size="sm"
           onClick={() => navigate(-1)} 
-          className="absolute top-4 left-4 gap-2 backdrop-blur-sm bg-background/80 hover:bg-background/90 shadow-lg"
+          className="absolute top-4 left-4 gap-1.5 text-foreground/80 hover:text-foreground bg-background/60 backdrop-blur-sm"
         >
           <ArrowLeft className="h-4 w-4" />
           {t('common.back')}
         </Button>
 
-        {/* Breadcrumb */}
-        <nav className="absolute top-4 right-4 flex items-center gap-2 text-sm text-muted-foreground backdrop-blur-sm bg-background/60 px-3 py-1.5 rounded-full">
+        <nav className="absolute top-4 right-4 flex items-center gap-1.5 text-xs text-muted-foreground bg-background/60 backdrop-blur-sm px-2.5 py-1 rounded-full">
           <Link to="/" className="hover:text-foreground transition-colors">{t('nav.home')}</Link>
           <span>/</span>
           <Link to="/search" className="hover:text-foreground transition-colors">{t('nav.search')}</Link>
         </nav>
       </section>
 
-      <div className="px-4 max-w-6xl mx-auto -mt-16 relative z-10">
-        {/* Header Card */}
-        <section className="glass-card rounded-2xl p-6 mb-6 border-t-4 animate-fade-in" style={{ borderTopColor: `var(--${typeConfig.color.split('-')[1]}-500, hsl(var(--primary)))` }}>
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-            {/* Provider Logo */}
-            <div className={`w-28 h-28 rounded-xl bg-gradient-to-br ${typeConfig.gradient} border-4 border-background shadow-xl overflow-hidden flex items-center justify-center`}>
+      <div className="px-4 max-w-6xl mx-auto -mt-14 relative z-10">
+        {/* Profile Header */}
+        <section className="rounded-2xl border bg-card p-6 mb-6 shadow-sm animate-fade-in">
+          <div className="flex flex-col md:flex-row gap-5">
+            {/* Avatar */}
+            <div className="w-24 h-24 rounded-2xl border-4 border-background shadow-md overflow-hidden flex-shrink-0 bg-muted flex items-center justify-center">
               {provider.image && provider.image !== '/placeholder.svg' && provider.image !== '' ? (
-                <img 
-                  src={provider.image} 
-                  alt={provider.name}
-                  className="w-full h-full object-cover"
-                />
+                <img src={provider.image} alt={provider.name} className="w-full h-full object-cover" />
               ) : (
-                <TypeIcon className={`h-12 w-12 ${typeConfig.color}`} />
+                <TypeIcon className={`h-10 w-10 ${typeConfig.color}`} />
               )}
             </div>
 
-            {/* Provider Info */}
+            {/* Info */}
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap mb-1">
-                <h1 className="text-2xl md:text-3xl font-bold break-words">{provider.name}</h1>
-                
-                {/* Badges */}
-                {isProviderVerified(provider) && (
-                  <VerifiedBadge type="verified" size="md" />
-                )}
-                {isNewProvider && (
-                  <Badge variant="secondary" className="gap-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                    <Sparkles className="h-3 w-3" />
-                    {t('provider.newProvider')}
-                  </Badge>
-                )}
-                {(provider.emergency || provider.emergencyCapable) && (
-                  ['doctor', 'clinic', 'hospital', 'birth_hospital'].includes(resolvedType) ? (
-                    <Badge className="gap-1.5 bg-red-600 text-white border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.6)] animate-pulse">
-                      <span className="w-2 h-2 rounded-full bg-white inline-block" />
-                      <HeartPulse className="h-3.5 w-3.5" />
-                      Urgences 24/7
-                    </Badge>
-                  ) : (
-                    <Badge variant="destructive" className="animate-pulse gap-1">
-                      🚑 {t('provider.emergency')}
-                    </Badge>
-                  )
-                )}
-                {/* Pharmacie de Garde glowing badge */}
-                {resolvedType === 'pharmacy' && provider.isPharmacieDeGarde && (
-                  <Badge className="gap-1.5 bg-emerald-500 text-white border-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse">
-                    <span className="w-2 h-2 rounded-full bg-white animate-ping inline-block" />
-                    <ShieldCheck className="h-3 w-3" />
-                    Pharmacie de Garde
-                  </Badge>
-                )}
-                {/* Pharmacy delivery badge */}
-                {resolvedType === 'pharmacy' && provider.pharmacyDeliveryAvailable && (
-                  <Badge variant="secondary" className="gap-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                    <Truck className="h-3 w-3" />
-                    Livraison à domicile
-                  </Badge>
-                )}
-                {/* Pharmacy night bell badge */}
-                {resolvedType === 'pharmacy' && provider.pharmacyNightBell && (
-                  <Badge variant="secondary" className="gap-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                    🔔 Sonnette de nuit
-                  </Badge>
-                )}
-                {/* Blood Cabin walk-in badge */}
-                {resolvedType === 'blood_cabin' && provider.bloodCabinWalkInAllowed !== false && (
-                  <Badge variant="secondary" className="gap-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                    <Users className="h-3 w-3" />
-                    Sans rendez-vous
-                  </Badge>
-                )}
-                {resolvedType === 'blood_cabin' && provider.bloodCabinWalkInAllowed === false && (
-                  <Badge variant="secondary" className="gap-1">
-                    <Clock className="h-3 w-3" />
-                    Sur rendez-vous
-                  </Badge>
-                )}
-                {provider.homeCollection && (
-                  <Badge variant="secondary" className="gap-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                    <HomeIcon className="h-3 w-3" />
-                    Prélèvement à domicile
-                  </Badge>
-                )}
-                {provider.turnaroundHours && (
-                  <Badge variant="secondary" className="gap-1">
-                    <Clock className="h-3 w-3" />
-                    Résultats en ~{provider.turnaroundHours}h
-                  </Badge>
-                )}
-                {resolvedType === 'lab' && provider.labAppointmentRequired === false && (
-                  <Badge variant="secondary" className="gap-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                    <Clock className="h-3 w-3" />
-                    Sans rendez-vous
-                  </Badge>
-                )}
-                {resolvedType === 'lab' && provider.labAppointmentRequired === true && (
-                  <Badge variant="secondary" className="gap-1">
-                    <Clock className="h-3 w-3" />
-                    Sur rendez-vous
-                  </Badge>
-                )}
-                {/* Radiology-specific header badges */}
-                {resolvedType === 'radiology_center' && provider.radiologistOnSite && (
-                  <Badge variant="secondary" className="gap-1 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400">
-                    <UserCheck className="h-3 w-3" />
-                    Radiologue sur place
-                  </Badge>
-                )}
-                {resolvedType === 'radiology_center' && provider.radiologyAppointmentRequired === true && (
-                  <Badge variant="secondary" className="gap-1">
-                    <Clock className="h-3 w-3" />
-                    Sur rendez-vous
-                  </Badge>
-                )}
-                {resolvedType === 'radiology_center' && provider.radiologyAppointmentRequired === false && (
-                  <Badge variant="secondary" className="gap-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                    <Clock className="h-3 w-3" />
-                    Sans rendez-vous
-                  </Badge>
-                )}
-                {/* Equipment business type badges */}
-                {resolvedType === 'medical_equipment' && provider.equipmentBusinessTypes?.map((bt: string) => (
-                  <Badge key={bt} variant="secondary" className="gap-1 text-xs">
-                    {bt === 'sale' ? <ShoppingBag className="h-3 w-3" /> : bt === 'rental' ? <RefreshCw className="h-3 w-3" /> : <Wrench className="h-3 w-3" />}
-                    {bt === 'sale' ? 'Vente' : bt === 'rental' ? 'Location' : 'Réparation'}
-                  </Badge>
-                ))}
-                {resolvedType === 'medical_equipment' && provider.installationAvailable && (
-                  <Badge variant="secondary" className="gap-1 text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                    <Truck className="h-3 w-3" />
-                    Livraison & Installation
-                  </Badge>
-                )}
+              {/* Name + Verified */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl md:text-2xl font-bold tracking-tight">{provider.name}</h1>
+                {isProviderVerified(provider) && <VerifiedBadge type="verified" size="md" />}
               </div>
 
-              {/* Care-specific: Specialty badges — exclude maternity (has its own services) */}
-              {provider.specialties && provider.specialties.length > 0 && ['doctor', 'clinic', 'hospital'].includes(resolvedType) && (
-                <div className="flex flex-wrap gap-1.5 mt-1">
-                  {provider.specialties.map((spec: string) => (
-                    <Badge key={spec} variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
-                      <Stethoscope className="h-3 w-3 mr-1" />
-                      {spec}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-
-              {/* Maternity-specific badges */}
-              {resolvedType === 'birth_hospital' && (
-                <div className="flex flex-wrap gap-1.5 mt-1">
-                  {provider.maternityServices?.map((service: string) => (
-                    <Badge key={service} variant="outline" className="text-xs bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-900/20 dark:text-pink-400 dark:border-pink-800">
-                      <Baby className="h-3 w-3 mr-1" />
-                      {service}
-                    </Badge>
-                  ))}
-                  {provider.femaleStaffOnly && (
-                    <Badge className="text-xs gap-1 bg-pink-500 text-white border-pink-400">
-                      👩‍⚕️ Personnel féminin
-                    </Badge>
-                  )}
-                  {provider.pediatricianOnSite && (
-                    <Badge className="text-xs gap-1 bg-blue-500 text-white border-blue-400">
-                      👶 Pédiatre sur place
-                    </Badge>
-                  )}
-                  {provider.hasNICU && (
-                    <Badge variant="secondary" className="text-xs gap-1 bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400">
-                      <HeartPulse className="h-3 w-3" />
-                      NICU
-                    </Badge>
-                  )}
-                </div>
-              )}
-
-              {/* Care-specific: Infrastructure badges */}
-              {['clinic', 'hospital', 'birth_hospital'].includes(resolvedType) && (
-                <div className="flex flex-wrap gap-1.5 mt-1">
-                  {provider.numberOfBeds && (
-                    <Badge variant="secondary" className="text-xs gap-1">
-                      <BedDouble className="h-3 w-3" />
-                      {provider.numberOfBeds} lits
-                    </Badge>
-                  )}
-                  {resolvedType === 'birth_hospital' && provider.deliveryRooms && (
-                    <Badge variant="secondary" className="text-xs gap-1 bg-pink-50 text-pink-700 dark:bg-pink-900/20 dark:text-pink-400">
-                      <Baby className="h-3 w-3" />
-                      {provider.deliveryRooms} salles d'accouchement
-                    </Badge>
-                  )}
-                  {provider.hasReanimation && (
-                    <Badge variant="secondary" className="text-xs gap-1 bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400">
-                      <HeartPulse className="h-3 w-3" />
-                      Réanimation
-                    </Badge>
-                  )}
-                  {provider.operatingBlocks && (
-                    <Badge variant="secondary" className="text-xs gap-1">
-                      <Scissors className="h-3 w-3" />
-                      {provider.operatingBlocks} blocs opératoires
-                    </Badge>
-                  )}
-                  {resolvedType === 'clinic' && provider.consultationRooms && (
-                    <Badge variant="secondary" className="text-xs gap-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400">
-                      <Building2 className="h-3 w-3" />
-                      {provider.consultationRooms} salles de consultation
-                    </Badge>
-                  )}
-                  {resolvedType === 'clinic' && provider.parkingAvailable && (
-                    <Badge variant="secondary" className="text-xs gap-1 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400">
-                      <Car className="h-3 w-3" />
-                      Parking
-                    </Badge>
-                  )}
-                </div>
-              )}
-
-              {/* Type and Specialty */}
-              <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                <TypeIcon className={`h-4 w-4 ${typeConfig.color}`} />
+              {/* Type line */}
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
+                <TypeIcon className={`h-3.5 w-3.5 ${typeConfig.color}`} />
                 <span>{t(`providerTypes.${resolvedType}`)}</span>
                 {provider.specialty && (
                   <>
-                    <span>•</span>
+                    <span className="text-border">·</span>
                     <span>{provider.specialty}</span>
                   </>
                 )}
               </div>
 
-              {/* Rating and Reviews - dynamic from Supabase */}
-              <div className="flex items-center gap-4 text-sm">
-                <span className="inline-flex items-center gap-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-1 rounded-full font-medium">
-                  <Star className="h-4 w-4 fill-current" /> 
+              {/* Rating */}
+              <div className="flex items-center gap-3 mt-2 text-sm">
+                <span className="inline-flex items-center gap-1 font-medium">
+                  <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                   {reviewStats.averageRating.toFixed(1)}
                 </span>
                 <span className="text-muted-foreground">{reviewStats.totalReviews} {t('provider.reviews')}</span>
-                
-                {/* Additional features */}
                 {provider.accessible && (
-                  <span className="inline-flex items-center gap-1 text-muted-foreground">
-                    <Accessibility className="h-4 w-4" />
-                    {t('provider.accessible')}
-                  </span>
+                  <>
+                    <span className="text-border">·</span>
+                    <span className="inline-flex items-center gap-1 text-muted-foreground">
+                      <Accessibility className="h-3.5 w-3.5" />
+                      {t('provider.accessible')}
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {/* Contextual badges — compact row */}
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {isNewProvider && (
+                  <Badge variant="secondary" className="text-xs gap-1">
+                    <Sparkles className="h-3 w-3" />
+                    {t('provider.newProvider')}
+                  </Badge>
+                )}
+                {(provider.emergency || provider.emergencyCapable) && ['doctor', 'clinic', 'hospital', 'birth_hospital'].includes(resolvedType) && (
+                  <Badge variant="destructive" className="text-xs gap-1">
+                    <HeartPulse className="h-3 w-3" />
+                    Urgences 24/7
+                  </Badge>
+                )}
+                {resolvedType === 'pharmacy' && provider.isPharmacieDeGarde && (
+                  <Badge className="text-xs gap-1 bg-emerald-600 text-white hover:bg-emerald-700">
+                    <ShieldCheck className="h-3 w-3" />
+                    Pharmacie de Garde
+                  </Badge>
+                )}
+                {resolvedType === 'pharmacy' && provider.pharmacyDeliveryAvailable && (
+                  <Badge variant="secondary" className="text-xs gap-1">
+                    <Truck className="h-3 w-3" /> Livraison
+                  </Badge>
+                )}
+                {provider.homeCollection && (
+                  <Badge variant="secondary" className="text-xs gap-1">
+                    <HomeIcon className="h-3 w-3" /> Prélèvement à domicile
+                  </Badge>
+                )}
+                {provider.turnaroundHours && (
+                  <Badge variant="secondary" className="text-xs gap-1">
+                    <Clock className="h-3 w-3" /> ~{provider.turnaroundHours}h
+                  </Badge>
+                )}
+                {/* Specialties inline */}
+                {provider.specialties && provider.specialties.length > 0 && ['doctor', 'clinic', 'hospital'].includes(resolvedType) && 
+                  provider.specialties.slice(0, 3).map((spec: string) => (
+                    <Badge key={spec} variant="outline" className="text-xs">
+                      {spec}
+                    </Badge>
+                  ))
+                }
+                {provider.specialties && provider.specialties.length > 3 && (
+                  <Badge variant="outline" className="text-xs text-muted-foreground">
+                    +{provider.specialties.length - 3}
+                  </Badge>
+                )}
+                {/* Infrastructure highlights */}
+                {provider.numberOfBeds && (
+                  <Badge variant="secondary" className="text-xs gap-1">
+                    <BedDouble className="h-3 w-3" /> {provider.numberOfBeds} lits
+                  </Badge>
+                )}
+                {provider.operatingBlocks && (
+                  <Badge variant="secondary" className="text-xs gap-1">
+                    <Scissors className="h-3 w-3" /> {provider.operatingBlocks} blocs
+                  </Badge>
                 )}
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-2 flex-wrap w-full md:w-auto">
-              {/* Category-specific primary CTA */}
+            {/* Actions — right side */}
+            <div className="flex md:flex-col gap-2 flex-wrap md:items-end flex-shrink-0">
+              {/* Primary CTA */}
               {['doctor', 'clinic', 'hospital', 'birth_hospital'].includes(resolvedType) && (
-                <Button onClick={() => setBookingOpen(true)} className="gap-2 flex-1 md:flex-none">
-                  <Calendar className="h-4 w-4" />
+                <Button onClick={() => setBookingOpen(true)} size="sm" className="gap-1.5">
+                  <Calendar className="h-3.5 w-3.5" />
                   Prendre rendez-vous
                 </Button>
               )}
               {['lab', 'radiology_center'].includes(resolvedType) && (
-                <Button onClick={() => setBookingOpen(true)} className="gap-2 flex-1 md:flex-none">
-                  <ClipboardList className="h-4 w-4" />
+                <Button onClick={() => setBookingOpen(true)} size="sm" className="gap-1.5">
+                  <ClipboardList className="h-3.5 w-3.5" />
                   Planifier un examen
                 </Button>
               )}
               {resolvedType === 'pharmacy' && (
-                <Button onClick={handleCall} className="gap-2 flex-1 md:flex-none">
-                  <Phone className="h-4 w-4" />
-                  Appeler la pharmacie
+                <Button onClick={handleCall} size="sm" className="gap-1.5">
+                  <Phone className="h-3.5 w-3.5" />
+                  Appeler
                 </Button>
               )}
               {resolvedType === 'blood_cabin' && (
-                <Button onClick={() => navigate('/blood-donation')} className="gap-2 flex-1 md:flex-none bg-red-600 hover:bg-red-700 text-white">
-                  <Droplets className="h-4 w-4" />
-                  Je donne mon sang
+                <Button onClick={() => navigate('/blood-donation')} size="sm" className="gap-1.5 bg-destructive hover:bg-destructive/90">
+                  <Droplets className="h-3.5 w-3.5" />
+                  Donner mon sang
                 </Button>
               )}
               {resolvedType === 'medical_equipment' && (
-                <Button onClick={handleCall} className="gap-2 flex-1 md:flex-none">
-                  <FileText className="h-4 w-4" />
+                <Button onClick={handleCall} size="sm" className="gap-1.5">
+                  <FileText className="h-3.5 w-3.5" />
                   Demander un devis
                 </Button>
               )}
-              
-              <Button 
-                variant={isFavorite ? "default" : "outline"} 
-                onClick={handleFavoriteClick}
-                disabled={favoriteLoading}
-                className="gap-2 flex-1 md:flex-none"
-              >
-                <Heart className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
-                <span className="hidden sm:inline">
-                  {isFavorite ? t('provider.removeFromFavorites') : t('provider.addToFavorites')}
-                </span>
-              </Button>
-              
-              {/* Share Dialog */}
-              <Dialog>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="icon">
-                          <Share2 className="h-4 w-4" />
-                        </Button>
-                      </DialogTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent>{t('provider.shareProfile')}</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>{t('provider.shareProfile')}</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="flex justify-center p-4 bg-white rounded-lg">
-                      <QRCodeSVG value={shareUrl} size={180} level="M" includeMargin />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={shareUrl}
-                        readOnly
-                        className="flex-1 px-3 py-2 border rounded-lg text-sm bg-muted truncate"
-                      />
-                      <Button size="sm" onClick={handleCopyLink}>
-                        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                    {typeof navigator !== 'undefined' && navigator.share && (
-                      <Button className="w-full gap-2" onClick={handleNativeShare}>
-                        <Share2 className="h-4 w-4" />
-                        {t('provider.shareProfile')}
-                      </Button>
-                    )}
-                  </div>
-                </DialogContent>
-              </Dialog>
 
-              {/* Report button */}
-              <ReportProviderDialog
-                providerId={provider.id}
-                reporterId={user?.uid || 'anonymous'}
-                tooltipLabel={t('provider.reportProfile')}
-              />
+              {/* Secondary actions row */}
+              <div className="flex gap-1.5">
+                <Button 
+                  variant={isFavorite ? "default" : "outline"} 
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handleFavoriteClick}
+                  disabled={favoriteLoading}
+                >
+                  <Heart className={`h-3.5 w-3.5 ${isFavorite ? "fill-current" : ""}`} />
+                </Button>
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="icon" className="h-8 w-8">
+                      <Share2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>{t('provider.shareProfile')}</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="flex justify-center p-4 bg-muted rounded-lg">
+                        <QRCodeSVG value={shareUrl} size={160} level="M" includeMargin />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input type="text" value={shareUrl} readOnly className="flex-1 px-3 py-2 border rounded-lg text-sm bg-muted truncate" />
+                        <Button size="sm" onClick={handleCopyLink}>
+                          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                      {typeof navigator !== 'undefined' && navigator.share && (
+                        <Button className="w-full gap-2" onClick={handleNativeShare}>
+                          <Share2 className="h-4 w-4" />
+                          {t('provider.shareProfile')}
+                        </Button>
+                      )}
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                <ReportProviderDialog
+                  providerId={provider.id}
+                  reporterId={user?.uid || 'anonymous'}
+                  tooltipLabel={t('provider.reportProfile')}
+                />
+              </div>
             </div>
           </div>
         </section>
