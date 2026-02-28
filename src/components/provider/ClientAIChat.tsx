@@ -19,9 +19,10 @@ interface ClientAIChatProps {
   providerName: string;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onAvailabilityChange?: (available: boolean) => void;
 }
 
-export const ClientAIChat = ({ providerId, providerName, isOpen: controlledOpen, onOpenChange }: ClientAIChatProps) => {
+export const ClientAIChat = ({ providerId, providerName, isOpen: controlledOpen, onOpenChange, onAvailabilityChange }: ClientAIChatProps) => {
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setIsOpen = useCallback((v: boolean) => {
@@ -46,15 +47,21 @@ export const ClientAIChat = ({ providerId, providerName, isOpen: controlledOpen,
       try {
         const userId = providerId.startsWith("provider_") ? providerId.slice("provider_".length) : providerId;
         const resp = await fetch(`${supabaseUrl}/storage/v1/object/public/pdfs/${userId}.pdf`, { method: 'HEAD' });
-        if (!resp.ok) setIsAiAvailable(false);
+        if (!resp.ok) {
+          setIsAiAvailable(false);
+          onAvailabilityChange?.(false);
+        } else {
+          onAvailabilityChange?.(true);
+        }
       } catch {
         setIsAiAvailable(false);
+        onAvailabilityChange?.(false);
       } finally {
         setIsCheckingPdf(false);
       }
     };
     checkPdf();
-  }, [providerId, supabaseUrl]);
+  }, [providerId, supabaseUrl, onAvailabilityChange]);
 
   // Welcome tooltip timer
   useEffect(() => {
@@ -113,6 +120,9 @@ export const ClientAIChat = ({ providerId, providerName, isOpen: controlledOpen,
     setShowTooltip(false);
     setTooltipDismissed(true);
   };
+
+  // Don't render anything if AI is not available (no PDF uploaded)
+  if (!isCheckingPdf && !isAiAvailable) return null;
 
   return (
     <>

@@ -82,6 +82,7 @@ const ProviderProfilePage = () => {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [chatAvailable, setChatAvailable] = useState<boolean | null>(null);
   
   // Routing state
   const [routesData, setRoutesData] = useState<import('@/types/routing').RouteData[] | null>(null);
@@ -2605,8 +2606,8 @@ const ProviderProfilePage = () => {
               </CardContent>
             </Card>
 
-            {/* AI Chat Banner */}
-            <ClientAIChatBanner onOpenChat={() => setChatOpen(true)} />
+            {/* AI Chat Banner — only if PDF is uploaded */}
+            {chatAvailable && <ClientAIChatBanner onOpenChat={() => setChatOpen(true)} />}
 
             {/* Announcements Card — consistent glass-card style */}
             <Card className="glass-card overflow-hidden animate-fade-in" style={{ animationDelay: '350ms' }}>
@@ -2654,6 +2655,7 @@ const ProviderProfilePage = () => {
         providerName={provider.name}
         isOpen={chatOpen}
         onOpenChange={setChatOpen}
+        onAvailabilityChange={setChatAvailable}
       />
 
       {/* Booking Modal - only for categories that use scheduling */}
