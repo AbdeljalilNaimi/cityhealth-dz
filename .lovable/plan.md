@@ -1,63 +1,36 @@
 
 
-# Redesign Citizen Dashboard + Fix Footer Duplicate Key
+# New "Inscription Professionnel" Section on Homepage
 
-## Summary
-Redesign the citizen dashboard (`PatientDashboard.tsx`) to be more service-oriented with quick access to all platform features, and fix the duplicate key console warning in the Footer.
+## Overview
+Create a new `ProviderRegistrationSection` component that visually presents the provider registration process with a step-by-step preview, placed just before the footer on the main page. This is distinct from the existing `ProviderCTA` (which is a general call-to-action).
 
----
+## What will be built
 
-## Changes
-
-### 1. Redesign Dashboard with Quick Services Grid (src/pages/PatientDashboard.tsx)
-
-**Add a "Quick Services" grid** between the stats cards and the tabs section. This grid provides direct access to all platform services with icons and descriptions:
-
-- **Rechercher un praticien** -> `/search`
-- **Carte Interactive** -> `/map/providers`
-- **Urgences** -> `/emergency`
-- **Assistant Medical IA** -> `/medical-assistant`
-- **Don de Sang** -> `/blood-donation`
-- **Communaute** -> `/community`
-- **Annonces Medicales** -> `/annonces`
-- **Recherche Medicale** -> `/research`
-- **Mon Profil** -> `/profile`
-- **Mes Favoris** -> `/favorites`
-- **Rendez-vous** -> `/citizen/appointments`
-- **Don Gratuit** -> `/citizen/provide`
-
-Each card will be a `Link` with an icon, title, and short description, using a responsive grid (`grid-cols-2 sm:grid-cols-3 lg:grid-cols-4`).
-
-**Simplify the tabs section**: Keep only 3 tabs instead of 5:
-- **A venir** (upcoming appointments) -- most important
-- **Historique** (past appointments)
-- **Notifications**
-
-Move "Mes Avis" and "Articles Sauvegardes" into the quick services grid as links to their respective pages (reviews accessible from profile, articles from /research).
-
-**Improve the header**: Add a greeting based on time of day ("Bonjour/Bonsoir") and show the current date.
-
-### 2. Fix Footer Duplicate Key (src/components/Footer.tsx)
-
-The `professionalsLinks` array has two items with the same `href: '/provider/register'`, and they use `link.href` as the `key` prop. Fix by using `link.label` as key instead, on both `servicesLinks` and `professionalsLinks` loops (lines 96-103 and 113-120).
-
----
+A visually appealing section showing:
+- A headline inviting providers to register
+- A visual 3-step process: (1) Choose your type, (2) Fill your profile, (3) Get verified
+- Icons for each supported provider type (Hospital, Clinic, Doctor, Pharmacy, Lab, Radiology, Dentist, Blood Cabin)
+- A prominent "Start Registration" button linking to `/provider/register`
+- Trilingual support (FR/AR/EN) following existing patterns
+- RTL support for Arabic
 
 ## Technical Details
 
-### PatientDashboard.tsx changes:
-- Add `quickServices` array with `{ label, description, icon, href, color }` objects
-- Render as a grid of `Link` components styled as cards with hover effects
-- Reduce `TabsList` from `grid-cols-5` to `grid-cols-3`
-- Remove `saved-articles` TabsContent and `reviews` tab (move access to profile/research pages)
-- Remove `SavedArticlesTab` component (no longer needed inline)
-- Add time-based greeting: `new Date().getHours() < 18 ? 'Bonjour' : 'Bonsoir'`
+### 1. Create `src/components/homepage/ProviderRegistrationSection.tsx`
+- New component with 3 animated step cards showing the registration flow
+- Provider type icons grid (all 8 types from `PROVIDER_TYPES`)
+- Gradient background matching the site's design language
+- Uses existing UI components (Card, Button, Badge)
+- Trilingual content object (fr/ar/en) like `ProviderCTA`
+- Framer Motion entrance animations
 
-### Footer.tsx changes:
-- Line 97: Change `key={link.href}` to `key={link.label}`
-- Line 113: Change `key={link.href}` to `key={link.label}`
+### 2. Update `src/pages/AntigravityIndex.tsx`
+- Import and add `ProviderRegistrationSection` between the last section (`ProviderCTA`) and `Footer`
+- Wrap in a div with `id="inscription-provider"` for anchor linking
 
-## Files Modified
-- `src/pages/PatientDashboard.tsx` -- redesign dashboard layout with services grid
-- `src/components/Footer.tsx` -- fix duplicate key warning
+### 3. End-to-end verification
+- Navigate to homepage and scroll to the new section
+- Click the registration button to confirm it navigates to `/provider/register`
+- Verify visual rendering and responsiveness
 
