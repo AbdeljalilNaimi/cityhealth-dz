@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ChevronDown, Menu, Shield, Heart, LayoutDashboard, Users, Globe, Check, Stethoscope, Search, Map, Siren, Bot, Droplets, UserPlus, BookOpen, Mail, LogOut, MessageSquare, FileText, ArrowRight, Megaphone, type LucideIcon } from 'lucide-react';
+import { ChevronDown, Menu, Shield, Heart, LayoutDashboard, Users, Globe, Check, Stethoscope, Search, Map, Siren, Bot, Droplets, UserPlus, BookOpen, Mail, LogOut, MessageSquare, FileText, ArrowRight, Megaphone, ArrowLeft, type LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -144,8 +144,19 @@ export const AntigravityHeader = () => {
     >
       <div className="max-w-7xl mx-auto px-8 lg:px-12">
         <div className="flex items-center h-16">
-          {/* Left: Logo */}
-          <div className="flex-shrink-0">
+          {/* Left: Back + Logo */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {location.pathname !== '/' && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate(-1)}
+                className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                aria-label={language === 'ar' ? 'العودة' : language === 'en' ? 'Back' : 'Retour'}
+              >
+                <ArrowLeft className="h-4.5 w-4.5" />
+              </Button>
+            )}
             <Logo size="md" showText={true} showOnlineIndicator={true} />
           </div>
 

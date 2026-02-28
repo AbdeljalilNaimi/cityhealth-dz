@@ -1,5 +1,5 @@
 import { useEffect, useRef, useMemo, useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
@@ -7,12 +7,13 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { MapProvider, useMapContext, MapMode } from '@/contexts/MapContext';
 import { MapControls } from './MapControls';
 import { MapSidebar } from './MapSidebar';
-import { Header } from '@/components/layout/Header';
+import { AntigravityHeader } from '@/components/AntigravityHeader';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { createUserLocationMarker, createRouteStartMarker } from './MapMarkers';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MapPin, Loader2, Navigation, X, Car, Footprints, Route, Clock } from 'lucide-react';
+import { MapPin, Loader2, Navigation, X, Car, Footprints, Route, Clock, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const MapSkeleton = ({ loadingText }: { loadingText: string }) => (
   <div className="absolute inset-0 z-10 bg-muted/50 flex flex-col items-center justify-center gap-4">
@@ -70,6 +71,7 @@ const MapMotherInner = () => {
   const routeLayersRef = useRef<L.Polyline[]>([]);
   const { language, t } = useLanguage();
   const location = useLocation();
+  const nav = useNavigate();
   const userMarkerRef = useRef<L.Marker | null>(null);
   const routeStartMarkerRef = useRef<L.Marker | null>(null);
   const initRef = useRef(false);
@@ -233,16 +235,27 @@ const MapMotherInner = () => {
   
   return (
     <div className={cn("min-h-screen bg-background flex flex-col", isRTL && "rtl")}>
-      <Header />
+      <AntigravityHeader />
       
       <main id="main-content" className={cn(
         "flex-1 flex flex-col",
         isFullscreen ? "fixed inset-0 z-50 pt-0" : "container mx-auto px-4 py-6"
       )}>
         {!isFullscreen && (
-          <div className="mb-4">
-            <h1 className="text-2xl md:text-3xl font-bold">{titleMap[mode]}</h1>
-            <p className="text-muted-foreground">{subtitleMap[mode]}</p>
+          <div className="mb-4 flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => nav(-1)}
+              className="shrink-0"
+              aria-label={language === 'ar' ? 'العودة' : language === 'en' ? 'Back' : 'Retour'}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold">{titleMap[mode]}</h1>
+              <p className="text-muted-foreground">{subtitleMap[mode]}</p>
+            </div>
           </div>
         )}
         
