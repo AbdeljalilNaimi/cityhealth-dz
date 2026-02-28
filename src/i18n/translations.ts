@@ -877,6 +877,72 @@ export interface Translations {
     pinBeforePublish: string;
     officialOnly: string;
   };
+
+  // Citizen Dashboard
+  citizenDashboard: {
+    greeting: string;
+    quickAccess: string;
+    searchProvider: string;
+    searchProviderDesc: string;
+    interactiveMap: string;
+    interactiveMapDesc: string;
+    emergencies: string;
+    emergenciesDesc: string;
+    aiAssistant: string;
+    aiAssistantDesc: string;
+    bloodDonation: string;
+    bloodDonationDesc: string;
+    communityHub: string;
+    communityHubDesc: string;
+    medicalAds: string;
+    medicalAdsDesc: string;
+    medicalResearch: string;
+    medicalResearchDesc: string;
+    myProfile: string;
+    myProfileDesc: string;
+    myFavorites: string;
+    myFavoritesDesc: string;
+    appointments: string;
+    appointmentsDesc: string;
+    freeGiving: string;
+    freeGivingDesc: string;
+    // Tab titles
+    tabNotifications: string;
+    tabUpcoming: string;
+    tabHistory: string;
+    tabOffers: string;
+    tabReviews: string;
+    tabFavorites: string;
+    // Empty states
+    emptyNotifications: string;
+    emptyNotificationsHint: string;
+    emptyUpcoming: string;
+    emptyUpcomingHint: string;
+    emptyHistory: string;
+    emptyOffers: string;
+    emptyOffersHint: string;
+    emptyReviews: string;
+    emptyReviewsHint: string;
+    emptyFavorites: string;
+    emptyFavoritesHint: string;
+    // Actions
+    findDoctor: string;
+    createOffer: string;
+    browseProviders: string;
+    bookAgain: string;
+    viewProvider: string;
+    // Labels
+    allFilter: string;
+    completedFilter: string;
+    cancelledFilter: string;
+    confirmedFilter: string;
+    pendingFilter: string;
+    markAllRead: string;
+    clearNotifs: string;
+    noFilterResults: string;
+    rdvWith: string;
+    statusChange: string;
+  };
 }
 
 export const translations: Record<Language, Translations> = {
@@ -1677,6 +1743,66 @@ export const translations: Record<Language, Translations> = {
       pinBeforePublish: 'Épingler dans Toutes',
       officialOnly: 'Communication officielle',
     },
+    citizenDashboard: {
+      greeting: 'Bonjour',
+      quickAccess: 'Accès rapide aux services',
+      searchProvider: 'Rechercher un praticien',
+      searchProviderDesc: 'Trouvez un médecin ou spécialiste',
+      interactiveMap: 'Carte interactive',
+      interactiveMapDesc: 'Explorez les établissements proches',
+      emergencies: 'Urgences',
+      emergenciesDesc: 'Services d\'urgence 24h/24',
+      aiAssistant: 'Assistant Médical IA',
+      aiAssistantDesc: 'Posez vos questions santé',
+      bloodDonation: 'Don de sang',
+      bloodDonationDesc: 'Répondez aux appels urgents',
+      communityHub: 'Communauté',
+      communityHubDesc: 'Échangez avec d\'autres patients',
+      medicalAds: 'Annonces médicales',
+      medicalAdsDesc: 'Offres et actualités santé',
+      medicalResearch: 'Recherche médicale',
+      medicalResearchDesc: 'Articles et publications',
+      myProfile: 'Mon profil',
+      myProfileDesc: 'Gérez vos informations',
+      myFavorites: 'Mes favoris',
+      myFavoritesDesc: 'Praticiens sauvegardés',
+      appointments: 'Rendez-vous',
+      appointmentsDesc: 'Gérez vos consultations',
+      freeGiving: 'Don gratuit',
+      freeGivingDesc: 'Offrez ou recevez de l\'aide',
+      tabNotifications: 'Notifications',
+      tabUpcoming: 'À venir',
+      tabHistory: 'Historique',
+      tabOffers: 'Mes Annonces',
+      tabReviews: 'Mes Avis',
+      tabFavorites: 'Favoris',
+      emptyNotifications: 'Aucune notification',
+      emptyNotificationsHint: 'Vous serez notifié des changements de vos RDV',
+      emptyUpcoming: 'Aucun rendez-vous à venir',
+      emptyUpcomingHint: 'Vos prochains rendez-vous apparaîtront ici',
+      emptyHistory: 'Aucun historique de rendez-vous',
+      emptyOffers: 'Aucune annonce publiée',
+      emptyOffersHint: 'Proposez de l\'aide à la communauté',
+      emptyReviews: 'Aucun avis donné',
+      emptyReviewsHint: 'Partagez votre expérience avec les praticiens',
+      emptyFavorites: 'Aucun favori enregistré',
+      emptyFavoritesHint: 'Sauvegardez vos praticiens préférés',
+      findDoctor: 'Rechercher un médecin',
+      createOffer: 'Créer une annonce',
+      browseProviders: 'Parcourir les praticiens',
+      bookAgain: 'Prendre RDV',
+      viewProvider: 'Voir le profil',
+      allFilter: 'Tous',
+      completedFilter: 'Terminé',
+      cancelledFilter: 'Annulé',
+      confirmedFilter: 'Confirmé',
+      pendingFilter: 'En attente',
+      markAllRead: 'Tout marquer lu',
+      clearNotifs: 'Effacer',
+      noFilterResults: 'Aucun rendez-vous avec ce filtre',
+      rdvWith: 'RDV avec',
+      statusChange: 'Changement de statut',
+    },
   },
 
   ar: {
@@ -2476,6 +2602,66 @@ export const translations: Record<Language, Translations> = {
       pinBeforePublish: 'تثبيت في الكل',
       officialOnly: 'تواصل رسمي',
     },
+    citizenDashboard: {
+      greeting: 'مرحباً',
+      quickAccess: 'الوصول السريع للخدمات',
+      searchProvider: 'البحث عن طبيب',
+      searchProviderDesc: 'ابحث عن طبيب أو أخصائي',
+      interactiveMap: 'الخريطة التفاعلية',
+      interactiveMapDesc: 'استكشف المؤسسات القريبة',
+      emergencies: 'الطوارئ',
+      emergenciesDesc: 'خدمات الطوارئ 24/7',
+      aiAssistant: 'المساعد الطبي الذكي',
+      aiAssistantDesc: 'اطرح أسئلتك الصحية',
+      bloodDonation: 'التبرع بالدم',
+      bloodDonationDesc: 'استجب للنداءات العاجلة',
+      communityHub: 'المجتمع',
+      communityHubDesc: 'تبادل مع المرضى الآخرين',
+      medicalAds: 'الإعلانات الطبية',
+      medicalAdsDesc: 'عروض وأخبار صحية',
+      medicalResearch: 'البحث الطبي',
+      medicalResearchDesc: 'مقالات ومنشورات',
+      myProfile: 'ملفي الشخصي',
+      myProfileDesc: 'إدارة معلوماتك',
+      myFavorites: 'مفضلاتي',
+      myFavoritesDesc: 'الأطباء المحفوظون',
+      appointments: 'المواعيد',
+      appointmentsDesc: 'إدارة استشاراتك',
+      freeGiving: 'تبرع مجاني',
+      freeGivingDesc: 'قدم أو احصل على مساعدة',
+      tabNotifications: 'الإشعارات',
+      tabUpcoming: 'القادمة',
+      tabHistory: 'السجل',
+      tabOffers: 'إعلاناتي',
+      tabReviews: 'تقييماتي',
+      tabFavorites: 'المفضلة',
+      emptyNotifications: 'لا توجد إشعارات',
+      emptyNotificationsHint: 'سيتم إعلامك بتغييرات مواعيدك',
+      emptyUpcoming: 'لا توجد مواعيد قادمة',
+      emptyUpcomingHint: 'ستظهر مواعيدك القادمة هنا',
+      emptyHistory: 'لا يوجد سجل مواعيد',
+      emptyOffers: 'لا توجد إعلانات منشورة',
+      emptyOffersHint: 'اقترح المساعدة على المجتمع',
+      emptyReviews: 'لا توجد تقييمات',
+      emptyReviewsHint: 'شارك تجربتك مع الأطباء',
+      emptyFavorites: 'لا توجد مفضلات',
+      emptyFavoritesHint: 'احفظ أطباءك المفضلين',
+      findDoctor: 'البحث عن طبيب',
+      createOffer: 'إنشاء إعلان',
+      browseProviders: 'تصفح الأطباء',
+      bookAgain: 'حجز موعد',
+      viewProvider: 'عرض الملف',
+      allFilter: 'الكل',
+      completedFilter: 'مكتمل',
+      cancelledFilter: 'ملغي',
+      confirmedFilter: 'مؤكد',
+      pendingFilter: 'قيد الانتظار',
+      markAllRead: 'قراءة الكل',
+      clearNotifs: 'مسح',
+      noFilterResults: 'لا توجد مواعيد بهذا الفلتر',
+      rdvWith: 'موعد مع',
+      statusChange: 'تغيير الحالة',
+    },
   },
 
   en: {
@@ -3274,6 +3460,66 @@ export const translations: Record<Language, Translations> = {
       dismissAnnouncement: 'Dismiss',
       pinBeforePublish: 'Pin to All',
       officialOnly: 'Official communication',
+    },
+    citizenDashboard: {
+      greeting: 'Hello',
+      quickAccess: 'Quick access to services',
+      searchProvider: 'Find a provider',
+      searchProviderDesc: 'Find a doctor or specialist',
+      interactiveMap: 'Interactive map',
+      interactiveMapDesc: 'Explore nearby facilities',
+      emergencies: 'Emergencies',
+      emergenciesDesc: '24/7 emergency services',
+      aiAssistant: 'AI Medical Assistant',
+      aiAssistantDesc: 'Ask your health questions',
+      bloodDonation: 'Blood donation',
+      bloodDonationDesc: 'Respond to urgent calls',
+      communityHub: 'Community',
+      communityHubDesc: 'Connect with other patients',
+      medicalAds: 'Medical ads',
+      medicalAdsDesc: 'Health offers and news',
+      medicalResearch: 'Medical research',
+      medicalResearchDesc: 'Articles and publications',
+      myProfile: 'My profile',
+      myProfileDesc: 'Manage your information',
+      myFavorites: 'My favorites',
+      myFavoritesDesc: 'Saved providers',
+      appointments: 'Appointments',
+      appointmentsDesc: 'Manage your consultations',
+      freeGiving: 'Free giving',
+      freeGivingDesc: 'Offer or receive help',
+      tabNotifications: 'Notifications',
+      tabUpcoming: 'Upcoming',
+      tabHistory: 'History',
+      tabOffers: 'My Offers',
+      tabReviews: 'My Reviews',
+      tabFavorites: 'Favorites',
+      emptyNotifications: 'No notifications',
+      emptyNotificationsHint: 'You\'ll be notified of appointment changes',
+      emptyUpcoming: 'No upcoming appointments',
+      emptyUpcomingHint: 'Your next appointments will appear here',
+      emptyHistory: 'No appointment history',
+      emptyOffers: 'No offers published',
+      emptyOffersHint: 'Offer help to the community',
+      emptyReviews: 'No reviews given',
+      emptyReviewsHint: 'Share your experience with providers',
+      emptyFavorites: 'No favorites saved',
+      emptyFavoritesHint: 'Save your favorite providers',
+      findDoctor: 'Find a doctor',
+      createOffer: 'Create an offer',
+      browseProviders: 'Browse providers',
+      bookAgain: 'Book again',
+      viewProvider: 'View profile',
+      allFilter: 'All',
+      completedFilter: 'Completed',
+      cancelledFilter: 'Cancelled',
+      confirmedFilter: 'Confirmed',
+      pendingFilter: 'Pending',
+      markAllRead: 'Mark all read',
+      clearNotifs: 'Clear',
+      noFilterResults: 'No appointments with this filter',
+      rdvWith: 'Appointment with',
+      statusChange: 'Status change',
     },
   },
 };
