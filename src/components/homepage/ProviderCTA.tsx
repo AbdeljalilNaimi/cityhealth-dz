@@ -29,27 +29,18 @@ export const ProviderCTA = () => {
     ]
   };
 
+  const providerTypeLabels: Record<string, { fr: string; ar: string; en: string }> = {
+    clinics: { fr: 'Cliniques', ar: 'عيادات', en: 'Clinics' },
+    labs: { fr: 'Laboratoires', ar: 'مختبرات', en: 'Laboratories' },
+    pharmacies: { fr: 'Pharmacies', ar: 'صيدليات', en: 'Pharmacies' },
+    doctors: { fr: 'Médecins', ar: 'أطباء', en: 'Doctors' },
+  };
+
   const providerTypes = [
-    { 
-      icon: Building2, 
-      label: isRTL ? 'عيادات' : 'Cliniques',
-      color: 'from-blue-500 to-blue-600'
-    },
-    { 
-      icon: FlaskConical, 
-      label: isRTL ? 'مختبرات' : 'Laboratoires',
-      color: 'from-purple-500 to-purple-600'
-    },
-    { 
-      icon: Pill, 
-      label: isRTL ? 'صيدليات' : 'Pharmacies',
-      color: 'from-emerald-500 to-emerald-600'
-    },
-    { 
-      icon: Stethoscope, 
-      label: isRTL ? 'أطباء' : 'Médecins',
-      color: 'from-rose-500 to-rose-600'
-    },
+    { icon: Building2, label: providerTypeLabels.clinics[language], color: 'from-blue-500 to-blue-600' },
+    { icon: FlaskConical, label: providerTypeLabels.labs[language], color: 'from-purple-500 to-purple-600' },
+    { icon: Pill, label: providerTypeLabels.pharmacies[language], color: 'from-emerald-500 to-emerald-600' },
+    { icon: Stethoscope, label: providerTypeLabels.doctors[language], color: 'from-rose-500 to-rose-600' },
   ];
 
   const content = {
