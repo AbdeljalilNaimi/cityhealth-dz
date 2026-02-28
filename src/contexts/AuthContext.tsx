@@ -562,10 +562,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       const profileRef = doc(db, 'profiles', user.uid);
-      await updateDoc(profileRef, {
-        ...updates,
-        updated_at: serverTimestamp()
-      });
+      // Filter out undefined values - Firestore rejects them
+      const cleanUpdates: Record<string, any> = { updated_at: serverTimestamp() };
+      for (const [key, value] of Object.entries(updates)) {
+        if (value !== undefined) {
+          cleanUpdates[key] = value;
+        }
+      }
+      await updateDoc(profileRef, cleanUpdates);
 
       // Update Firebase Auth profile if display name changed
       if (updates.full_name) {
