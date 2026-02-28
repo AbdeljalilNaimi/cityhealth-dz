@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Navigation,
   MapPin,
   Star,
@@ -41,6 +42,13 @@ export const MapSidebar = ({
   const { language } = useLanguage();
   const [routingId, setRoutingId] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<ProviderType | null>(null);
+  const [visibleCount, setVisibleCount] = useState(5);
+
+  // Reset visible count when filter changes
+  const toggleTypeFilterWithReset = useCallback((type: ProviderType) => {
+    setTypeFilter(prev => prev === type ? null : type);
+    setVisibleCount(5);
+  }, []);
 
   // Get unique types from providers
   const availableTypes = useMemo(() => {
@@ -54,9 +62,12 @@ export const MapSidebar = ({
     return providers.filter(p => p.type === typeFilter);
   }, [providers, typeFilter]);
 
-  const toggleTypeFilter = useCallback((type: ProviderType) => {
-    setTypeFilter(prev => prev === type ? null : type);
-  }, []);
+  // Visible slice
+  const visibleProviders = useMemo(() => {
+    return filteredProviders.slice(0, visibleCount);
+  }, [filteredProviders, visibleCount]);
+
+  const hasMore = filteredProviders.length > visibleCount;
 
   const t = useMemo(() => ({
     fr: {
@@ -179,7 +190,7 @@ export const MapSidebar = ({
             return (
               <button
                 key={type}
-                onClick={() => toggleTypeFilter(type)}
+                onClick={() => toggleTypeFilterWithReset(type)}
                 className={cn(
                   "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium transition-all border whitespace-nowrap flex-shrink-0",
                   isActive
@@ -222,7 +233,7 @@ export const MapSidebar = ({
           </div>
         ) : (
           <div className="p-2 space-y-1">
-            {filteredProviders.map((provider) => {
+            {visibleProviders.map((provider) => {
               const distance = distances.get(provider.id);
               const isSelected = selectedProvider?.id === provider.id;
               const typeLabel =
@@ -264,7 +275,6 @@ export const MapSidebar = ({
 
                   {/* Info */}
                   <div className="flex-1 min-w-0 space-y-1">
-                    {/* Name + verified */}
                     <div className="flex items-center gap-1">
                       <h4 className="font-medium text-xs leading-snug truncate flex-1 text-foreground">
                         {provider.name}
@@ -274,7 +284,6 @@ export const MapSidebar = ({
                       )}
                     </div>
 
-                    {/* Type + distance + rating inline */}
                     <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
                       <Badge variant="secondary" className="text-[9px] h-4 px-1.5 font-normal rounded-md">
                         {typeLabel}
@@ -297,7 +306,6 @@ export const MapSidebar = ({
                       )}
                     </div>
 
-                    {/* Compact actions */}
                     <div className="flex gap-1 pt-0.5" onClick={(e) => e.stopPropagation()}>
                       <Button
                         size="sm"
@@ -344,6 +352,18 @@ export const MapSidebar = ({
                 </button>
               );
             })}
+
+            {/* Show More button */}
+            {hasMore && (
+              <button
+                onClick={() => setVisibleCount(prev => prev + 5)}
+                className="w-full flex items-center justify-center gap-1.5 py-2 mt-1 rounded-lg text-[11px] font-medium text-primary hover:bg-accent/40 transition-colors border border-border/30"
+              >
+                <ChevronDown className="h-3.5 w-3.5" />
+                {language === 'ar' ? 'عرض المزيد' : language === 'en' ? 'Show more' : 'Voir plus'}
+                <span className="text-muted-foreground">({filteredProviders.length - visibleCount})</span>
+              </button>
+            )}
           </div>
         )}
       </ScrollArea>
