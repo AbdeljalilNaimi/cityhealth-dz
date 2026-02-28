@@ -37,7 +37,7 @@ export default function DeveloperRegisterPage() {
             company: company || null,
             user_type: 'developer',
           },
-          emailRedirectTo: `${window.location.origin}/email-verified`,
+          emailRedirectTo: `${window.location.origin}/developers/login`,
         },
       });
       if (signUpError) throw signUpError;
@@ -60,7 +60,7 @@ export default function DeveloperRegisterPage() {
         type: 'signup',
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/email-verified`,
+          emailRedirectTo: `${window.location.origin}/developers/login`,
         },
       });
       if (resendError) throw resendError;

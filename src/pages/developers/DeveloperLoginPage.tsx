@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
-import { Eye, EyeOff, Code2, Zap, Shield, Terminal } from 'lucide-react';
+import { Eye, EyeOff, Code2, Zap, Shield, Terminal, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,31 @@ export default function DeveloperLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [emailConfirmed, setEmailConfirmed] = useState(false);
+
+  // Handle Supabase email confirmation redirect (token exchange via URL hash)
+  useEffect(() => {
+    const handleAuthCallback = async () => {
+      const hash = window.location.hash;
+      if (hash && (hash.includes('access_token') || hash.includes('type=signup') || hash.includes('type=email'))) {
+        // Supabase client auto-exchanges tokens from the URL hash
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (session && !error) {
+          setEmailConfirmed(true);
+          // Small delay to show confirmation message
+          setTimeout(() => {
+            navigate('/developers/dashboard', { replace: true });
+          }, 1500);
+        } else {
+          // Token exchange happened but session may already be set via onAuthStateChange
+          setEmailConfirmed(true);
+        }
+        // Clean the URL hash
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    };
+    handleAuthCallback();
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,6 +116,13 @@ export default function DeveloperLoginPage() {
             <h1 className="text-2xl font-bold text-foreground tracking-tight">Connexion développeur</h1>
             <p className="text-muted-foreground text-sm mt-1">Accédez à votre tableau de bord API</p>
           </div>
+
+          {emailConfirmed && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20">
+              <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
+              <p className="text-sm text-foreground">Email confirmé avec succès ! Redirection en cours...</p>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
