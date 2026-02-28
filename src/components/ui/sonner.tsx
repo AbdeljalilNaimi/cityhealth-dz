@@ -1,10 +1,10 @@
 import { Toaster as Sonner } from "sonner"
+import { useTheme } from "@/contexts/ThemeContext"
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  // Antigravity design: always light theme, no dark mode
-  const theme = "light";
+  const { theme } = useTheme();
 
   return (
     <Sonner
