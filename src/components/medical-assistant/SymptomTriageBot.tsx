@@ -29,29 +29,29 @@ interface SimplifiedDoctor {
 
 const QUICK_SYMPTOMS = {
   fr: [
-    { icon: HeartPulse, label: "Douleur thoracique", query: "J'ai une douleur dans la poitrine" },
-    { icon: Thermometer, label: "Fièvre", query: "J'ai de la fièvre depuis 2 jours" },
-    { icon: Brain, label: "Maux de tête", query: "J'ai des maux de tête fréquents et intenses" },
-    { icon: Bone, label: "Douleur dos", query: "J'ai mal au dos depuis plusieurs jours" },
-    { icon: Eye, label: "Problème de vue", query: "Ma vue a baissé récemment" },
-    { icon: Baby, label: "Suivi grossesse", query: "Je cherche un suivi de grossesse" },
-  ],
+  { icon: HeartPulse, label: "Douleur thoracique", query: "J'ai une douleur dans la poitrine" },
+  { icon: Thermometer, label: "Fièvre", query: "J'ai de la fièvre depuis 2 jours" },
+  { icon: Brain, label: "Maux de tête", query: "J'ai des maux de tête fréquents et intenses" },
+  { icon: Bone, label: "Douleur dos", query: "J'ai mal au dos depuis plusieurs jours" },
+  { icon: Eye, label: "Problème de vue", query: "Ma vue a baissé récemment" },
+  { icon: Baby, label: "Suivi grossesse", query: "Je cherche un suivi de grossesse" }],
+
   ar: [
-    { icon: HeartPulse, label: "ألم في الصدر", query: "لدي ألم في الصدر" },
-    { icon: Thermometer, label: "حمى", query: "أعاني من الحمى منذ يومين" },
-    { icon: Brain, label: "صداع", query: "أعاني من صداع متكرر وشديد" },
-    { icon: Bone, label: "ألم الظهر", query: "أعاني من ألم في الظهر منذ عدة أيام" },
-    { icon: Eye, label: "مشكلة في النظر", query: "تراجعت رؤيتي مؤخراً" },
-    { icon: Baby, label: "متابعة الحمل", query: "أبحث عن متابعة الحمل" },
-  ],
+  { icon: HeartPulse, label: "ألم في الصدر", query: "لدي ألم في الصدر" },
+  { icon: Thermometer, label: "حمى", query: "أعاني من الحمى منذ يومين" },
+  { icon: Brain, label: "صداع", query: "أعاني من صداع متكرر وشديد" },
+  { icon: Bone, label: "ألم الظهر", query: "أعاني من ألم في الظهر منذ عدة أيام" },
+  { icon: Eye, label: "مشكلة في النظر", query: "تراجعت رؤيتي مؤخراً" },
+  { icon: Baby, label: "متابعة الحمل", query: "أبحث عن متابعة الحمل" }],
+
   en: [
-    { icon: HeartPulse, label: "Chest pain", query: "I have chest pain" },
-    { icon: Thermometer, label: "Fever", query: "I've had a fever for 2 days" },
-    { icon: Brain, label: "Headache", query: "I have frequent and intense headaches" },
-    { icon: Bone, label: "Back pain", query: "I've had back pain for several days" },
-    { icon: Eye, label: "Vision issue", query: "My vision has decreased recently" },
-    { icon: Baby, label: "Pregnancy care", query: "I'm looking for pregnancy follow-up" },
-  ],
+  { icon: HeartPulse, label: "Chest pain", query: "I have chest pain" },
+  { icon: Thermometer, label: "Fever", query: "I've had a fever for 2 days" },
+  { icon: Brain, label: "Headache", query: "I have frequent and intense headaches" },
+  { icon: Bone, label: "Back pain", query: "I've had back pain for several days" },
+  { icon: Eye, label: "Vision issue", query: "My vision has decreased recently" },
+  { icon: Baby, label: "Pregnancy care", query: "I'm looking for pregnancy follow-up" }]
+
 };
 
 export function SymptomTriageBot() {
@@ -66,10 +66,10 @@ export function SymptomTriageBot() {
 
   useEffect(() => {
     setIsLoadingProviders(true);
-    getVerifiedProviders()
-      .then(setProviders)
-      .catch(console.error)
-      .finally(() => setIsLoadingProviders(false));
+    getVerifiedProviders().
+    then(setProviders).
+    catch(console.error).
+    finally(() => setIsLoadingProviders(false));
   }, []);
 
   useEffect(() => {
@@ -79,7 +79,7 @@ export function SymptomTriageBot() {
   }, [messages, isLoading]);
 
   const simplifiedDoctors: SimplifiedDoctor[] = useMemo(() => {
-    return providers.map(p => ({ id: p.id, name: p.name, specialty: p.specialty, city: p.city, type: p.type }));
+    return providers.map((p) => ({ id: p.id, name: p.name, specialty: p.specialty, city: p.city, type: p.type }));
   }, [providers]);
 
   const t = useMemo(() => ({
@@ -90,7 +90,7 @@ export function SymptomTriageBot() {
       noSpecialistSuffix: "inscrit sur la plateforme pour le moment.",
       recommended: "Spécialistes recommandés",
       placeholder: "Décrivez vos symptômes...",
-      helper: "Entrée pour envoyer · Shift+Entrée pour un retour à la ligne",
+      helper: "Entrée pour envoyer · Shift+Entrée pour un retour à la ligne"
     },
     ar: {
       welcome: "مرحباً! 👋 صف أعراضك وسأوجهك إلى الأخصائي المناسب.",
@@ -99,7 +99,7 @@ export function SymptomTriageBot() {
       noSpecialistSuffix: "مسجل على المنصة حالياً.",
       recommended: "الأخصائيون الموصى بهم",
       placeholder: "صف أعراضك...",
-      helper: "Enter للإرسال · Shift+Enter لسطر جديد",
+      helper: "Enter للإرسال · Shift+Enter لسطر جديد"
     },
     en: {
       welcome: "Hello! 👋 Describe your symptoms and I'll guide you to the right specialist.",
@@ -108,11 +108,11 @@ export function SymptomTriageBot() {
       noSpecialistSuffix: "registered on the platform at this time.",
       recommended: "Recommended specialists",
       placeholder: "Describe your symptoms...",
-      helper: "Enter to send · Shift+Enter for new line",
-    },
-  }[language] || {
-    welcome: "", welcomeSub: "", noSpecialist: "", noSpecialistSuffix: "", recommended: "", placeholder: "", helper: "",
-  }), [language]);
+      helper: "Enter to send · Shift+Enter for new line"
+    }
+  })[language] || {
+    welcome: "", welcomeSub: "", noSpecialist: "", noSpecialistSuffix: "", recommended: "", placeholder: "", helper: ""
+  }, [language]);
 
   const quickSymptoms = QUICK_SYMPTOMS[language as keyof typeof QUICK_SYMPTOMS] || QUICK_SYMPTOMS.fr;
   const hasConversation = messages.length > 0;
@@ -121,29 +121,29 @@ export function SymptomTriageBot() {
     const trimmed = (text || input).trim();
     if (!trimmed || isLoading || isLoadingProviders) return;
 
-    setMessages(prev => [...prev, { role: "user", content: trimmed }]);
+    setMessages((prev) => [...prev, { role: "user", content: trimmed }]);
     setInput("");
     setIsLoading(true);
 
     try {
       const { data, error } = await supabase.functions.invoke("symptom-triage", {
-        body: { userSymptoms: trimmed, availableDoctors: simplifiedDoctors, language },
+        body: { userSymptoms: trimmed, availableDoctors: simplifiedDoctors, language }
       });
 
       if (error) {
-        setMessages(prev => [...prev, { role: "assistant", content: error.message || "Une erreur est survenue." }]);
+        setMessages((prev) => [...prev, { role: "assistant", content: error.message || "Une erreur est survenue." }]);
         setIsLoading(false);
         return;
       }
-      setMessages(prev => [...prev, {
+      setMessages((prev) => [...prev, {
         role: "assistant",
         content: data.analysis || "Analyse non disponible.",
         doctorIds: data.doctorIds || [],
         recommendedSpecialty: data.recommendedSpecialty || "",
-        urgencyLevel: data.urgencyLevel || undefined,
+        urgencyLevel: data.urgencyLevel || undefined
       }]);
     } catch {
-      setMessages(prev => [...prev, { role: "assistant", content: "Erreur de connexion. Veuillez réessayer." }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: "Erreur de connexion. Veuillez réessayer." }]);
     } finally {
       setIsLoading(false);
     }
@@ -156,7 +156,7 @@ export function SymptomTriageBot() {
     }
   };
 
-  const getDoctorById = (id: string) => providers.find(p => p.id === id);
+  const getDoctorById = (id: string) => providers.find((p) => p.id === id);
 
   // Auto-resize textarea
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -172,99 +172,99 @@ export function SymptomTriageBot() {
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         <div className="px-4 sm:px-6 py-6 space-y-5">
           {/* Welcome state */}
-          {!hasConversation && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="flex flex-col items-center justify-center py-8 sm:py-16"
-            >
+          {!hasConversation &&
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col items-center justify-center py-8 sm:py-16">
+
               {/* Big icon */}
-              <motion.div
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="w-20 h-20 rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shadow-xl shadow-teal-500/20 mb-6"
-              >
-                <Stethoscope className="w-10 h-10 text-white" />
-              </motion.div>
+              
+
+
+
+
+
+
 
               <h2 className="text-xl sm:text-2xl font-bold text-center mb-2">{t.welcome}</h2>
               <p className="text-sm text-muted-foreground text-center mb-8">{t.welcomeSub}</p>
 
               {/* Quick symptom chips */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 w-full max-w-lg">
-                {quickSymptoms.map((symptom, i) => (
-                  <motion.button
-                    key={symptom.label}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 + i * 0.08 }}
-                    whileHover={{ scale: 1.03, y: -2 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => sendMessage(symptom.query)}
-                    className={cn(
-                      "flex items-center gap-2.5 px-3.5 py-3 rounded-xl text-sm text-left",
-                      "bg-card border border-border/60 hover:border-teal-500/40",
-                      "hover:bg-teal-500/5 hover:shadow-md transition-all duration-200",
-                      "group cursor-pointer"
-                    )}
-                  >
+                {quickSymptoms.map((symptom, i) =>
+              <motion.button
+                key={symptom.label}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + i * 0.08 }}
+                whileHover={{ scale: 1.03, y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => sendMessage(symptom.query)}
+                className={cn(
+                  "flex items-center gap-2.5 px-3.5 py-3 rounded-xl text-sm text-left",
+                  "bg-card border border-border/60 hover:border-teal-500/40",
+                  "hover:bg-teal-500/5 hover:shadow-md transition-all duration-200",
+                  "group cursor-pointer"
+                )}>
+
                     <div className="w-8 h-8 rounded-lg bg-teal-500/10 flex items-center justify-center shrink-0 group-hover:bg-teal-500/20 transition-colors">
                       <symptom.icon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                     </div>
                     <span className="font-medium text-foreground/80 group-hover:text-foreground transition-colors">{symptom.label}</span>
                   </motion.button>
-                ))}
+              )}
               </div>
             </motion.div>
-          )}
+          }
 
           {/* Chat messages */}
           <AnimatePresence mode="popLayout">
-            {messages.map((msg, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className={cn("flex gap-3", msg.role === "user" ? "justify-end" : "justify-start")}
-              >
+            {messages.map((msg, i) =>
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className={cn("flex gap-3", msg.role === "user" ? "justify-end" : "justify-start")}>
+
                 {/* Bot avatar */}
-                {msg.role === "assistant" && (
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shrink-0 mt-1 shadow-sm">
+                {msg.role === "assistant" &&
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shrink-0 mt-1 shadow-sm">
                     <Bot className="w-4 h-4 text-white" />
                   </div>
-                )}
+              }
 
                 <div className={cn("max-w-[85%] sm:max-w-[75%] space-y-2.5", msg.role === "user" ? "order-1" : "")}>
                   {/* Message bubble */}
                   <div className={cn(
-                    "rounded-2xl px-4 py-3 text-sm leading-relaxed",
-                    msg.role === "user"
-                      ? "bg-gradient-to-br from-teal-600 to-cyan-600 text-white rounded-br-md shadow-sm"
-                      : "bg-muted/60 border border-border/30 rounded-bl-md"
-                  )}>
-                    {msg.role === "assistant" ? (
-                      <div className="prose prose-sm dark:prose-invert max-w-none prose-p:mb-2 prose-p:last:mb-0 prose-ul:mb-2 prose-li:mb-0.5">
+                  "rounded-2xl px-4 py-3 text-sm leading-relaxed",
+                  msg.role === "user" ?
+                  "bg-gradient-to-br from-teal-600 to-cyan-600 text-white rounded-br-md shadow-sm" :
+                  "bg-muted/60 border border-border/30 rounded-bl-md"
+                )}>
+                    {msg.role === "assistant" ?
+                  <div className="prose prose-sm dark:prose-invert max-w-none prose-p:mb-2 prose-p:last:mb-0 prose-ul:mb-2 prose-li:mb-0.5">
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
-                      </div>
-                    ) : (
-                      <p className="whitespace-pre-wrap">{msg.content}</p>
-                    )}
+                      </div> :
+
+                  <p className="whitespace-pre-wrap">{msg.content}</p>
+                  }
                   </div>
 
                   {/* Urgency badge */}
-                  {msg.role === "assistant" && msg.urgencyLevel && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold w-fit",
-                        msg.urgencyLevel === "high" && "bg-destructive/10 text-destructive border border-destructive/20",
-                        msg.urgencyLevel === "medium" && "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20",
-                        msg.urgencyLevel === "low" && "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20",
-                      )}
-                    >
+                  {msg.role === "assistant" && msg.urgencyLevel &&
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold w-fit",
+                    msg.urgencyLevel === "high" && "bg-destructive/10 text-destructive border border-destructive/20",
+                    msg.urgencyLevel === "medium" && "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20",
+                    msg.urgencyLevel === "low" && "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20"
+                  )}>
+
                       {msg.urgencyLevel === "high" && <ShieldAlert className="w-3.5 h-3.5" />}
                       {msg.urgencyLevel === "medium" && <Shield className="w-3.5 h-3.5" />}
                       {msg.urgencyLevel === "low" && <ShieldCheck className="w-3.5 h-3.5" />}
@@ -272,57 +272,57 @@ export function SymptomTriageBot() {
                       {msg.urgencyLevel === "medium" && (language === "ar" ? "متوسط" : language === "en" ? "Moderate" : "Modéré")}
                       {msg.urgencyLevel === "low" && (language === "ar" ? "منخفض" : language === "en" ? "Low urgency" : "Faible")}
                     </motion.div>
-                  )}
+                }
 
                   {/* Doctor cards */}
-                  {msg.role === "assistant" && msg.doctorIds && msg.doctorIds.length > 0 && (
-                    <div className="flex flex-col gap-2.5 mt-2">
+                  {msg.role === "assistant" && msg.doctorIds && msg.doctorIds.length > 0 &&
+                <div className="flex flex-col gap-2.5 mt-2">
                       <p className="text-xs font-semibold text-muted-foreground tracking-wide uppercase px-1">{t.recommended}</p>
                       {msg.doctorIds.map((id, idx) => {
-                        const doc = getDoctorById(id);
-                        if (!doc) return null;
-                        return (
-                          <motion.div
-                            key={id}
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.1 }}
-                          >
+                    const doc = getDoctorById(id);
+                    if (!doc) return null;
+                    return (
+                      <motion.div
+                        key={id}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.1 }}>
+
                             <DoctorProfileCard
-                              id={doc.id}
-                              name={doc.name}
-                              specialty={doc.specialty}
-                              city={doc.city}
-                              language={language}
-                              image={doc.image}
-                            />
-                          </motion.div>
-                        );
-                      })}
+                          id={doc.id}
+                          name={doc.name}
+                          specialty={doc.specialty}
+                          city={doc.city}
+                          language={language}
+                          image={doc.image} />
+
+                          </motion.div>);
+
+                  })}
                     </div>
-                  )}
+                }
 
                   {/* No specialist */}
-                  {msg.role === "assistant" && msg.doctorIds && msg.doctorIds.length === 0 && msg.recommendedSpecialty && (
-                    <div className="rounded-xl border border-dashed border-amber-500/30 bg-amber-500/5 p-3 text-xs text-muted-foreground">
+                  {msg.role === "assistant" && msg.doctorIds && msg.doctorIds.length === 0 && msg.recommendedSpecialty &&
+                <div className="rounded-xl border border-dashed border-amber-500/30 bg-amber-500/5 p-3 text-xs text-muted-foreground">
                       {t.noSpecialist} <strong>{msg.recommendedSpecialty}</strong> {t.noSpecialistSuffix}
                     </div>
-                  )}
+                }
                 </div>
 
                 {/* User avatar */}
-                {msg.role === "user" && (
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/15 flex items-center justify-center shrink-0 mt-1 order-2">
+                {msg.role === "user" &&
+              <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/15 flex items-center justify-center shrink-0 mt-1 order-2">
                     <User className="w-4 h-4 text-primary" />
                   </div>
-                )}
+              }
               </motion.div>
-            ))}
+            )}
           </AnimatePresence>
 
           {/* Loading indicator */}
-          {isLoading && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-3">
+          {isLoading &&
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shrink-0 shadow-sm">
                 <Bot className="w-4 h-4 text-white" />
               </div>
@@ -339,7 +339,7 @@ export function SymptomTriageBot() {
                 </div>
               </div>
             </motion.div>
-          )}
+          }
         </div>
       </div>
 
@@ -359,8 +359,8 @@ export function SymptomTriageBot() {
                 "placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500/40",
                 "transition-all duration-200 max-h-[120px]"
               )}
-              disabled={isLoading || isLoadingProviders}
-            />
+              disabled={isLoading || isLoadingProviders} />
+
           </div>
           <Button
             onClick={() => sendMessage()}
@@ -368,20 +368,20 @@ export function SymptomTriageBot() {
             size="icon"
             className={cn(
               "shrink-0 rounded-xl h-11 w-11 transition-all duration-200",
-              input.trim()
-                ? "bg-gradient-to-br from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 shadow-lg shadow-teal-500/25"
-                : "bg-muted text-muted-foreground shadow-none"
-            )}
-          >
+              input.trim() ?
+              "bg-gradient-to-br from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 shadow-lg shadow-teal-500/25" :
+              "bg-muted text-muted-foreground shadow-none"
+            )}>
+
             {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </Button>
         </div>
         <p className="text-[10px] text-center text-muted-foreground/40 mt-1.5">
-          {isLoadingProviders
-            ? (language === "ar" ? "جاري تحميل الأطباء..." : language === "en" ? "Loading providers..." : "Chargement des prestataires...")
-            : t.helper}
+          {isLoadingProviders ?
+          language === "ar" ? "جاري تحميل الأطباء..." : language === "en" ? "Loading providers..." : "Chargement des prestataires..." :
+          t.helper}
         </p>
       </div>
-    </div>
-  );
+    </div>);
+
 }
