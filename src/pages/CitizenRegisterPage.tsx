@@ -165,17 +165,24 @@ const CitizenRegisterPage = () => {
                 try {
                   const auth = getAuth();
                   let user = auth.currentUser;
+                  let signedInTemporarily = false;
+
                   if (!user) {
                     const cred = await firebaseSignIn(auth, registeredEmail, password);
                     user = cred.user;
+                    signedInTemporarily = true;
+                  }
+
+                  if (!user) throw new Error('Utilisateur introuvable pour renvoi email');
+
+                  await sendEmailVerification(user);
+
+                  if (signedInTemporarily) {
                     await auth.signOut();
                   }
-                  await sendEmailVerification(user, {
-                    url: `${window.location.origin}/citizen/dashboard`,
-                    handleCodeInApp: false,
-                  });
+
                   toast.success('Email de vérification renvoyé !');
-                  setResendCooldown(60);
+                  setResendCooldown(120);
                   const interval = setInterval(() => {
                     setResendCooldown(prev => {
                       if (prev <= 1) { clearInterval(interval); return 0; }
@@ -184,7 +191,11 @@ const CitizenRegisterPage = () => {
                   }, 1000);
                 } catch (err: any) {
                   console.error('Resend error:', err);
-                  toast.error("Impossible de renvoyer l'email. Réessayez plus tard.");
+                  if (err?.code === 'auth/too-many-requests') {
+                    toast.error("Trop de tentatives. Réessayez dans quelques minutes.");
+                  } else {
+                    toast.error("Impossible de renvoyer l'email. Réessayez plus tard.");
+                  }
                 } finally {
                   setResending(false);
                 }

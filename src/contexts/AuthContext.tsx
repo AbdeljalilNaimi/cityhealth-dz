@@ -424,18 +424,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         displayName: fullName
       });
 
-      // Send email verification with redirect to dashboard after verification
+      // Send email verification (without continue URL to avoid unauthorized-domain failures)
       try {
-        await sendEmailVerification(newUser, {
-          url: `${window.location.origin}/citizen/dashboard`,
-          handleCodeInApp: false,
-        });
-      } catch {
-        // If continueUrl domain is not allowlisted, retry without it
-        try {
-          await sendEmailVerification(newUser);
-        } catch (retryError) {
-          console.warn('Email verification send failed:', retryError);
+        await sendEmailVerification(newUser);
+      } catch (verificationError: any) {
+        console.warn('Email verification send failed:', verificationError);
+        if (verificationError?.code === 'auth/too-many-requests') {
+          toast.error("Compte créé, mais l'email de vérification est temporairement bloqué. Réessayez dans quelques minutes.");
         }
       }
 
