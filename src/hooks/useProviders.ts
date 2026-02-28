@@ -188,10 +188,14 @@ export function useUpdateProvider() {
       updates: Partial<CityHealthProvider>;
     }) => updateProvider(providerId, updates),
     onSuccess: (_, { providerId }) => {
-      // Invalidate specific provider and all lists
+      // Invalidate specific provider, user-based queries, and all lists
       queryClient.invalidateQueries({ queryKey: providerKeys.detail(providerId) });
       queryClient.invalidateQueries({ queryKey: providerKeys.verified() });
       queryClient.invalidateQueries({ queryKey: providerKeys.all });
+      // Also invalidate byUser queries so the dashboard refreshes
+      queryClient.invalidateQueries({ predicate: (query) => 
+        query.queryKey[0] === 'providers' && query.queryKey[1] === 'user'
+      });
     },
   });
 }

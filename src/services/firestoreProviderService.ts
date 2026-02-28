@@ -230,6 +230,9 @@ function docToProvider(docData: DocumentData, id: string): CityHealthProvider {
     verificationRevokedAt: merged.verificationRevokedAt as Date | string | undefined,
     verificationRevokedReason: merged.verificationRevokedReason as string | undefined,
     
+    // ========== PLAN TYPE ==========
+    planType: (merged.planType as 'basic' | 'standard' | 'premium') || undefined,
+    
     // ========== ACCOUNT SETTINGS ==========
     settings: merged.settings as CityHealthProvider['settings'] || undefined,
     
