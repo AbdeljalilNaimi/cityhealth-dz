@@ -61,7 +61,7 @@ const ServiceCardItem = ({ service, language }: { service: ServiceCard; language
         <service.icon className={`w-12 h-12 ${service.color} group-hover:scale-110 transition-transform duration-300`} strokeWidth={1.5} />
       </div>
       {/* Label + Description */}
-      <div className="px-3 py-2.5 border-t border-border/30 bg-card text-left">
+      <div className="px-3 py-2.5 border-t border-border/30 bg-card text-start">
         <span className="font-semibold text-sm text-foreground leading-tight truncate block">{title}</span>
         <span className="text-xs text-muted-foreground leading-snug line-clamp-2 mt-0.5 block">{description}</span>
       </div>
@@ -72,11 +72,14 @@ const ServiceCardItem = ({ service, language }: { service: ServiceCard; language
 /* ─── Marquee row ─── */
 const MarqueeRow = ({ services, reverse = false, language }: { services: ServiceCard[]; reverse?: boolean; language: 'fr' | 'ar' | 'en' }) => {
   const items = [...services, ...services, ...services, ...services];
+  const isRTL = language === 'ar';
+  // In RTL, swap the animation direction so scroll feels natural
+  const useReverse = isRTL ? !reverse : reverse;
 
   return (
-    <div className="overflow-hidden w-full group/marquee">
+    <div className="overflow-hidden w-full group/marquee" dir="ltr">
       <div
-        className={`flex w-max ${reverse ? 'animate-marquee-reverse' : 'animate-marquee'} group-hover/marquee:[animation-play-state:paused]`}
+        className={`flex w-max ${useReverse ? 'animate-marquee-reverse' : 'animate-marquee'} group-hover/marquee:[animation-play-state:paused]`}
       >
         {items.map((service, i) => (
           <ServiceCardItem key={`${service.route}-${i}`} service={service} language={language} />
