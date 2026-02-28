@@ -75,3 +75,23 @@ export function useSupabaseReviews(providerId: string | undefined) {
 
   return { reviews, stats, isLoading, submitReview };
 }
+
+// Hook to fetch all reviews by a patient (citizen)
+export function usePatientSupabaseReviews(patientId: string | undefined) {
+  const { data: reviews = [], isLoading } = useQuery({
+    queryKey: ['patient-reviews', patientId],
+    queryFn: async () => {
+      if (!patientId) return [];
+      const { data, error } = await supabase
+        .from('provider_reviews')
+        .select('*')
+        .eq('patient_id', patientId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as SupabaseReview[];
+    },
+    enabled: !!patientId,
+  });
+
+  return { data: reviews, isLoading };
+}

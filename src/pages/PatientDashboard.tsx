@@ -19,7 +19,7 @@ import { useProfileScore } from '@/hooks/useProfileScore';
 import { ProfileCompletionWidget } from '@/components/patient/ProfileCompletionWidget';
 import { getEmergencyCard, EmergencyHealthCard } from '@/services/emergencyCardService';
 import { useRealtimePatientAppointments, useCancelAppointment } from '@/hooks/useAppointments';
-import { usePatientReviews } from '@/hooks/useReviews';
+import { usePatientSupabaseReviews } from '@/hooks/useSupabaseReviews';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useMyOffers } from '@/hooks/useProvide';
 import { PostAppointmentReviewWidget } from '@/components/appointments/PostAppointmentReviewWidget';
@@ -53,7 +53,7 @@ const PatientDashboard = () => {
   const scoreData = useProfileScore(profile, emergencyCard);
   const { appointments, loading: appointmentsLoading } = useRealtimePatientAppointments();
   const { mutate: cancelAppointmentMutation, isPending: isCancelling } = useCancelAppointment();
-  const { data: reviews = [], isLoading: reviewsLoading } = usePatientReviews(user?.uid);
+  const { data: reviews = [], isLoading: reviewsLoading } = usePatientSupabaseReviews(user?.uid);
   const { data: favoriteIds = [] } = useFavorites();
   const { offers, loading: offersLoading } = useMyOffers();
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearAll } = useAppointmentNotifications(appointments);
@@ -521,7 +521,7 @@ const PatientDashboard = () => {
                   ctaHref="/search"
                 />
               ) : (
-                reviews.map((review) => (
+              reviews.map((review) => (
                   <Card key={review.id} className="hover:shadow-sm transition-all">
                     <CardContent className="p-4 sm:p-5">
                       <div className="flex items-start justify-between gap-3">
@@ -531,10 +531,10 @@ const PatientDashboard = () => {
                           </div>
                           <div className="min-w-0">
                             <Link
-                              to={`/provider/${review.providerId.replace(/^provider_/, '')}`}
+                              to={`/provider/${review.provider_id}`}
                               className="font-semibold text-sm hover:text-primary transition-colors inline-flex items-center gap-1.5"
                             >
-                              {t('appointments', 'reviewFor')} {review.providerId.replace(/^provider_/, '').replace(/_/g, ' ')}
+                              {t('appointments', 'reviewFor')} {review.provider_id.replace(/_/g, ' ')}
                               <ExternalLink className="h-3 w-3 shrink-0" />
                             </Link>
                             <div className="flex items-center gap-1 mt-1">
@@ -545,24 +545,12 @@ const PatientDashboard = () => {
                                 />
                               ))}
                               <span className="text-xs text-muted-foreground ml-2">
-                                {format(new Date(review.createdAt), 'PP', { locale: locales[language] })}
+                                {format(new Date(review.created_at), 'PP', { locale: locales[language] })}
                               </span>
                             </div>
                             {review.comment && <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">{review.comment}</p>}
-                            {review.providerResponse && (
-                              <div className="mt-2 p-2 rounded-lg bg-muted/50 border border-border/50">
-                                <p className="text-xs font-medium text-foreground flex items-center gap-1">
-                                  <MessageSquare className="h-3 w-3" />
-                                  {t('appointments', 'providerResponse')}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-0.5">{review.providerResponse.text}</p>
-                              </div>
-                            )}
                           </div>
                         </div>
-                        <Badge variant="outline" className="shrink-0 text-xs">
-                          {review.helpfulVotes} 👍
-                        </Badge>
                       </div>
                     </CardContent>
                   </Card>
