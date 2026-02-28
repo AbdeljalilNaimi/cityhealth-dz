@@ -6,6 +6,7 @@ import { ServicesGrid } from '@/components/homepage/ServicesGrid';
 import { FeaturedProviders } from '@/components/homepage/FeaturedProviders';
 import { TestimonialsSlider } from '@/components/homepage/TestimonialsSlider';
 import { ProviderCTA } from '@/components/homepage/ProviderCTA';
+import { ProviderRegistrationSection } from '@/components/homepage/ProviderRegistrationSection';
 import { EmergencyBanner } from '@/components/homepage/EmergencyBanner';
 import { AnimatedMapSection } from '@/components/homepage/AnimatedMapSection';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -49,6 +50,10 @@ const AntigravityIndex = () => {
         <div id="publicite">
           <ProviderCTA />
         </div>
+      </div>
+
+      <div id="inscription-provider">
+        <ProviderRegistrationSection />
       </div>
 
       <Footer />
