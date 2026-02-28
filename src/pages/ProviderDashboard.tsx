@@ -18,7 +18,7 @@ import {
   Globe, Users, Search, RefreshCw, Save, LayoutDashboard,
   Image, Gift, FileText, Droplet, Bell, ClipboardList,
   Home as HomeIcon, Upload, Pill, ToggleLeft, Package, Truck, ShoppingBag,
-  Ambulance, Building2, Baby, Scissors, FlaskConical, GraduationCap, ScanLine, BookOpen
+  Ambulance, Building2, Baby, Scissors, FlaskConical, GraduationCap, ScanLine, BookOpen, ArrowLeft
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { toast as sonnerToast } from 'sonner';
@@ -710,6 +710,17 @@ export default function ProviderDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+        {/* Back button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(-1)}
+          className="gap-2 text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Retour
+        </Button>
+
         {/* Verification Approval/Rejection Banner */}
         {providerData?.id && (
           <VerificationApprovalBanner providerId={providerData.id} />
