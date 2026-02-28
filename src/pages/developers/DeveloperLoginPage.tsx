@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Eye, EyeOff, Code2, Zap, Shield, Terminal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,20 +8,31 @@ import { Label } from '@/components/ui/label';
 
 export default function DeveloperLoginPage() {
   const navigate = useNavigate();
-  const { loginAsCitizen, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
     try {
-      await loginAsCitizen(email, password);
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        if (signInError.message?.includes('Email not confirmed')) {
+          setError('Veuillez confirmer votre email avant de vous connecter.');
+        } else {
+          setError('Email ou mot de passe incorrect.');
+        }
+        return;
+      }
       navigate('/developers/dashboard');
     } catch {
       setError('Email ou mot de passe incorrect.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
