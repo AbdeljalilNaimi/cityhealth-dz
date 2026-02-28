@@ -89,6 +89,7 @@ export const AntigravityHeader = () => {
   const providerItems: MegaMenuItem[] = [
     { label: t('footer', 'becomePartner'), description: 'Inscrivez votre établissement', href: '/provider/register', icon: UserPlus },
     { label: t('footer', 'providerDashboard'), description: 'Gérez votre profil et rendez-vous', href: '/provider/dashboard', icon: LayoutDashboard },
+    { label: language === 'ar' ? 'الأسعار' : language === 'en' ? 'Pricing' : 'Tarifs', description: language === 'ar' ? 'اكتشف عروضنا' : language === 'en' ? 'Discover our plans' : 'Découvrez nos forfaits', href: '/#pricing', icon: FileText },
   ];
 
   const resourceItems: MegaMenuItem[] = [
@@ -110,20 +111,40 @@ export const AntigravityHeader = () => {
   const currentLang = languages.find((l) => l.code === language) || languages[0];
 
   // Mega-menu item renderer
-  const MegaItem = ({ item }: { item: MegaMenuItem }) => (
-    <Link
-      to={item.href}
-      className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/60 transition-colors group/item"
-    >
-      <div className="mt-0.5 flex-shrink-0 w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center group-hover/item:bg-primary/15 transition-colors">
-        <item.icon className="h-4.5 w-4.5 text-primary" />
-      </div>
-      <div>
-        <p className="text-sm font-semibold text-foreground">{item.label}</p>
-        <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{item.description}</p>
-      </div>
-    </Link>
-  );
+  const MegaItem = ({ item }: { item: MegaMenuItem }) => {
+    const handleClick = (e: React.MouseEvent) => {
+      if (item.href.includes('#')) {
+        e.preventDefault();
+        const [path, hash] = item.href.split('#');
+        setActiveMenu(null);
+        setIsMobileMenuOpen(false);
+        if (location.pathname === (path || '/')) {
+          document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          navigate(path || '/');
+          setTimeout(() => {
+            document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' });
+          }, 500);
+        }
+      }
+    };
+
+    return (
+      <Link
+        to={item.href}
+        onClick={handleClick}
+        className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/60 transition-colors group/item"
+      >
+        <div className="mt-0.5 flex-shrink-0 w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center group-hover/item:bg-primary/15 transition-colors">
+          <item.icon className="h-4.5 w-4.5 text-primary" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-foreground">{item.label}</p>
+          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{item.description}</p>
+        </div>
+      </Link>
+    );
+  };
 
   // Nav trigger button
   const NavTrigger = ({ label, menuKey }: { label: string; menuKey: MenuKey }) => (
