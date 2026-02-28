@@ -5,8 +5,12 @@ import { auth, db } from '@/lib/firebase';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, CheckCircle, XCircle, Info, Loader2 } from 'lucide-react';
+import { AlertTriangle, CheckCircle, XCircle, Info, Loader2, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { getAllProviders } from '@/services/firestoreProviderService';
+import { CityHealthProvider } from '@/data/providers';
 
 interface LogEntry {
   email: string;
@@ -463,8 +467,97 @@ export default function DevToolsPage() {
     toast.success('Seeding terminé !');
   };
 
+  const [syncSecret, setSyncSecret] = useState('');
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<{ upserted: number; removed: number; errors: string[] } | null>(null);
+
+  const mapToPublicFields = (p: CityHealthProvider) => ({
+    id: p.id,
+    name: p.name,
+    type: p.type,
+    specialty: p.specialty || null,
+    address: p.address || null,
+    city: p.city || null,
+    area: p.area || null,
+    phone: p.phone || null,
+    lat: p.lat || null,
+    lng: p.lng || null,
+    is_verified: true,
+    is_24h: Boolean(p.is24_7 || p.emergency),
+    is_open: p.isOpen !== false,
+    rating: p.rating || 0,
+    reviews_count: p.reviewsCount || 0,
+    description: p.description || null,
+    languages: p.languages || null,
+    image_url: p.image || null,
+    night_duty: false,
+  });
+
+  const syncToApi = async () => {
+    if (!syncSecret.trim()) {
+      toast.error('Veuillez entrer le secret de synchronisation.');
+      return;
+    }
+
+    setSyncing(true);
+    setSyncResult(null);
+
+    try {
+      // Fetch all providers from Firestore
+      const allProviders = await getAllProviders();
+      
+      // Filter verified only
+      const verified = allProviders.filter(
+        p => p.verificationStatus === 'verified' && p.isPublic
+      );
+
+      if (verified.length === 0) {
+        toast.info('Aucun prestataire vérifié trouvé à synchroniser.');
+        setSyncing(false);
+        return;
+      }
+
+      // Map to safe public fields
+      const publicData = verified.map(mapToPublicFields);
+
+      // POST to sync-provider edge function
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/sync-provider`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-sync-secret': syncSecret,
+        },
+        body: JSON.stringify(publicData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        toast.error(`Erreur: ${result.error || 'Échec de synchronisation'}`);
+        setSyncResult({ upserted: 0, removed: 0, errors: [result.error] });
+      } else {
+        const { upserted, removed, errors } = result.data;
+        setSyncResult({
+          upserted: upserted?.length || 0,
+          removed: removed?.length || 0,
+          errors: errors || [],
+        });
+        toast.success(
+          `✅ ${upserted?.length || 0} prestataire(s) synchronisé(s) vers l'API publique.`
+        );
+      }
+    } catch (err: any) {
+      toast.error(`Erreur réseau: ${err.message}`);
+      setSyncResult({ upserted: 0, removed: 0, errors: [err.message] });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background p-6 md:p-12 max-w-2xl mx-auto">
+    <div className="min-h-screen bg-background p-6 md:p-12 max-w-2xl mx-auto space-y-6">
+      {/* Existing Dev Tools Card */}
       <Card className="border-destructive/30">
         <CardHeader>
           <div className="flex items-center gap-2 mb-2">
@@ -491,6 +584,62 @@ export default function DevToolsPage() {
                   <span className="text-muted-foreground">— {log.message}</span>
                 </div>
               ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* API Sync Card */}
+      <Card className="border-primary/30">
+        <CardHeader>
+          <div className="flex items-center gap-2 mb-2">
+            <RefreshCw className="h-5 w-5 text-primary" />
+            <Badge variant="outline" className="border-primary text-primary">API</Badge>
+          </div>
+          <CardTitle className="text-xl">Synchronisation API Publique</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Synchronise tous les prestataires vérifiés de Firestore vers la table <code className="text-xs bg-muted px-1 rounded">providers_public</code> pour l'API publique.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="sync-secret">Secret de synchronisation</Label>
+            <Input
+              id="sync-secret"
+              type="password"
+              placeholder="Entrez le x-sync-secret..."
+              value={syncSecret}
+              onChange={(e) => setSyncSecret(e.target.value)}
+            />
+          </div>
+
+          <Button onClick={syncToApi} disabled={syncing || !syncSecret.trim()} className="w-full">
+            {syncing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+            {syncing ? 'Synchronisation en cours...' : 'Synchroniser tous les prestataires vers l\'API'}
+          </Button>
+
+          {syncResult && (
+            <div className="rounded-md border p-3 bg-muted/30 space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <span><strong>{syncResult.upserted}</strong> prestataire(s) synchronisé(s)</span>
+              </div>
+              {syncResult.removed > 0 && (
+                <div className="flex items-center gap-2 text-sm">
+                  <XCircle className="h-4 w-4 text-destructive" />
+                  <span><strong>{syncResult.removed}</strong> retiré(s) (non vérifiés)</span>
+                </div>
+              )}
+              {syncResult.errors.length > 0 && (
+                <div className="space-y-1">
+                  {syncResult.errors.map((err, i) => (
+                    <div key={i} className="flex items-center gap-2 text-sm text-destructive">
+                      <XCircle className="h-3 w-3" />
+                      <span className="text-xs">{err}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </CardContent>
