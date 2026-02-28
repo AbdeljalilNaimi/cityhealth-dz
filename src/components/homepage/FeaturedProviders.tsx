@@ -1,14 +1,14 @@
 import { Link } from 'react-router-dom';
-import { Star, ArrowRight, ArrowUpRight, Shield } from 'lucide-react';
+import { Star, ArrowRight, MapPin, Shield, Stethoscope, Building2, Pill, FlaskConical, Hospital, Baby, Droplets, RadioTower, Wrench } from 'lucide-react';
 import { ProviderAvatar } from '@/components/ui/ProviderAvatar';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useMemo } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { useVerifiedProviders } from '@/hooks/useProviders';
 import { isProviderVerified } from '@/utils/verificationUtils';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { cn } from '@/lib/utils';
 
 interface DisplayProvider {
   id: string;
@@ -19,53 +19,51 @@ interface DisplayProvider {
   reviewCount: number;
   isVerified: boolean;
   image: string;
+  city?: string;
 }
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.1,
-    },
-  },
+const typeIcons: Record<string, typeof Stethoscope> = {
+  doctor: Stethoscope,
+  clinic: Building2,
+  pharmacy: Pill,
+  lab: FlaskConical,
+  hospital: Hospital,
+  birth_hospital: Baby,
+  blood_cabin: Droplets,
+  radiology_center: RadioTower,
+  medical_equipment: Wrench,
 };
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 20, scale: 0.95 },
-  visible: { 
-    opacity: 1, 
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.4, ease: 'easeOut' }
-  },
-};
+const filterTabs = [
+  { key: 'all', label: 'Tous' },
+  { key: 'doctor', label: 'Médecins' },
+  { key: 'pharmacy', label: 'Pharmacies' },
+  { key: 'clinic', label: 'Cliniques' },
+  { key: 'hospital', label: 'Hôpitaux' },
+  { key: 'lab', label: 'Laboratoires' },
+];
 
 const SkeletonCard = () => (
-  <div className="p-5 bg-card border border-border rounded-xl space-y-4">
-    <div className="flex items-center gap-3">
-      <Skeleton className="w-12 h-12 rounded-full" />
-      <div className="space-y-2 flex-1">
-        <Skeleton className="h-4 w-32" />
-        <Skeleton className="h-3 w-24" />
-      </div>
+  <div className="min-w-[260px] max-w-[260px] p-4 bg-card border border-border rounded-2xl space-y-3 flex-shrink-0">
+    <Skeleton className="w-full h-24 rounded-xl" />
+    <div className="space-y-2">
+      <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="h-3 w-1/2" />
     </div>
-    <div className="flex items-center justify-between">
-      <Skeleton className="h-6 w-20" />
-      <Skeleton className="h-8 w-24" />
-    </div>
+    <Skeleton className="h-8 w-full rounded-lg" />
   </div>
 );
 
 export const FeaturedProviders = () => {
   const { data: verifiedProviders = [], isLoading } = useVerifiedProviders();
   const { t } = useLanguage();
+  const [activeFilter, setActiveFilter] = useState('all');
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const providers = useMemo(() => {
+  const allProviders = useMemo(() => {
     return verifiedProviders
       .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-      .slice(0, 8)
+      .slice(0, 20)
       .map(p => ({
         id: p.id,
         name: p.name,
@@ -74,65 +72,82 @@ export const FeaturedProviders = () => {
         rating: p.rating || 0,
         reviewCount: p.reviewsCount || 0,
         isVerified: isProviderVerified(p),
-        image: p.image || ''
+        image: p.image || '',
+        city: p.city || '',
       }));
-  }, [verifiedProviders, t]);
+  }, [verifiedProviders]);
+
+  const filteredProviders = useMemo(() => {
+    if (activeFilter === 'all') return allProviders;
+    return allProviders.filter(p => p.type === activeFilter);
+  }, [allProviders, activeFilter]);
+
+  const TypeIcon = (type: string) => typeIcons[type] || Stethoscope;
 
   return (
     <section className="py-20 px-4 bg-background relative overflow-hidden">
-      {/* Subtle background pattern */}
-      <div className="absolute inset-0 opacity-[0.015]" 
-        style={{
-          backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)',
-          backgroundSize: '24px 24px'
-        }}
-      />
-      
       <div className="container mx-auto max-w-6xl relative">
-        {/* Section Header */}
-        <motion.div 
+        {/* Header */}
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="flex items-center justify-between mb-10"
+          className="flex items-end justify-between mb-8"
         >
           <div>
             <span className="inline-block px-3 py-1 text-xs font-medium text-muted-foreground bg-muted border border-border rounded-full mb-3">
               {t('featuredProviders', 'topPractitioners')}
             </span>
-            <h2 className="text-2xl font-bold text-foreground mb-2">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground">
               {t('featuredProviders', 'healthProfessionals')}
             </h2>
-            <p className="text-muted-foreground text-sm">
-              {t('featuredProviders', 'bestRated')}
-            </p>
           </div>
-          <Button asChild variant="outline" size="sm" className="hidden sm:flex gap-2">
+          <Button asChild variant="ghost" size="sm" className="hidden sm:flex gap-1.5 text-muted-foreground hover:text-foreground">
             <Link to="/search">
               {t('featuredProviders', 'viewAll')}
-              <ArrowRight className="h-4 w-4 rtl-flip" />
+              <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
         </motion.div>
 
-        {/* Provider Cards Grid */}
+        {/* Filter Tabs */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide"
+        >
+          {filterTabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveFilter(tab.key)}
+              className={cn(
+                "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200",
+                activeFilter === tab.key
+                  ? "bg-foreground text-background shadow-sm"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </motion.div>
+
+        {/* Horizontally Scrolling Cards */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 8 }).map((_, i) => (
+          <div className="flex gap-4 overflow-hidden">
+            {Array.from({ length: 5 }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
           </div>
-        ) : providers.length === 0 ? (
-          <motion.div 
+        ) : filteredProviders.length === 0 ? (
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="py-20 text-center bg-card border border-border rounded-xl"
+            animate={{ opacity: 1, scale: 1 }}
+            className="py-16 text-center bg-muted/30 border border-border rounded-2xl"
           >
-            <div className="w-16 h-16 mx-auto mb-4">
-              <ProviderAvatar image={null} name="Provider" type="doctor" className="w-16 h-16" iconSize={32} />
-            </div>
             <p className="text-muted-foreground text-sm mb-4">
               {t('featuredProviders', 'noPractitioners')}
             </p>
@@ -143,120 +158,106 @@ export const FeaturedProviders = () => {
             </Button>
           </motion.div>
         ) : (
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-50px" }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+          <div
+            ref={scrollRef}
+            className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide scroll-smooth"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {providers.map((provider, index) => (
-              <motion.div
-                key={provider.id}
-                variants={cardVariants}
-                whileHover={{ y: -6, scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              >
-                <Link
-                  to={`/provider/${provider.id}`}
-                  className="group relative block p-5 bg-card border border-border rounded-xl hover:border-foreground/20 hover:shadow-xl transition-all duration-300 h-full"
-                >
-                  {/* Top Badge - Rank or Verified */}
-                  {index < 3 && (
-                    <span className="absolute -top-2 -left-2 w-6 h-6 bg-foreground text-background text-[10px] font-bold rounded-full flex items-center justify-center shadow-lg">
-                      #{index + 1}
-                    </span>
-                  )}
-                  
-                  
-                  {/* Avatar & Info */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <motion.div 
-                      className="relative"
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ type: "spring", stiffness: 400 }}
+            <AnimatePresence mode="popLayout">
+              {filteredProviders.map((provider, index) => {
+                const Icon = TypeIcon(provider.type);
+                return (
+                  <motion.div
+                    key={provider.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.35, delay: index * 0.04 }}
+                    className="snap-start flex-shrink-0"
+                  >
+                    <Link
+                      to={`/provider/${provider.id}`}
+                      className="group relative block w-[260px] bg-card border border-border rounded-2xl overflow-hidden hover:shadow-lg hover:border-foreground/10 transition-all duration-300"
                     >
-                      <ProviderAvatar
-                        image={provider.image || null}
-                        name={provider.name}
-                        type={provider.type}
-                        className="w-14 h-14 rounded-full border-2 border-border"
-                        iconSize={24}
-                      />
-                      {/* Verified checkmark */}
-                      {provider.isVerified && (
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-background">
-                          <Shield className="w-2.5 h-2.5 text-primary-foreground" />
-                        </div>
-                      )}
-                    </motion.div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground text-sm truncate group-hover:text-primary transition-colors">
-                        {provider.name}
-                      </h3>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {provider.specialty}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {/* Rating & Action */}
-                  <div className="flex items-center justify-between pt-3 border-t border-border">
-                    <div className="flex items-center gap-1.5">
-                      <div className="flex items-center gap-0.5">
-                        {[...Array(5)].map((_, i) => (
-                          <Star 
-                            key={i} 
-                            className={`h-3 w-3 ${
-                              i < Math.floor(provider.rating) 
-                                ? 'fill-foreground text-foreground' 
-                                : 'fill-muted text-muted'
-                            }`}
+                      {/* Top visual area */}
+                      <div className="relative h-28 bg-muted/50 flex items-center justify-center overflow-hidden">
+                        {provider.image && provider.image !== '/placeholder.svg' && provider.image !== '' ? (
+                          <img
+                            src={provider.image}
+                            alt={provider.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
-                        ))}
+                        ) : (
+                          <Icon className="h-10 w-10 text-muted-foreground/40" />
+                        )}
+                        {/* Gradient overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
+
+                        {/* Verified badge */}
+                        {provider.isVerified && (
+                          <div className="absolute top-3 right-3 w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-sm">
+                            <Shield className="w-3 h-3 text-primary-foreground" />
+                          </div>
+                        )}
+
+                        {/* Rank badge for top 3 */}
+                        {index < 3 && activeFilter === 'all' && (
+                          <div className="absolute top-3 left-3 px-2 py-0.5 bg-foreground/90 text-background text-[10px] font-bold rounded-full">
+                            #{index + 1}
+                          </div>
+                        )}
                       </div>
-                      <span className="text-sm font-semibold text-foreground">
-                        {provider.rating.toFixed(1)}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        ({provider.reviewCount})
-                      </span>
-                    </div>
-                    
-                    {/* Arrow reveal on hover */}
-                    <motion.div
-                      initial={{ opacity: 0, x: -10 }}
-                      whileHover={{ opacity: 1, x: 0 }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <ArrowUpRight className="h-4 w-4 text-foreground" />
-                    </motion.div>
-                  </div>
-                  
-                  {/* Hover gradient overlay */}
-                  <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                    style={{
-                      background: 'linear-gradient(135deg, transparent 60%, rgba(0,0,0,0.02) 100%)'
-                    }}
-                  />
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
+
+                      {/* Content */}
+                      <div className="p-4">
+                        <h3 className="font-semibold text-foreground text-sm truncate group-hover:text-primary transition-colors duration-200">
+                          {provider.name}
+                        </h3>
+
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          <Icon className="h-3 w-3 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground truncate">{provider.specialty}</span>
+                        </div>
+
+                        {provider.city && (
+                          <div className="flex items-center gap-1 mt-1">
+                            <MapPin className="h-3 w-3 text-muted-foreground/60" />
+                            <span className="text-[11px] text-muted-foreground/60 truncate">{provider.city}</span>
+                          </div>
+                        )}
+
+                        {/* Rating + CTA */}
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+                          <div className="flex items-center gap-1">
+                            <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                            <span className="text-sm font-semibold text-foreground">{provider.rating.toFixed(1)}</span>
+                            <span className="text-[11px] text-muted-foreground">({provider.reviewCount})</span>
+                          </div>
+                          <span className="text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            Voir →
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
         )}
-        
+
         {/* Mobile CTA */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="sm:hidden mt-8 text-center"
+          className="sm:hidden mt-6 text-center"
         >
           <Button asChild variant="outline" size="sm">
             <Link to="/search" className="flex items-center gap-2">
               {t('featuredProviders', 'viewAllPractitioners')}
-              <ArrowRight className="h-4 w-4 rtl-flip" />
+              <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
         </motion.div>
