@@ -78,9 +78,10 @@ export const ProviderCard = ({ provider, distance, onClose }: ProviderCardProps)
   
   return (
     <Card className={cn(
-      "absolute bottom-14 md:bottom-4 z-20 w-[calc(100%-2rem)] sm:w-80 shadow-xl border border-border animate-fade-in",
-      isRTL ? "right-4" : "left-4",
-      "md:left-4 md:right-auto"
+      "absolute z-20 w-[calc(100%-2rem)] sm:w-80 shadow-xl border border-border animate-fade-in",
+      "top-4",
+      isRTL ? "right-4" : "right-4",
+      "md:right-4 md:left-auto"
     )}>
       <CardContent className="p-4">
         {/* New badge */}

@@ -149,7 +149,7 @@ export const MapSidebar = ({
       </div>
 
       {/* ── Content ── */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1" style={{ maxHeight: 'calc(4 * 160px)' }}>
         {loading ? (
           <div className="p-3 space-y-3">
             {[1, 2, 3, 4].map((i) => (
