@@ -51,7 +51,7 @@ export default function DeveloperLandingPage() {
             urgences 24/7 — le tout via une API REST simple et sécurisée.
           </p>
           <div className="flex gap-4 justify-center">
-            <Button size="lg" onClick={() => navigate('/developers/dashboard')}>
+            <Button size="lg" onClick={() => navigate('/developers/register')}>
               Obtenir une clé API <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
             <Button size="lg" variant="outline" onClick={() => navigate('/developers/docs')}>
@@ -139,7 +139,7 @@ export default function DeveloperLandingPage() {
           <p className="text-muted-foreground mb-6">
             Créez votre compte développeur et obtenez votre clé API en moins de 2 minutes.
           </p>
-          <Button size="lg" onClick={() => navigate('/developers/dashboard')}>
+          <Button size="lg" onClick={() => navigate('/developers/register')}>
             Créer un compte développeur <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Copy, Key, RefreshCw, XCircle, Plus, ArrowLeft } from 'lucide-react';
+import { Copy, Key, RefreshCw, XCircle, Plus, ArrowLeft, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -23,7 +23,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function DeveloperDashboardPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -39,7 +39,7 @@ export default function DeveloperDashboardPage() {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/citizen/login');
+      navigate('/developers/login');
       return;
     }
     loadKeys();
@@ -129,10 +129,13 @@ export default function DeveloperDashboardPage() {
           <Button variant="ghost" size="icon" onClick={() => navigate('/developers')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-bold text-foreground">Tableau de bord Développeur</h1>
             <p className="text-muted-foreground text-sm">Gérez vos clés API CityHealth</p>
           </div>
+          <Button variant="ghost" size="sm" onClick={async () => { await logout(); navigate('/developers/login'); }}>
+            <LogOut className="h-4 w-4 mr-1" /> Se déconnecter
+          </Button>
         </div>
 
         {/* Create new key */}

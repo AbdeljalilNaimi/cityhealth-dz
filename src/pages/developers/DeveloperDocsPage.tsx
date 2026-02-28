@@ -11,7 +11,7 @@ const sections = [
   { id: 'errors', label: 'Codes d\'erreur', icon: AlertTriangle },
 ];
 
-const API_BASE = `https://hozjbchgaucbfqumrhhs.supabase.co/functions/v1/public-api`;
+const API_BASE = `https://lerfyjdokajfkyarlhjg.supabase.co/functions/v1/public-api`;
 
 function CodeBlock({ children, title }: { children: string; title?: string }) {
   return (

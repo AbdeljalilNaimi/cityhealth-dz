@@ -81,6 +81,8 @@ const EmailVerifiedPage = lazy(() => import("./pages/EmailVerifiedPage"));
 const DeveloperLandingPage = lazy(() => import("./pages/developers/DeveloperLandingPage"));
 const DeveloperDashboardPage = lazy(() => import("./pages/developers/DeveloperDashboardPage"));
 const DeveloperDocsPage = lazy(() => import("./pages/developers/DeveloperDocsPage"));
+const DeveloperLoginPage = lazy(() => import("./pages/developers/DeveloperLoginPage"));
+const DeveloperRegisterPage = lazy(() => import("./pages/developers/DeveloperRegisterPage"));
 const queryClient = new QueryClient();
 
 // Loading fallback component
@@ -542,6 +544,8 @@ const AppRoutes = () => {
         {/* DEVELOPER PORTAL */}
         {/* ============================================ */}
         <Route path="/developers" element={<PageTransition><DeveloperLandingPage /></PageTransition>} />
+        <Route path="/developers/login" element={<PageTransition><DeveloperLoginPage /></PageTransition>} />
+        <Route path="/developers/register" element={<PageTransition><DeveloperRegisterPage /></PageTransition>} />
         <Route path="/developers/dashboard" element={<PageTransition><DeveloperDashboardPage /></PageTransition>} />
         <Route path="/developers/docs" element={<PageTransition><DeveloperDocsPage /></PageTransition>} />
 
