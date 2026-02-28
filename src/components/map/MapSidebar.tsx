@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ChevronLeft,
@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CityHealthProvider, PROVIDER_TYPE_LABELS } from '@/data/providers';
+import { CityHealthProvider, ProviderType, PROVIDER_TYPE_LABELS } from '@/data/providers';
 import { useMapContext } from '@/contexts/MapContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
@@ -40,6 +40,23 @@ export const MapSidebar = ({
   const { selectedProvider, setSelectedProvider, calculateRoute, isRouting, isRTL, flyTo, sidebarOpen, setSidebarOpen } = useMapContext();
   const { language } = useLanguage();
   const [routingId, setRoutingId] = useState<string | null>(null);
+  const [typeFilter, setTypeFilter] = useState<ProviderType | null>(null);
+
+  // Get unique types from providers
+  const availableTypes = useMemo(() => {
+    const types = new Set(providers.map(p => p.type));
+    return Array.from(types).sort();
+  }, [providers]);
+
+  // Filter providers by selected type
+  const filteredProviders = useMemo(() => {
+    if (!typeFilter) return providers;
+    return providers.filter(p => p.type === typeFilter);
+  }, [providers, typeFilter]);
+
+  const toggleTypeFilter = useCallback((type: ProviderType) => {
+    setTypeFilter(prev => prev === type ? null : type);
+  }, []);
 
   const t = useMemo(() => ({
     fr: {
@@ -135,8 +152,8 @@ export const MapSidebar = ({
               <Skeleton className="h-3.5 w-24" />
             ) : (
               <p className="text-xs font-semibold leading-tight truncate">
-                <span className="text-primary font-bold">{providers.length}</span>{' '}
-                <span className="text-foreground">{providers.length === 1 ? tx.provider : tx.providers}</span>
+                <span className="text-primary font-bold">{filteredProviders.length}</span>{' '}
+                <span className="text-foreground">{filteredProviders.length === 1 ? tx.provider : tx.providers}</span>
                 {label && <span className="text-muted-foreground"> · {label}</span>}
               </p>
             )}
@@ -153,6 +170,31 @@ export const MapSidebar = ({
         </Button>
       </div>
 
+      {/* ── Type Filter Pills ── */}
+      {availableTypes.length > 1 && (
+        <div className="px-2 py-1.5 border-b border-border/40 flex flex-wrap gap-1">
+          {availableTypes.map(type => {
+            const label = PROVIDER_TYPE_LABELS[type];
+            const isActive = typeFilter === type;
+            return (
+              <button
+                key={type}
+                onClick={() => toggleTypeFilter(type)}
+                className={cn(
+                  "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium transition-all border",
+                  isActive
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-muted/40 text-muted-foreground border-border/40 hover:bg-accent hover:text-accent-foreground"
+                )}
+              >
+                <span>{label?.icon}</span>
+                <span>{language === 'ar' ? label?.ar : label?.fr}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* ── Content ── */}
       <ScrollArea className="flex-1 overflow-hidden">
         {loading ? (
@@ -168,7 +210,7 @@ export const MapSidebar = ({
               </div>
             ))}
           </div>
-        ) : providers.length === 0 ? (
+        ) : filteredProviders.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2.5 py-16 px-5 text-center">
             <div className="h-12 w-12 rounded-2xl bg-muted/50 flex items-center justify-center">
               <AlertTriangle className="h-6 w-6 text-muted-foreground/40" />
@@ -180,7 +222,7 @@ export const MapSidebar = ({
           </div>
         ) : (
           <div className="p-2 space-y-1">
-            {providers.map((provider) => {
+            {filteredProviders.map((provider) => {
               const distance = distances.get(provider.id);
               const isSelected = selectedProvider?.id === provider.id;
               const typeLabel =
