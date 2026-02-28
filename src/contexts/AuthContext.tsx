@@ -424,12 +424,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         displayName: fullName
       });
 
-      // Send email verification FIRST (before any Firestore writes that might fail)
+      // Send email verification with redirect to dashboard after verification
       try {
-        await sendEmailVerification(newUser);
-      } catch (verificationError) {
-        console.warn('Email verification send failed (domain may not be allowlisted):', verificationError);
-        // Continue anyway - account is created, user can request verification later
+        await sendEmailVerification(newUser, {
+          url: `${window.location.origin}/citizen/dashboard`,
+          handleCodeInApp: false,
+        });
+      } catch {
+        // If continueUrl domain is not allowlisted, retry without it
+        try {
+          await sendEmailVerification(newUser);
+        } catch (retryError) {
+          console.warn('Email verification send failed:', retryError);
+        }
       }
 
       // Create Firestore documents (non-blocking errors won't prevent confirmation screen)
