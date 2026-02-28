@@ -428,7 +428,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         await sendEmailVerification(newUser, {
           url: `${window.location.origin}/email-verified`,
-          handleCodeInApp: false,
+          handleCodeInApp: true,
         });
       } catch {
         // Fallback without continueUrl if domain not allowlisted
