@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabaseClient';
 import { Copy, Key, RefreshCw, XCircle, Plus, ArrowLeft, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,10 +24,11 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function DeveloperDashboardPage() {
-  const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const [developerUser, setDeveloperUser] = useState<SupabaseUser | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [appName, setAppName] = useState('');
@@ -38,18 +40,52 @@ export default function DeveloperDashboardPage() {
   const [usageCharts, setUsageCharts] = useState<Record<string, { date: string; requests: number }[]>>({});
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/developers/login');
-      return;
-    }
-    loadKeys();
-  }, [isAuthenticated]);
+    let mounted = true;
 
-  const loadKeys = async () => {
-    if (!user?.uid) return;
+    const syncSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!mounted) return;
+
+      const currentUser = session?.user ?? null;
+      setDeveloperUser(currentUser);
+      setAuthLoading(false);
+
+      if (!currentUser) {
+        navigate('/developers/login', { replace: true });
+      }
+    };
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+
+      const currentUser = session?.user ?? null;
+      setDeveloperUser(currentUser);
+      setAuthLoading(false);
+
+      if (!currentUser) {
+        navigate('/developers/login', { replace: true });
+      }
+    });
+
+    syncSession();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
+
+  useEffect(() => {
+    if (!developerUser) return;
+    loadKeys(developerUser.id);
+  }, [developerUser]);
+
+  const loadKeys = async (developerId: string) => {
     setLoading(true);
     try {
-      const apiKeys = await getApiKeys(user.uid);
+      const apiKeys = await getApiKeys(developerId);
       setKeys(apiKeys);
 
       // Load usage for each key
@@ -78,15 +114,15 @@ export default function DeveloperDashboardPage() {
   };
 
   const handleCreate = async () => {
-    if (!user?.uid || !appName.trim()) return;
+    if (!developerUser?.id || !appName.trim()) return;
     setCreating(true);
     try {
-      const { rawKey } = await generateApiKey(user.uid, appName, appDesc);
+      const { rawKey } = await generateApiKey(developerUser.id, appName, appDesc);
       setNewRawKey(rawKey);
       setShowNewKeyModal(true);
       setAppName('');
       setAppDesc('');
-      await loadKeys();
+      await loadKeys(developerUser.id);
     } catch {
       toast({ title: 'Erreur', description: 'Impossible de créer la clé.', variant: 'destructive' });
     } finally {
@@ -95,21 +131,23 @@ export default function DeveloperDashboardPage() {
   };
 
   const handleDeactivate = async (id: string) => {
+    if (!developerUser?.id) return;
     try {
       await deactivateApiKey(id);
       toast({ title: 'Clé désactivée' });
-      await loadKeys();
+      await loadKeys(developerUser.id);
     } catch {
       toast({ title: 'Erreur', variant: 'destructive' });
     }
   };
 
   const handleRegenerate = async (id: string) => {
+    if (!developerUser?.id) return;
     try {
       const { rawKey } = await regenerateApiKey(id);
       setNewRawKey(rawKey);
       setShowNewKeyModal(true);
-      await loadKeys();
+      await loadKeys(developerUser.id);
     } catch {
       toast({ title: 'Erreur', variant: 'destructive' });
     }
@@ -120,7 +158,8 @@ export default function DeveloperDashboardPage() {
     toast({ title: 'Copié !', description: 'Clé copiée dans le presse-papier.' });
   };
 
-  if (!isAuthenticated) return null;
+  if (authLoading) return null;
+  if (!developerUser) return null;
 
   return (
     <div className="min-h-screen bg-background py-8 px-4">
@@ -133,7 +172,7 @@ export default function DeveloperDashboardPage() {
             <h1 className="text-2xl font-bold text-foreground">Tableau de bord Développeur</h1>
             <p className="text-muted-foreground text-sm">Gérez vos clés API CityHealth</p>
           </div>
-          <Button variant="ghost" size="sm" onClick={async () => { await logout(); navigate('/developers/login'); }}>
+          <Button variant="ghost" size="sm" onClick={async () => { await supabase.auth.signOut(); navigate('/developers/login'); }}>
             <LogOut className="h-4 w-4 mr-1" /> Se déconnecter
           </Button>
         </div>
