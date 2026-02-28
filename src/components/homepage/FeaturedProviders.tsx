@@ -110,25 +110,36 @@ export const FeaturedProviders = () => {
     el.scrollBy({ left: dir === 'left' ? -amount : amount, behavior: 'smooth' });
   }, []);
 
-  // Auto-scroll
+  // Auto-scroll with requestAnimationFrame
+  const isPausedRef = useRef(false);
   const [isPaused, setIsPaused] = useState(false);
+  isPausedRef.current = isPaused;
 
   useEffect(() => {
-    if (isPaused) return;
     const el = scrollRef.current;
     if (!el) return;
 
-    const interval = setInterval(() => {
-      const atEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 4;
-      if (atEnd) {
-        el.scrollTo({ left: 0, behavior: 'smooth' });
-      } else {
-        el.scrollBy({ left: 1, behavior: 'auto' });
-      }
-    }, 30);
+    let rafId: number;
+    let lastTime = 0;
+    const speed = 0.5; // pixels per frame at 60fps
 
-    return () => clearInterval(interval);
-  }, [isPaused, filteredProviders]);
+    const step = (timestamp: number) => {
+      if (!isPausedRef.current && el) {
+        const delta = lastTime ? (timestamp - lastTime) / 16.67 : 1;
+        const atEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 2;
+        if (atEnd) {
+          el.scrollLeft = 0;
+        } else {
+          el.scrollLeft += speed * delta;
+        }
+      }
+      lastTime = timestamp;
+      rafId = requestAnimationFrame(step);
+    };
+
+    rafId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(rafId);
+  }, [filteredProviders]);
 
   return (
     <section className="py-20 px-4 bg-background relative overflow-hidden">
