@@ -1,76 +1,49 @@
 
 
-## Plan: CityHealth Companion Chrome Extension
+## Plan: Security, Quick Triage Widget, Privacy & README Updates
 
-### Overview
-Create an isolated `cityhealth-extension/` directory at the project root containing a Manifest V3 Chrome extension with two features: a popup UI for quick triage/search, and a background service worker for blood emergency notifications.
-
-### File Structure
-```text
-cityhealth-extension/
-├── manifest.json
-├── index.html
-├── vite.config.ts
-├── package.json
-├── tailwind.config.ts
-├── postcss.config.js
-├── tsconfig.json
-├── src/
-│   ├── main.tsx
-│   ├── Popup.tsx
-│   ├── background.ts
-│   ├── supabaseClient.ts
-│   └── index.css
+### 1. Create `.env.example`
+New file `cityhealth-extension/.env.example` with three placeholders:
+```
+VITE_APP_URL=
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
 ```
 
-### Implementation Steps
+### 2. Refactor `src/supabaseClient.ts`
+- Replace hardcoded URL/key/APP_URL with `import.meta.env.VITE_SUPABASE_URL`, `import.meta.env.VITE_SUPABASE_ANON_KEY`
+- Export `APP_URL` from env: `import.meta.env.VITE_APP_URL`
 
-#### 1. `manifest.json` — Manifest V3 Configuration
-- Permissions: `storage`, `notifications`
-- Service worker: `background.js` (built output)
-- Popup: `index.html`
-- Connect to Supabase URL in `host_permissions`
+### 3. Refactor `src/background.ts`
+- Remove hardcoded `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `APP_URL`
+- Import `supabase` and `APP_URL` from `./supabaseClient` (single source of truth)
 
-#### 2. `vite.config.ts` — Dual Build Configuration
-- Build popup as standard React app (`index.html` entry)
-- Build `background.ts` separately as an IIFE bundle (service worker can't use ES modules)
-- Output to `cityhealth-extension/dist/`
+### 4. Refactor `src/Popup.tsx`
+- Remove hardcoded `APP_URL`, import it from `./supabaseClient`
+- Redesign main view layout order:
+  1. **Prominent search bar** -- larger input with placeholder "Trouver un medecin, pharmacie..." and a styled search button with icon
+  2. **Massive Triage CTA** -- full-width gradient button "Lancer l'Assistant Triage IA" with larger padding and bold text
+  3. **Blood group badge + emergency card** (existing, kept below)
+  4. **Quick links** (Don de sang, Urgences) at bottom
+- Add a small privacy footer tooltip/section at the very bottom of the popup
 
-#### 3. `supabaseClient.ts` — Supabase Connection
-- Import `@supabase/supabase-js`
-- Use the project's existing Lovable Cloud Supabase URL and anon key (hardcoded, these are public/publishable)
+### 5. Add privacy section to `src/OptionsPage.tsx`
+- New "Confidentialite & Permissions" card at the bottom of the options page with two bullet points:
+  - Notifications: "Uniquement pour les alertes vitales de don de sang."
+  - Stockage: "Pour sauvegarder vos preferences en toute securite sur cet appareil."
 
-#### 4. `Popup.tsx` — Popup UI (350×500px)
-- **Auth screen**: Email/password login via `supabase.auth.signInWithPassword`
-- **Main screen** (post-login):
-  - Header with CityHealth branding
-  - Read-only badge showing synced blood group from `emergency_health_cards` table (fetched on login, saved to `chrome.storage.local`)
-  - Search bar "Trouver un professionnel" — opens main app search page in new tab
-  - "Assistant Triage IA" button — opens main app `/assistant-medical` in new tab
-  - Logout button
-- Styled with Tailwind CSS, healthcare color theme
+### 6. Update `README.md`
+- Add env setup step in Installation section: "Creez un fichier `.env` base sur `.env.example`..."
+- Add image placeholders under Fonctionnalites section
+- Update Configuration section to reflect env-based approach instead of editing constants
 
-#### 5. `background.ts` — Service Worker
-- On install/startup: read blood type from `chrome.storage.local`
-- Listen to `chrome.storage.onChanged` to update blood type if popup refreshes it
-- Subscribe to Supabase realtime channel on `blood_emergencies` table (INSERT events, status='active')
-- When a new emergency matches the user's blood group → `chrome.notifications.create` with French message
-- On notification click → open the blood donation page on the main app
-
-#### 6. `index.css` — Tailwind Setup
-- Standard Tailwind directives (`@tailwind base/components/utilities`)
-- Minimal custom styles for popup dimensions
-
-#### 7. Supporting Config Files
-- `package.json` with dependencies: `@supabase/supabase-js`, `react`, `react-dom`, `vite`, `tailwindcss`, `postcss`, `autoprefixer`, `@vitejs/plugin-react`
-- `tsconfig.json` for TypeScript
-- `tailwind.config.ts` and `postcss.config.js`
-
-### Technical Notes
-
-- **Blood group source**: Uses existing `emergency_health_cards` table (column `blood_group`, keyed by `user_id`). No new tables needed.
-- **Auth**: Uses Supabase Auth (email/password). Session token stored in `chrome.storage.local` for the service worker to reuse.
-- **Realtime in service worker**: The background script creates a Supabase client and subscribes to postgres_changes on `blood_emergencies`. Service workers can maintain WebSocket connections while active; Chrome will wake the worker on incoming messages.
-- **No changes to main app**: Everything is self-contained in `cityhealth-extension/`. The main app codebase is untouched.
-- **Build process**: Run `cd cityhealth-extension && npm install && npm run build` to produce `dist/` folder ready to load as unpacked extension in Chrome.
+### Files changed
+| File | Action |
+|------|--------|
+| `cityhealth-extension/.env.example` | Create |
+| `cityhealth-extension/src/supabaseClient.ts` | Edit (env vars) |
+| `cityhealth-extension/src/background.ts` | Edit (import from supabaseClient) |
+| `cityhealth-extension/src/Popup.tsx` | Edit (import APP_URL, redesign layout, add privacy footer) |
+| `cityhealth-extension/src/OptionsPage.tsx` | Edit (add privacy section) |
+| `cityhealth-extension/README.md` | Edit (env step, image placeholders, config update) |
 
