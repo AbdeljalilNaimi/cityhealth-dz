@@ -14,20 +14,25 @@ import { createUserLocationMarker, createRouteStartMarker } from './MapMarkers';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MapPin, Loader2, Navigation, X, Car, Footprints, Route, Clock, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const MapSkeleton = ({ loadingText }: { loadingText: string }) => (
-  <div className="absolute inset-0 z-10 bg-muted/50 flex flex-col items-center justify-center gap-4">
+  <div className="absolute inset-0 z-10 bg-background/60 backdrop-blur-sm flex flex-col items-center justify-center gap-4">
     <div className="relative">
-      <Skeleton className="w-full h-full absolute inset-0" />
+      <Skeleton className="w-full h-full absolute inset-0 rounded-xl" />
       <div className="grid grid-cols-3 gap-2 p-4">
         {Array.from({ length: 9 }).map((_, i) => (
-          <Skeleton key={i} className="w-20 h-20 rounded" />
+          <Skeleton key={i} className="w-20 h-20 rounded-lg" />
         ))}
       </div>
     </div>
-    <div className="flex items-center gap-2 text-muted-foreground">
-      <Loader2 className="h-5 w-5 animate-spin" />
-      <span>{loadingText}</span>
+    <div className="flex items-center gap-2.5 text-muted-foreground bg-card/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-border/50">
+      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+      <span className="text-sm font-medium">{loadingText}</span>
     </div>
   </div>
 );
@@ -39,8 +44,10 @@ const GeolocationIndicator = ({ isLocating, hasError, locatingText, errorText }:
   
   return (
     <div className={cn(
-      "absolute top-20 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-full shadow-lg flex items-center gap-2 text-sm",
-      hasError ? "bg-destructive/90 text-destructive-foreground" : "bg-primary/90 text-primary-foreground"
+      "absolute top-20 left-1/2 -translate-x-1/2 z-20 px-5 py-2.5 rounded-full shadow-xl flex items-center gap-2.5 text-sm font-medium backdrop-blur-md border",
+      hasError 
+        ? "bg-destructive/90 text-destructive-foreground border-destructive/30" 
+        : "bg-primary/90 text-primary-foreground border-primary/30"
     )}>
       {isLocating ? (
         <>
@@ -136,11 +143,8 @@ const MapMotherInner = () => {
     }
   }, [isFullscreen, mapRef]);
   
-  // Multi-route polyline effect
   useEffect(() => {
     if (!mapRef.current) return;
-    
-    // Clear previous routes + start marker
     routeLayersRef.current.forEach(layer => {
       mapRef.current?.removeLayer(layer);
     });
@@ -149,10 +153,7 @@ const MapMotherInner = () => {
       mapRef.current.removeLayer(routeStartMarkerRef.current);
       routeStartMarkerRef.current = null;
     }
-    
     if (routesData && routesData.length > 0) {
-      // Draw alternatives first (background), then selected (foreground)
-      // First pass: alternatives
       routesData.forEach((route, index) => {
         if (index === selectedRouteIndex) return;
         const polyline = L.polyline(route.coordinates, {
@@ -164,8 +165,6 @@ const MapMotherInner = () => {
         polyline.on('click', () => setSelectedRouteIndex(index));
         routeLayersRef.current.push(polyline);
       });
-      
-      // Second pass: selected route
       const selected = routesData[selectedRouteIndex];
       if (selected) {
         const polyline = L.polyline(selected.coordinates, {
@@ -175,8 +174,6 @@ const MapMotherInner = () => {
         }).addTo(mapRef.current);
         routeLayersRef.current.push(polyline);
       }
-      
-      // Start marker at user position (first coord of selected route)
       const startCoords = routesData[selectedRouteIndex]?.coordinates[0];
       if (startCoords) {
         routeStartMarkerRef.current = L.marker(startCoords, {
@@ -186,7 +183,6 @@ const MapMotherInner = () => {
         routeStartMarkerRef.current.bindPopup('Point de départ', { closeButton: false });
       }
     }
-    
     return () => {
       routeLayersRef.current.forEach(layer => {
         mapRef.current?.removeLayer(layer);
@@ -201,10 +197,8 @@ const MapMotherInner = () => {
   
   useEffect(() => {
     if (!mapRef.current || !geolocation.latitude || !geolocation.longitude) return;
-    
     const userLatLng: L.LatLngExpression = [geolocation.latitude, geolocation.longitude];
     setUserPosition({ lat: geolocation.latitude, lng: geolocation.longitude });
-    
     if (userMarkerRef.current) {
       userMarkerRef.current.setLatLng(userLatLng);
     } else {
@@ -212,13 +206,11 @@ const MapMotherInner = () => {
         icon: createUserLocationMarker(),
         zIndexOffset: 1000,
       }).addTo(mapRef.current);
-      
       userMarkerRef.current.bindPopup(t('map', 'yourPosition'), {
         closeButton: false,
         className: 'user-location-popup'
       });
     }
-    
     return () => {
       if (userMarkerRef.current && mapRef.current) {
         mapRef.current.removeLayer(userMarkerRef.current);
@@ -239,29 +231,30 @@ const MapMotherInner = () => {
       
       <main id="main-content" className={cn(
         "flex-1 flex flex-col",
-        isFullscreen ? "fixed inset-0 z-50 pt-0" : "container mx-auto px-4 py-6"
+        isFullscreen ? "fixed inset-0 z-50 pt-0" : "container mx-auto px-4 py-4 md:py-6"
       )}>
         {!isFullscreen && (
-          <div className="mb-4 flex items-center gap-3">
+          <div className="mb-3 flex items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => nav(-1)}
-              className="shrink-0"
+              className="shrink-0 h-9 w-9 rounded-lg hover:bg-muted"
               aria-label={language === 'ar' ? 'العودة' : language === 'en' ? 'Back' : 'Retour'}
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4" />
             </Button>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold">{titleMap[mode]}</h1>
-              <p className="text-muted-foreground">{subtitleMap[mode]}</p>
+            <div className="min-w-0">
+              <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">{titleMap[mode]}</h1>
+              <p className="text-xs md:text-sm text-muted-foreground mt-0.5">{subtitleMap[mode]}</p>
             </div>
           </div>
         )}
         
         {/* ── Flex wrapper: sidebar + map ── */}
         <div className={cn(
-          "flex-1 flex rounded-xl overflow-hidden border border-border shadow-lg",
+          "flex-1 flex overflow-hidden",
+          !isFullscreen && "rounded-2xl border border-border/60 shadow-xl ring-1 ring-black/[0.03] dark:ring-white/[0.03]",
           isFullscreen && "rounded-none border-0",
           isRTL ? "flex-row-reverse" : "flex-row"
         )}>
@@ -292,43 +285,53 @@ const MapMotherInner = () => {
             
             {/* Multi-route info banner */}
             {selectedRoute && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 bg-card/95 backdrop-blur-sm border border-border rounded-xl shadow-lg px-4 py-3 flex flex-col gap-2 text-sm max-w-md w-[92%] sm:w-auto animate-fade-in">
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 bg-card/90 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl px-5 py-3.5 flex flex-col gap-2.5 text-sm max-w-md w-[92%] sm:w-auto animate-fade-in ring-1 ring-black/[0.04] dark:ring-white/[0.04]">
                 {/* Transport mode toggle + close */}
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center bg-muted rounded-lg p-0.5 gap-0.5">
-                    <button
-                      onClick={() => setTransportMode('driving')}
-                      disabled={isRouting}
-                      className={cn(
-                        "p-1.5 rounded-md transition-all",
-                        transportMode === 'driving'
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                      aria-label="Voiture"
-                    >
-                      <Car className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => setTransportMode('foot')}
-                      disabled={isRouting}
-                      className={cn(
-                        "p-1.5 rounded-md transition-all",
-                        transportMode === 'foot'
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                      aria-label="À pied"
-                    >
-                      <Footprints className="h-4 w-4" />
-                    </button>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center bg-muted/60 rounded-xl p-1 gap-0.5">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => setTransportMode('driving')}
+                          disabled={isRouting}
+                          className={cn(
+                            "p-2 rounded-lg transition-all duration-200",
+                            transportMode === 'driving'
+                              ? "bg-primary text-primary-foreground shadow-md"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                          )}
+                          aria-label="Voiture"
+                        >
+                          <Car className="h-4 w-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">Voiture</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => setTransportMode('foot')}
+                          disabled={isRouting}
+                          className={cn(
+                            "p-2 rounded-lg transition-all duration-200",
+                            transportMode === 'foot'
+                              ? "bg-primary text-primary-foreground shadow-md"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                          )}
+                          aria-label="À pied"
+                        >
+                          <Footprints className="h-4 w-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">À pied</TooltipContent>
+                    </Tooltip>
                   </div>
                   <button
                     onClick={clearRoute}
-                    className="p-1 rounded-full hover:bg-muted transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors"
                     aria-label="Fermer l'itinéraire"
                   >
-                    <X className="h-4 w-4 text-muted-foreground" />
+                    <X className="h-4 w-4" />
                   </button>
                 </div>
 
@@ -338,19 +341,21 @@ const MapMotherInner = () => {
                     <button
                         onClick={() => setSelectedRouteIndex(0)}
                         className={cn(
-                          "w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-left",
-                          selectedRouteIndex === 0 ? "bg-primary/10 ring-1 ring-primary/30" : "hover:bg-muted"
+                          "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all duration-200 text-left",
+                          selectedRouteIndex === 0 
+                            ? "bg-primary/10 ring-1 ring-primary/30 shadow-sm" 
+                            : "hover:bg-muted/60"
                         )}
                       >
-                        <div className="w-3 h-1 rounded-full bg-blue-500 shrink-0" />
+                        <div className="w-3 h-1 rounded-full bg-primary shrink-0" />
                         {isRouting ? (
                           <Loader2 className="h-4 w-4 animate-spin text-primary" />
                         ) : (
                           <Route className="h-4 w-4 text-primary shrink-0" />
                         )}
                         <span className="text-xs font-semibold text-primary hidden sm:inline">Principal</span>
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                          <span className="font-medium">{routesData![0].distance} km</span>
+                        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5">
+                          <span className="font-semibold">{routesData![0].distance} km</span>
                           <span className="text-muted-foreground">≈ {routesData![0].duration} min</span>
                           <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
                             <Clock className="h-3 w-3" />
@@ -370,15 +375,17 @@ const MapMotherInner = () => {
                         key={idx}
                         onClick={() => setSelectedRouteIndex(idx)}
                         className={cn(
-                          "w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors text-left",
-                          selectedRouteIndex === idx ? "bg-primary/10 ring-1 ring-primary/30" : "hover:bg-muted"
+                          "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all duration-200 text-left",
+                          selectedRouteIndex === idx 
+                            ? "bg-primary/10 ring-1 ring-primary/30 shadow-sm" 
+                            : "hover:bg-muted/60"
                         )}
                       >
                         <div className="w-3 h-1 rounded-full bg-muted-foreground shrink-0" style={{ borderTop: '1px dashed' }} />
                         <Route className="h-4 w-4 text-muted-foreground shrink-0" />
                         <span className="text-xs font-semibold text-muted-foreground hidden sm:inline">Alternatif</span>
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                          <span className="font-medium">{route.distance} km</span>
+                        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5">
+                          <span className="font-semibold">{route.distance} km</span>
                           <span className="text-muted-foreground">≈ {route.duration} min</span>
                           <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
                             <Clock className="h-3 w-3" />

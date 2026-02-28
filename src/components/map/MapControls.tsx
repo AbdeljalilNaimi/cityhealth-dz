@@ -10,6 +10,11 @@ import { useMapContext, MapMode } from '@/contexts/MapContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { MapChatWidget } from './MapChatWidget';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface MapControlsProps {
   mode: MapMode;
@@ -62,46 +67,71 @@ export const MapControls = ({ mode }: MapControlsProps) => {
   
   return (
     <>
-      {/* Floating action buttons - bottom right */}
+      {/* Floating action buttons - grouped pill */}
       <div className={cn(
-        "absolute bottom-6 z-[1000] flex flex-col gap-3",
+        "absolute bottom-6 z-[1000] flex flex-col gap-1.5",
         isRTL ? "left-6" : "right-6"
       )}>
-        {/* Fullscreen toggle */}
-        <Button
-          size="icon"
-          variant="secondary"
-          className="h-12 w-12 rounded-full shadow-lg bg-white dark:bg-card border border-border hover:scale-105 transition-transform"
-          onClick={toggleFullscreen}
-          title={isFullscreen ? tx.exitFullscreen : tx.fullscreen}
-        >
-          {isFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
-        </Button>
+        <div className="flex flex-col bg-card/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-border/40 p-1.5 ring-1 ring-black/[0.04] dark:ring-white/[0.04]">
+          {/* Fullscreen toggle */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-10 w-10 rounded-xl hover:bg-accent transition-all duration-200"
+                onClick={toggleFullscreen}
+              >
+                {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side={isRTL ? "right" : "left"} className="text-xs">
+              {isFullscreen ? tx.exitFullscreen : tx.fullscreen}
+            </TooltipContent>
+          </Tooltip>
 
-        {/* Geolocation button */}
-        <Button
-          size="icon"
-          variant="secondary"
-          className="h-12 w-12 rounded-full shadow-lg bg-white dark:bg-card border border-border hover:scale-105 transition-transform"
-          onClick={locateUser}
-          disabled={geolocation.loading}
-          title={tx.locate}
-        >
-          <LocateFixed className={cn("h-5 w-5 text-blue-600", geolocation.loading && "animate-pulse")} />
-        </Button>
-        
-        {/* AI Assistant / MapBot button */}
-        <Button
-          size="icon"
-          className={cn(
-            "h-12 w-12 rounded-full shadow-lg hover:scale-105 transition-transform",
-            isBotOpen ? "bg-blue-500 hover:bg-blue-600" : "bg-blue-600 hover:bg-blue-700"
-          )}
-          onClick={() => setIsBotOpen(prev => !prev)}
-          title={tx.assistant}
-        >
-          <MessageCircle className="h-5 w-5 text-white" />
-        </Button>
+          {/* Divider */}
+          <div className="h-px bg-border/40 mx-2" />
+
+          {/* Geolocation button */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-10 w-10 rounded-xl hover:bg-accent transition-all duration-200"
+                onClick={locateUser}
+                disabled={geolocation.loading}
+              >
+                <LocateFixed className={cn("h-4 w-4 text-primary", geolocation.loading && "animate-pulse")} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side={isRTL ? "right" : "left"} className="text-xs">
+              {tx.locate}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+
+        {/* AI Assistant button - separate for emphasis */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon"
+              className={cn(
+                "h-12 w-12 rounded-2xl shadow-xl transition-all duration-200",
+                isBotOpen 
+                  ? "bg-primary hover:bg-primary/90 scale-95" 
+                  : "bg-primary hover:bg-primary/90 hover:scale-105 hover:shadow-2xl"
+              )}
+              onClick={() => setIsBotOpen(prev => !prev)}
+            >
+              <MessageCircle className="h-5 w-5 text-primary-foreground" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side={isRTL ? "right" : "left"} className="text-xs">
+            {tx.assistant}
+          </TooltipContent>
+        </Tooltip>
       </div>
 
       {/* MapChatWidget */}

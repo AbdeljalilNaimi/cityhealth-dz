@@ -2,7 +2,7 @@ import { useEffect, useMemo, useCallback, useState, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet.markercluster';
-import { Filter, X, Clock, Building2, Search, MapPin, Maximize2, Menu, AlertTriangle, Droplet } from 'lucide-react';
+import { Filter, X, Clock, Building2, Search, MapPin, Maximize2, AlertTriangle, Droplet, ChevronDown } from 'lucide-react';
 import { useMapContext } from '@/contexts/MapContext';
 import { useVerifiedProviders } from '@/hooks/useProviders';
 import { ProviderCard } from '../ProviderCard';
@@ -284,119 +284,109 @@ const ProvidersMapChild = () => {
       {/* ========== UNIFIED CONTROL PANEL ========== */}
       <div className={cn(
         "absolute top-4 z-[1000] w-80 max-w-[calc(100%-2rem)]",
-        "bg-white/95 dark:bg-card/95 backdrop-blur-md shadow-xl rounded-2xl p-4",
-        "flex flex-col gap-3 transition-opacity duration-300",
-        "opacity-40 hover:opacity-100 focus-within:opacity-100",
+        "bg-card/90 backdrop-blur-xl shadow-2xl rounded-2xl p-3.5",
+        "flex flex-col gap-3 transition-all duration-300",
+        "border border-border/40 ring-1 ring-black/[0.04] dark:ring-white/[0.04]",
         isRTL ? "right-4" : "left-4"
       )}>
-        {/* Row 1: Menu button + Search bar */}
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 flex-shrink-0"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-          
-          <Popover open={searchOpen} onOpenChange={setSearchOpen}>
-            <PopoverTrigger asChild>
-              <div className="relative flex-1">
-                <Search className={cn(
-                  "absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground",
-                  isRTL ? "right-3" : "left-3"
-                )} />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    if (e.target.value.length >= 2) setSearchOpen(true);
-                  }}
-                  onFocus={() => {
-                    if (searchQuery.length >= 2) setSearchOpen(true);
-                  }}
-                  placeholder={tx.searchPlaceholder}
-                  className={cn(
-                    "h-9 text-sm border-border bg-muted/50",
-                    isRTL ? "pr-9 pl-8" : "pl-9 pr-8"
-                  )}
-                />
-                {searchQuery && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={cn(
-                      "absolute top-1/2 -translate-y-1/2 h-6 w-6",
-                      isRTL ? "left-1" : "right-1"
-                    )}
-                    onClick={() => { setSearchQuery(''); setSearchOpen(false); }}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
+        {/* Row 1: Search bar (full-width) */}
+        <Popover open={searchOpen} onOpenChange={setSearchOpen}>
+          <PopoverTrigger asChild>
+            <div className="relative">
+              <Search className={cn(
+                "absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground",
+                isRTL ? "right-3.5" : "left-3.5"
+              )} />
+              <Input
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  if (e.target.value.length >= 2) setSearchOpen(true);
+                }}
+                onFocus={() => {
+                  if (searchQuery.length >= 2) setSearchOpen(true);
+                }}
+                placeholder={tx.searchPlaceholder}
+                className={cn(
+                  "h-10 text-sm rounded-xl border-border/50 bg-background/60 focus-visible:ring-primary/30 focus-visible:border-primary/40 transition-all",
+                  isRTL ? "pr-10 pl-9" : "pl-10 pr-9"
                 )}
-              </div>
-            </PopoverTrigger>
-            
-            <PopoverContent 
-              className="w-72 md:w-80 p-0" 
-              align={isRTL ? "end" : "start"}
-              onOpenAutoFocus={(e) => e.preventDefault()}
-            >
-              <Command>
-                <CommandList>
-                  {searchSuggestions.length === 0 ? (
-                    <CommandEmpty>{tx.noResults}</CommandEmpty>
-                  ) : (
-                    <CommandGroup heading={`${searchSuggestions.length} ${tx.results}`}>
-                      {searchSuggestions.map((provider) => (
-                        <CommandItem
-                          key={provider.id}
-                          value={provider.name}
-                          onSelect={() => handleSearchSelect(provider)}
-                          className="cursor-pointer"
-                        >
-                          <div className="flex items-start gap-3 w-full">
-                            <div className="flex-shrink-0 mt-0.5">
-                              <ProviderAvatar
-                                image={provider.image}
-                                name={provider.name}
-                                type={provider.type}
-                                className="h-7 w-7"
-                                iconSize={14}
-                              />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium truncate">{provider.name}</div>
-                              <div className="text-xs text-muted-foreground truncate">
-                                {provider.specialty || PROVIDER_TYPE_LABELS[provider.type]?.fr}
-                              </div>
-                              <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                                <MapPin className="h-3 w-3" />
-                                <span className="truncate">{provider.address}</span>
-                              </div>
-                            </div>
-                            {provider.isOpen && (
-                              <Badge variant="secondary" className="text-[10px] h-5 flex-shrink-0">
-                                {tx.openNow}
-                              </Badge>
-                            )}
-                          </div>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "absolute top-1/2 -translate-y-1/2 h-6 w-6 rounded-md",
+                    isRTL ? "left-1.5" : "right-1.5"
                   )}
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-        </div>
+                  onClick={() => { setSearchQuery(''); setSearchOpen(false); }}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+          </PopoverTrigger>
+          
+          <PopoverContent 
+            className="w-72 md:w-80 p-0 rounded-xl shadow-xl border-border/50" 
+            align={isRTL ? "end" : "start"}
+            onOpenAutoFocus={(e) => e.preventDefault()}
+          >
+            <Command>
+              <CommandList>
+                {searchSuggestions.length === 0 ? (
+                  <CommandEmpty className="py-6 text-center text-sm">{tx.noResults}</CommandEmpty>
+                ) : (
+                  <CommandGroup heading={`${searchSuggestions.length} ${tx.results}`}>
+                    {searchSuggestions.map((provider) => (
+                      <CommandItem
+                        key={provider.id}
+                        value={provider.name}
+                        onSelect={() => handleSearchSelect(provider)}
+                        className="cursor-pointer rounded-lg"
+                      >
+                        <div className="flex items-start gap-3 w-full">
+                          <div className="flex-shrink-0 mt-0.5">
+                            <ProviderAvatar
+                              image={provider.image}
+                              name={provider.name}
+                              type={provider.type}
+                              className="h-8 w-8 rounded-lg"
+                              iconSize={14}
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-sm truncate">{provider.name}</div>
+                            <div className="text-xs text-muted-foreground truncate">
+                              {provider.specialty || PROVIDER_TYPE_LABELS[provider.type]?.fr}
+                            </div>
+                            <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                              <MapPin className="h-3 w-3" />
+                              <span className="truncate">{provider.address}</span>
+                            </div>
+                          </div>
+                          {provider.isOpen && (
+                            <Badge variant="secondary" className="text-[10px] h-5 flex-shrink-0 rounded-md">
+                              {tx.openNow}
+                            </Badge>
+                          )}
+                        </div>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )}
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
 
-        {/* Row 2: Mode pills (scrollable horizontal) */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {/* Row 2: Mode pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
           <Link to="/map/providers">
             <Badge 
               variant="default"
-              className="cursor-pointer px-3 py-1.5 text-xs whitespace-nowrap gap-1.5"
+              className="cursor-pointer px-3 py-1.5 text-xs whitespace-nowrap gap-1.5 rounded-lg shadow-sm"
             >
               <MapPin className="h-3.5 w-3.5" />
               {tx.all}
@@ -405,7 +395,7 @@ const ProvidersMapChild = () => {
           <Link to="/map/emergency">
             <Badge 
               variant="outline"
-              className="cursor-pointer px-3 py-1.5 text-xs whitespace-nowrap gap-1.5 bg-muted/50 hover:bg-muted"
+              className="cursor-pointer px-3 py-1.5 text-xs whitespace-nowrap gap-1.5 bg-background/60 hover:bg-accent rounded-lg transition-colors"
             >
               <AlertTriangle className="h-3.5 w-3.5" />
               {tx.emergency}
@@ -414,7 +404,7 @@ const ProvidersMapChild = () => {
           <Link to="/map/blood">
             <Badge 
               variant="outline"
-              className="cursor-pointer px-3 py-1.5 text-xs whitespace-nowrap gap-1.5 bg-muted/50 hover:bg-muted"
+              className="cursor-pointer px-3 py-1.5 text-xs whitespace-nowrap gap-1.5 bg-background/60 hover:bg-accent rounded-lg transition-colors"
             >
               <Droplet className="h-3.5 w-3.5" />
               {tx.blood}
@@ -427,11 +417,11 @@ const ProvidersMapChild = () => {
               variant="ghost"
               size="sm"
               onClick={handleFitAll}
-              className="h-7 px-2 text-xs whitespace-nowrap gap-1 flex-shrink-0"
+              className="h-7 px-2 text-xs whitespace-nowrap gap-1 flex-shrink-0 rounded-lg"
             >
               <Maximize2 className="h-3.5 w-3.5" />
               {tx.fitAll}
-              <Badge variant="secondary" className="h-4 px-1 text-[10px] ml-0.5">
+              <Badge variant="secondary" className="h-4 px-1 text-[10px] ml-0.5 rounded">
                 {filteredProviders.length}
               </Badge>
             </Button>
@@ -444,21 +434,27 @@ const ProvidersMapChild = () => {
             <Button 
               variant="outline" 
               size="sm" 
-              className="w-full justify-between h-8 text-xs gap-2"
+              className="w-full justify-between h-9 text-xs gap-2 rounded-xl border-border/50 bg-background/40 hover:bg-accent transition-all"
             >
               <span className="flex items-center gap-2">
                 <Filter className="h-3.5 w-3.5" />
                 {tx.showFilters}
               </span>
-              {activeFilterCount > 0 && (
-                <Badge variant="default" className="h-5 w-5 p-0 flex items-center justify-center text-[10px]">
-                  {activeFilterCount}
-                </Badge>
-              )}
+              <div className="flex items-center gap-1.5">
+                {activeFilterCount > 0 && (
+                  <Badge variant="default" className="h-5 w-5 p-0 flex items-center justify-center text-[10px] rounded-full">
+                    {activeFilterCount}
+                  </Badge>
+                )}
+                <ChevronDown className={cn(
+                  "h-3.5 w-3.5 text-muted-foreground transition-transform duration-200",
+                  filtersOpen && "rotate-180"
+                )} />
+              </div>
             </Button>
           </CollapsibleTrigger>
           
-          <CollapsibleContent className="pt-3 space-y-3 animate-fade-in">
+          <CollapsibleContent className="pt-3 space-y-3">
             {/* Header with clear */}
             {activeFilterCount > 0 && (
               <div className="flex items-center justify-end">
@@ -466,7 +462,7 @@ const ProvidersMapChild = () => {
                   variant="ghost" 
                   size="sm" 
                   onClick={clearFilters}
-                  className="h-6 text-xs text-muted-foreground"
+                  className="h-6 text-xs text-muted-foreground hover:text-destructive"
                 >
                   <X className="h-3 w-3 mr-1" />
                   {tx.clearFilters}
@@ -475,8 +471,8 @@ const ProvidersMapChild = () => {
             )}
             
             {/* Open Now Toggle */}
-            <div className="flex items-center justify-between">
-              <Label htmlFor="open-now" className="flex items-center gap-2 text-xs cursor-pointer">
+            <div className="flex items-center justify-between px-1">
+              <Label htmlFor="open-now" className="flex items-center gap-2 text-xs cursor-pointer font-medium">
                 <Clock className="h-3.5 w-3.5 text-green-600" />
                 {tx.openNow}
               </Label>
@@ -487,25 +483,29 @@ const ProvidersMapChild = () => {
               />
             </div>
             
+            {/* Divider */}
+            <div className="h-px bg-border/40 mx-1" />
+            
             {/* Provider Types */}
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="space-y-2 px-1">
+              <Label className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
                 <Building2 className="h-3.5 w-3.5" />
                 {tx.providerTypes}
               </Label>
-              <div className="space-y-1.5 max-h-40 overflow-y-auto">
+              <div className="space-y-2 max-h-40 overflow-y-auto">
                 {FILTERABLE_TYPES.map(type => {
                   const label = PROVIDER_TYPE_LABELS[type];
                   return (
-                    <div key={type} className="flex items-center gap-2">
+                    <div key={type} className="flex items-center gap-2.5">
                       <Checkbox
                         id={`type-${type}`}
                         checked={selectedTypes.has(type)}
                         onCheckedChange={() => toggleType(type)}
+                        className="rounded"
                       />
                       <Label 
                         htmlFor={`type-${type}`} 
-                        className="text-xs cursor-pointer flex items-center gap-1"
+                        className="text-xs cursor-pointer flex items-center gap-1.5"
                       >
                         <span>{label.icon}</span>
                         <span>{language === 'ar' ? label.ar : label.fr}</span>
@@ -517,7 +517,7 @@ const ProvidersMapChild = () => {
             </div>
             
             {activeFilterCount > 0 && (
-              <div className="text-[10px] text-muted-foreground text-center pt-2 border-t">
+              <div className="text-[10px] text-muted-foreground text-center pt-2 border-t border-border/40 mx-1">
                 {activeFilterCount} {tx.activeFilters}
               </div>
             )}
