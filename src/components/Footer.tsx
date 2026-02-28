@@ -37,6 +37,7 @@ const Footer = () => {
   const professionalsLinks = [
     { label: t('footer', 'becomePartner'), href: '/provider/register', icon: UserPlus },
     { label: t('footer', 'practitionerRegistration'), href: '/provider/register', icon: ClipboardCheck },
+    { label: language === 'ar' ? 'الأسعار' : language === 'en' ? 'Pricing' : 'Tarifs', href: '/#pricing', icon: Heart },
     { label: t('footer', 'documentation'), href: '/docs', icon: BookOpen },
     { label: t('footer', 'verificationCharter'), href: '/how', icon: ShieldCheck },
   ];
