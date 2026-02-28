@@ -424,13 +424,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         displayName: fullName
       });
 
-      // Send email verification (without continue URL to avoid unauthorized-domain failures)
+      // Send email verification with redirect to citizen dashboard
       try {
-        await sendEmailVerification(newUser);
-      } catch (verificationError: any) {
-        console.warn('Email verification send failed:', verificationError);
-        if (verificationError?.code === 'auth/too-many-requests') {
-          toast.error("Compte créé, mais l'email de vérification est temporairement bloqué. Réessayez dans quelques minutes.");
+        await sendEmailVerification(newUser, {
+          url: `${window.location.origin}/citizen/dashboard`,
+          handleCodeInApp: false,
+        });
+      } catch {
+        // Fallback without continueUrl if domain not allowlisted
+        try {
+          await sendEmailVerification(newUser);
+        } catch (retryError: any) {
+          console.warn('Email verification send failed:', retryError);
+          if (retryError?.code === 'auth/too-many-requests') {
+            toast.error("Compte créé, mais l'email de vérification est temporairement bloqué. Réessayez dans quelques minutes.");
+          }
         }
       }
 
