@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import Footer from '@/components/Footer';
 
 export default function DeveloperRegisterPage() {
   const [fullName, setFullName] = useState('');
@@ -105,6 +106,7 @@ export default function DeveloperRegisterPage() {
   }
 
   return (
+    <>
     <div className="min-h-screen flex">
       {/* Left branding panel */}
       <div className="hidden lg:flex lg:w-[480px] bg-foreground text-background flex-col justify-between p-10">
@@ -234,5 +236,7 @@ export default function DeveloperRegisterPage() {
         </div>
       </div>
     </div>
+    <Footer />
+    </>
   );
 }

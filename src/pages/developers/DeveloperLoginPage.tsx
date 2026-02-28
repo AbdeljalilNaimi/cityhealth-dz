@@ -5,6 +5,7 @@ import { Eye, EyeOff, Code2, Zap, Shield, Terminal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import Footer from '@/components/Footer';
 
 export default function DeveloperLoginPage() {
   const navigate = useNavigate();
@@ -37,6 +38,7 @@ export default function DeveloperLoginPage() {
   };
 
   return (
+    <>
     <div className="min-h-screen flex">
       {/* Left branding panel */}
       <div className="hidden lg:flex lg:w-[480px] bg-foreground text-background flex-col justify-between p-10">
@@ -147,5 +149,7 @@ export default function DeveloperLoginPage() {
         </div>
       </div>
     </div>
+    <Footer />
+    </>
   );
 }
