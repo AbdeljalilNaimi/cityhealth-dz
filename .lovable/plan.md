@@ -1,30 +1,59 @@
 
 
-## Problem
-Firebase's default email verification page shows "Your email has been verified. You can now sign in with your new account" instead of redirecting directly to the app. This happens because the Lovable preview domain is likely not in Firebase's authorized domains list, so `handleCodeInApp: true` fails silently and the fallback sends a plain verification email that uses Firebase's hosted page.
+## Analysis: Image Upload Verification
 
-## Solution
+### Current Architecture
 
-Two-pronged approach to ensure the user always ends up on their dashboard:
+Image uploads use **Supabase Storage** (`provider-images` bucket) via `src/services/providerImageService.ts`. Three upload points exist:
 
-### 1. Fix `sendEmailVerification` in `src/contexts/AuthContext.tsx`
-- Keep `handleCodeInApp: true` with the `continueUrl` pointing to `/email-verified`
-- **Also set the fallback** to use `continueUrl` (without `handleCodeInApp`) so that even on Firebase's hosted page, the "Continue" button redirects to `/email-verified` instead of a generic page
+1. **`/provider/register` (Step 5)**: Logo + gallery uploaded during registration via `providerRegistrationService.ts`. Uses blob URLs locally, then uploads to Supabase on final submission.
+2. **`/provider/dashboard`**: Logo upload via avatar hover overlay (line ~810). Gallery managed via `PhotoGalleryManager` inside `NonSensitiveFieldsEditor`.
+3. **Provider profile page**: Display only (no upload on public profile).
 
-### 2. Update `src/pages/EmailVerifiedPage.tsx` to handle both flows
-- **Flow A (handleCodeInApp works):** URL contains `oobCode` → call `applyActionCode` → auto-login → redirect to dashboard (already implemented)
-- **Flow B (Firebase hosted page, user clicks "Continue"):** URL has NO `oobCode` but email is already verified → attempt auto-login with stored credentials → redirect to dashboard
-- Add logic: if no `oobCode` in URL, check `sessionStorage` for stored credentials, sign in, and redirect. If no credentials either, redirect to `/citizen/login`.
+### Issues Found
 
-### Changes
+1. **RLS Policy Conflict**: The storage bucket has `auth.role() = 'authenticated'` checks, but this project uses **Firebase Auth** (not Supabase Auth). The Supabase `auth.role()` will always return `'anon'` since users authenticate through Firebase, not Supabase. This means **all uploads will fail with a 403 error** for authenticated Firebase users because Supabase doesn't recognize them as authenticated.
 
-**`src/contexts/AuthContext.tsx`** (lines ~427-443)
-- Update fallback `sendEmailVerification` to include `url: \`\${window.location.origin}/email-verified\`` (without `handleCodeInApp`) so the "Continue" link on Firebase's page points to our app
+2. **Registration Upload Path**: In `providerRegistrationService.ts` (line 121), the provider ID is set to `provider_${userId}`, but `uploadProviderLogo` uses this as the folder path. This is fine structurally but the upload itself will fail due to RLS issue above.
 
-**`src/pages/EmailVerifiedPage.tsx`**
-- In the `verifyAndLogin` effect, if `oobCode` is missing, don't show an error. Instead:
-  - Try auto-login with `sessionStorage` credentials
-  - If successful, redirect to dashboard
-  - If no credentials, redirect to `/citizen/login`
-- This handles the case where the user arrives from Firebase's "Continue" button (no `oobCode`, but email already verified)
+3. **Dashboard Logo Upload**: Works only if Supabase auth is active (which it isn't - Firebase is the auth provider).
+
+4. **Gallery in Registration**: During Step 5, images are stored as local blob URLs. On submission, they're uploaded to Supabase. But blob URLs saved to localStorage (draft recovery) will be invalid after page reload since `URL.createObjectURL` URLs are session-scoped.
+
+### Proposed Fix
+
+Since the app uses Firebase Auth (not Supabase Auth), the storage RLS policies need to allow uploads without requiring Supabase authentication. Two approaches:
+
+**Option A (Recommended)**: Update RLS policies to allow any upload to the `provider-images` bucket (it's already public-read). Since the bucket is public and stores non-sensitive provider marketing images, this is acceptable.
+
+**Option B**: Switch image uploads to Firebase Storage (already configured in `storage.rules`). This would require rewriting `providerImageService.ts` to use Firebase Storage SDK.
+
+### Implementation Plan
+
+1. **Fix storage RLS policies** - Create a new migration that drops the `auth.role() = 'authenticated'` requirement for INSERT/UPDATE/DELETE on `provider-images` bucket, replacing with `true` (since bucket is already public and content is non-sensitive marketing images).
+
+2. **Fix blob URL persistence** - In `Step5MediaUpload`, add a warning or handle the case where blob URLs in `galleryPreviews` become invalid after page reload during draft recovery.
+
+3. **Verify provider profile page** - The profile page only displays images, no upload issues there. Confirm `providerData.image` and `providerData.gallery` render correctly.
+
+### Technical Details
+
+Migration SQL:
+```sql
+DROP POLICY IF EXISTS "Providers can upload images" ON storage.objects;
+DROP POLICY IF EXISTS "Providers can update images" ON storage.objects;  
+DROP POLICY IF EXISTS "Providers can delete images" ON storage.objects;
+
+CREATE POLICY "Anyone can upload provider images"
+ON storage.objects FOR INSERT
+WITH CHECK (bucket_id = 'provider-images');
+
+CREATE POLICY "Anyone can update provider images"
+ON storage.objects FOR UPDATE
+USING (bucket_id = 'provider-images');
+
+CREATE POLICY "Anyone can delete provider images"
+ON storage.objects FOR DELETE
+USING (bucket_id = 'provider-images');
+```
 
