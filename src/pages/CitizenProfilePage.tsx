@@ -61,6 +61,7 @@ export default function CitizenProfilePage() {
   
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     full_name: '',
     phone: '',
@@ -70,6 +71,91 @@ export default function CitizenProfilePage() {
     height: '' as string,
     last_donation_date: '' as string
   });
+
+  // Format phone to +213 X XX XX XX XX pattern
+  const formatAlgerianPhone = (value: string): string => {
+    // Strip everything except digits
+    let digits = value.replace(/[^\d]/g, '');
+    // Remove leading 213 if user typed it (we add prefix automatically)
+    if (digits.startsWith('213')) digits = digits.slice(3);
+    // Remove leading 0 (local format)
+    if (digits.startsWith('0')) digits = digits.slice(1);
+    // Limit to 9 digits
+    digits = digits.slice(0, 9);
+    // Format: X XX XX XX XX
+    if (digits.length === 0) return '';
+    let formatted = digits[0];
+    if (digits.length > 1) formatted += ' ' + digits.slice(1, 3);
+    if (digits.length > 3) formatted += ' ' + digits.slice(3, 5);
+    if (digits.length > 5) formatted += ' ' + digits.slice(5, 7);
+    if (digits.length > 7) formatted += ' ' + digits.slice(7, 9);
+    return '+213 ' + formatted;
+  };
+
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    // Name validation
+    if (!formData.full_name.trim()) {
+      errors.full_name = 'Le nom est obligatoire';
+    } else if (formData.full_name.trim().length < 3) {
+      errors.full_name = 'Le nom doit contenir au moins 3 caractères';
+    } else if (formData.full_name.trim().length > 100) {
+      errors.full_name = 'Le nom ne doit pas dépasser 100 caractères';
+    }
+
+    // Phone validation (Algerian format)
+    if (formData.phone) {
+      const phoneDigits = formData.phone.replace(/[^\d]/g, '');
+      // Should be 12 digits total (213 + 9 digits)
+      if (phoneDigits.length !== 12 || !phoneDigits.startsWith('213')) {
+        errors.phone = 'Numéro invalide. Format : +213 X XX XX XX XX';
+      }
+    }
+
+    // Date of birth validation
+    if (formData.dateOfBirth) {
+      const dob = new Date(formData.dateOfBirth);
+      const today = new Date();
+      const minDate = new Date('1900-01-01');
+      const age = (today.getTime() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+      if (dob > today) {
+        errors.dateOfBirth = 'La date ne peut pas être dans le futur';
+      } else if (dob < minDate) {
+        errors.dateOfBirth = 'Date de naissance invalide';
+      } else if (age < 13) {
+        errors.dateOfBirth = 'Vous devez avoir au moins 13 ans';
+      }
+    }
+
+    // Weight validation
+    if (formData.weight) {
+      const w = Number(formData.weight);
+      if (isNaN(w) || w < 20 || w > 350) {
+        errors.weight = 'Poids invalide (20-350 kg)';
+      }
+    }
+
+    // Height validation
+    if (formData.height) {
+      const h = Number(formData.height);
+      if (isNaN(h) || h < 50 || h > 260) {
+        errors.height = 'Taille invalide (50-260 cm)';
+      }
+    }
+
+    // Last donation date validation
+    if (formData.last_donation_date) {
+      const donDate = new Date(formData.last_donation_date);
+      const today = new Date();
+      if (donDate > today) {
+        errors.last_donation_date = 'La date ne peut pas être dans le futur';
+      }
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
   const [providerCache, setProviderCache] = useState<Record<string, CityHealthProvider | null>>({});
   const [emergencyCard, setEmergencyCard] = useState<EmergencyHealthCard | null>(null);
 
@@ -129,17 +215,22 @@ export default function CitizenProfilePage() {
     .slice(0, 2) || 'U';
 
   const handleSave = async () => {
+    if (!validateForm()) {
+      toast.error('Veuillez corriger les erreurs avant de sauvegarder');
+      return;
+    }
     await updateProfile({ 
-      full_name: formData.full_name,
-      phone: formData.phone,
-      address: formData.address,
-      date_of_birth: formData.dateOfBirth,
+      full_name: formData.full_name.trim(),
+      phone: formData.phone || undefined,
+      address: formData.address || undefined,
+      date_of_birth: formData.dateOfBirth || undefined,
       weight: formData.weight ? Number(formData.weight) : undefined,
       height: formData.height ? Number(formData.height) : undefined,
       last_donation_date: formData.last_donation_date || undefined,
     });
     toast.success('Profil mis à jour');
     setIsEditing(false);
+    setFormErrors({});
   };
 
   const handleRemoveFavorite = (providerId: string) => {
@@ -259,12 +350,17 @@ export default function CitizenProfilePage() {
                       <Input
                         id="name"
                         value={formData.full_name}
-                        onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, full_name: e.target.value }));
+                          if (formErrors.full_name) setFormErrors(prev => ({ ...prev, full_name: '' }));
+                        }}
                         disabled={!isEditing}
-                        className="pl-10"
+                        className={cn("pl-10", formErrors.full_name && "border-destructive")}
                         placeholder="Votre nom complet"
+                        maxLength={100}
                       />
                     </div>
+                    {formErrors.full_name && <p className="text-sm text-destructive">{formErrors.full_name}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -288,12 +384,17 @@ export default function CitizenProfilePage() {
                       <Input
                         id="phone"
                         value={formData.phone}
-                        onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                        onChange={(e) => {
+                          const formatted = formatAlgerianPhone(e.target.value);
+                          setFormData(prev => ({ ...prev, phone: formatted }));
+                          if (formErrors.phone) setFormErrors(prev => ({ ...prev, phone: '' }));
+                        }}
                         disabled={!isEditing}
-                        className="pl-10"
-                        placeholder="+213 XX XX XX XX"
+                        className={cn("pl-10", formErrors.phone && "border-destructive")}
+                        placeholder="+213 X XX XX XX XX"
                       />
                     </div>
+                    {formErrors.phone && <p className="text-sm text-destructive">{formErrors.phone}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -304,11 +405,16 @@ export default function CitizenProfilePage() {
                         id="dob"
                         type="date"
                         value={formData.dateOfBirth}
-                        onChange={(e) => setFormData(prev => ({ ...prev, dateOfBirth: e.target.value }))}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, dateOfBirth: e.target.value }));
+                          if (formErrors.dateOfBirth) setFormErrors(prev => ({ ...prev, dateOfBirth: '' }));
+                        }}
                         disabled={!isEditing}
-                        className="pl-10"
+                        className={cn("pl-10", formErrors.dateOfBirth && "border-destructive")}
+                        max={new Date().toISOString().split('T')[0]}
                       />
                     </div>
+                    {formErrors.dateOfBirth && <p className="text-sm text-destructive">{formErrors.dateOfBirth}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -318,15 +424,19 @@ export default function CitizenProfilePage() {
                       <Input
                         id="weight"
                         type="number"
-                        min="1"
-                        max="300"
+                        min="20"
+                        max="350"
                         value={formData.weight}
-                        onChange={(e) => setFormData(prev => ({ ...prev, weight: e.target.value }))}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, weight: e.target.value }));
+                          if (formErrors.weight) setFormErrors(prev => ({ ...prev, weight: '' }));
+                        }}
                         disabled={!isEditing}
-                        className="pl-10"
+                        className={cn("pl-10", formErrors.weight && "border-destructive")}
                         placeholder="kg"
                       />
                     </div>
+                    {formErrors.weight && <p className="text-sm text-destructive">{formErrors.weight}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -337,14 +447,18 @@ export default function CitizenProfilePage() {
                         id="height"
                         type="number"
                         min="50"
-                        max="250"
+                        max="260"
                         value={formData.height}
-                        onChange={(e) => setFormData(prev => ({ ...prev, height: e.target.value }))}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, height: e.target.value }));
+                          if (formErrors.height) setFormErrors(prev => ({ ...prev, height: '' }));
+                        }}
                         disabled={!isEditing}
-                        className="pl-10"
+                        className={cn("pl-10", formErrors.height && "border-destructive")}
                         placeholder="cm"
                       />
                     </div>
+                    {formErrors.height && <p className="text-sm text-destructive">{formErrors.height}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -355,12 +469,16 @@ export default function CitizenProfilePage() {
                         id="lastDonation"
                         type="date"
                         value={formData.last_donation_date}
-                        onChange={(e) => setFormData(prev => ({ ...prev, last_donation_date: e.target.value }))}
+                        onChange={(e) => {
+                          setFormData(prev => ({ ...prev, last_donation_date: e.target.value }));
+                          if (formErrors.last_donation_date) setFormErrors(prev => ({ ...prev, last_donation_date: '' }));
+                        }}
                         disabled={!isEditing}
-                        className="pl-10"
+                        className={cn("pl-10", formErrors.last_donation_date && "border-destructive")}
                         max={new Date().toISOString().split('T')[0]}
                       />
                     </div>
+                    {formErrors.last_donation_date && <p className="text-sm text-destructive">{formErrors.last_donation_date}</p>}
                   </div>
 
                   <div className="space-y-2 md:col-span-2">
