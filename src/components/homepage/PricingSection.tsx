@@ -143,7 +143,7 @@ export const PricingSection = () => {
                     <Button
                       className="w-full"
                       variant={plan.popular ? 'default' : 'outline'}
-                      onClick={() => navigate('/inscription-professionnel')}
+                      onClick={() => navigate('/provider/register')}
                     >
                       {plan.cta}
                     </Button>
