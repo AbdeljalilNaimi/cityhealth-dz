@@ -107,12 +107,12 @@ export const MapSidebar = ({
         onClick={() => setSidebarOpen(true)}
         className={cn(
           "absolute top-20 z-[1000] flex items-center gap-2 px-3.5 py-2.5 bg-card/95 backdrop-blur-sm border border-border/60 shadow-xl text-sm font-medium text-foreground hover:bg-accent transition-all duration-200",
-          isRTL ? "right-0 rounded-l-xl" : "left-0 rounded-r-xl"
+          isRTL ? "left-0 rounded-r-xl" : "right-0 rounded-l-xl"
         )}
         title={tx.open}
       >
         <List className="h-4 w-4 text-primary" />
-        <ChevronRight className={cn("h-4 w-4", isRTL && "rotate-180")} />
+        <ChevronLeft className={cn("h-4 w-4", isRTL && "rotate-180")} />
       </button>
     );
   }
@@ -120,21 +120,21 @@ export const MapSidebar = ({
   return (
     <div
       className={cn(
-        "flex flex-col w-80 flex-shrink-0 h-full bg-card z-10 overflow-hidden",
-        isRTL ? "border-l border-border/60" : "border-r border-border/60"
+        "flex flex-col w-72 flex-shrink-0 h-full bg-card z-10 overflow-hidden",
+        isRTL ? "border-r border-border/60" : "border-l border-border/60"
       )}
     >
       {/* ── Sticky Header ── */}
-      <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b border-border/50 px-4 py-3.5 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-            <List className="h-4 w-4 text-primary" />
+      <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b border-border/50 px-3 py-2.5 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <List className="h-3.5 w-3.5 text-primary" />
           </div>
           <div className="min-w-0">
             {loading ? (
-              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-3.5 w-24" />
             ) : (
-              <p className="text-sm font-semibold leading-tight truncate">
+              <p className="text-xs font-semibold leading-tight truncate">
                 <span className="text-primary font-bold">{providers.length}</span>{' '}
                 <span className="text-foreground">{providers.length === 1 ? tx.provider : tx.providers}</span>
                 {label && <span className="text-muted-foreground"> · {label}</span>}
@@ -145,42 +145,41 @@ export const MapSidebar = ({
         <Button
           size="icon"
           variant="ghost"
-          className="h-8 w-8 flex-shrink-0 rounded-lg hover:bg-muted"
+          className="h-7 w-7 flex-shrink-0 rounded-lg hover:bg-muted"
           onClick={() => setSidebarOpen(false)}
           title={tx.close}
         >
-          <ChevronLeft className={cn("h-4 w-4", isRTL && "rotate-180")} />
+          <ChevronRight className={cn("h-4 w-4", isRTL && "rotate-180")} />
         </Button>
       </div>
 
       {/* ── Content ── */}
       <ScrollArea className="flex-1 overflow-hidden">
         {loading ? (
-          <div className="p-3 space-y-2">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex gap-3 p-4 rounded-xl border border-border/40 bg-muted/20">
-                <Skeleton className="w-14 h-14 rounded-xl flex-shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-3/4" />
+          <div className="p-2 space-y-1.5">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex gap-2.5 p-2.5 rounded-lg border border-border/30 bg-muted/10">
+                <Skeleton className="w-9 h-9 rounded-lg flex-shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <Skeleton className="h-3.5 w-3/4" />
                   <Skeleton className="h-3 w-1/2" />
-                  <Skeleton className="h-3 w-2/3" />
-                  <Skeleton className="h-7 w-full rounded-lg" />
+                  <Skeleton className="h-6 w-full rounded-md" />
                 </div>
               </div>
             ))}
           </div>
         ) : providers.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-20 px-6 text-center">
-            <div className="h-14 w-14 rounded-2xl bg-muted/50 flex items-center justify-center">
-              <AlertTriangle className="h-7 w-7 text-muted-foreground/40" />
+          <div className="flex flex-col items-center justify-center gap-2.5 py-16 px-5 text-center">
+            <div className="h-12 w-12 rounded-2xl bg-muted/50 flex items-center justify-center">
+              <AlertTriangle className="h-6 w-6 text-muted-foreground/40" />
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">{tx.noResults}</p>
-              <p className="text-xs text-muted-foreground/60 mt-1">{tx.noResultsSub}</p>
+              <p className="text-xs font-medium text-muted-foreground">{tx.noResults}</p>
+              <p className="text-[11px] text-muted-foreground/60 mt-0.5">{tx.noResultsSub}</p>
             </div>
           </div>
         ) : (
-          <div className="p-2.5 space-y-1.5">
+          <div className="p-2 space-y-1">
             {providers.map((provider) => {
               const distance = distances.get(provider.id);
               const isSelected = selectedProvider?.id === provider.id;
@@ -192,18 +191,18 @@ export const MapSidebar = ({
                 <button
                   key={provider.id}
                   className={cn(
-                    'w-full flex gap-3 p-3.5 rounded-xl text-left transition-all duration-200',
-                    'hover:bg-accent/50 hover:shadow-sm',
+                    'w-full flex gap-2.5 p-2.5 rounded-lg text-left transition-all duration-150',
+                    'hover:bg-accent/40',
                     isSelected
-                      ? 'bg-primary/5 border-l-[3px] border-l-primary border border-primary/20 shadow-sm'
-                      : 'border border-transparent hover:border-border/40'
+                      ? 'bg-primary/5 border-l-[3px] border-l-primary border border-primary/20'
+                      : 'border border-transparent hover:border-border/30'
                   )}
                   onClick={() => handleProviderClick(provider)}
                 >
-                  {/* Avatar */}
+                  {/* Small Avatar */}
                   <div className="flex-shrink-0">
                     {provider.image && provider.image !== '/placeholder.svg' ? (
-                      <div className="w-13 h-13 rounded-xl overflow-hidden ring-2 ring-border/30">
+                      <div className="w-9 h-9 rounded-lg overflow-hidden ring-1 ring-border/20">
                         <img
                           src={provider.image}
                           alt={provider.name}
@@ -215,17 +214,17 @@ export const MapSidebar = ({
                         image={null}
                         name={provider.name}
                         type={provider.type}
-                        className="h-13 w-13 rounded-xl ring-2 ring-border/30"
-                        iconSize={24}
+                        className="h-9 w-9 rounded-lg ring-1 ring-border/20"
+                        iconSize={16}
                       />
                     )}
                   </div>
 
                   {/* Info */}
-                  <div className="flex-1 min-w-0 space-y-1.5">
+                  <div className="flex-1 min-w-0 space-y-1">
                     {/* Name + verified */}
-                    <div className="flex items-start gap-1.5">
-                      <h4 className="font-semibold text-sm leading-snug truncate flex-1 text-foreground">
+                    <div className="flex items-center gap-1">
+                      <h4 className="font-medium text-xs leading-snug truncate flex-1 text-foreground">
                         {provider.name}
                       </h4>
                       {isProviderVerified(provider) && (
@@ -233,52 +232,42 @@ export const MapSidebar = ({
                       )}
                     </div>
 
-                    {/* Type + 24/7 */}
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <Badge variant="secondary" className="text-[10px] h-5 px-2 font-normal rounded-md">
+                    {/* Type + distance + rating inline */}
+                    <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
+                      <Badge variant="secondary" className="text-[9px] h-4 px-1.5 font-normal rounded-md">
                         {typeLabel}
                       </Badge>
                       {provider.emergency && (
-                        <Badge variant="destructive" className="text-[10px] h-5 px-2 rounded-md">
+                        <Badge variant="destructive" className="text-[9px] h-4 px-1.5 rounded-md">
                           {tx.emergency247}
                         </Badge>
                       )}
-                    </div>
-
-                    {/* Address */}
-                    <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                      <MapPin className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                      <span className="truncate">{provider.address}</span>
-                    </div>
-
-                    {/* Distance + rating */}
-                    <div className="flex items-center gap-3 text-xs">
                       {distance !== undefined && (
-                        <span className="text-muted-foreground font-medium">
+                        <span className="text-muted-foreground text-[10px]">
                           {distance.toFixed(1)} {tx.km}
                         </span>
                       )}
                       {provider.rating && (
                         <div className="flex items-center gap-0.5">
-                          <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-                          <span className="font-semibold text-foreground">{provider.rating.toFixed(1)}</span>
+                          <Star className="h-2.5 w-2.5 text-yellow-500 fill-yellow-500" />
+                          <span className="text-[10px] font-medium">{provider.rating.toFixed(1)}</span>
                         </div>
                       )}
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex gap-1.5 pt-1" onClick={(e) => e.stopPropagation()}>
+                    {/* Compact actions */}
+                    <div className="flex gap-1 pt-0.5" onClick={(e) => e.stopPropagation()}>
                       <Button
                         size="sm"
                         variant="default"
-                        className="flex-1 h-8 text-xs gap-1.5 rounded-lg shadow-sm"
+                        className="flex-1 h-6 text-[10px] gap-1 rounded-md shadow-sm px-2"
                         onClick={(e) => handleRoute(e, provider)}
                         disabled={isComputingRoute}
                       >
                         {isComputingRoute ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
+                          <Loader2 className="h-2.5 w-2.5 animate-spin" />
                         ) : (
-                          <Navigation className="h-3 w-3" />
+                          <Navigation className="h-2.5 w-2.5" />
                         )}
                         {tx.route}
                       </Button>
@@ -287,12 +276,12 @@ export const MapSidebar = ({
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-8 w-8 p-0 flex-shrink-0 rounded-lg"
+                          className="h-6 w-6 p-0 flex-shrink-0 rounded-md"
                           asChild
                           onClick={(e) => e.stopPropagation()}
                         >
                           <a href={`tel:${provider.phone}`}>
-                            <Phone className="h-3 w-3" />
+                            <Phone className="h-2.5 w-2.5" />
                           </a>
                         </Button>
                       )}
@@ -300,12 +289,12 @@ export const MapSidebar = ({
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-8 w-8 p-0 flex-shrink-0 rounded-lg"
+                        className="h-6 w-6 p-0 flex-shrink-0 rounded-md"
                         asChild
                         onClick={(e) => e.stopPropagation()}
                       >
                         <Link to={`/provider/${provider.id}`}>
-                          <ExternalLink className="h-3 w-3" />
+                          <ExternalLink className="h-2.5 w-2.5" />
                         </Link>
                       </Button>
                     </div>

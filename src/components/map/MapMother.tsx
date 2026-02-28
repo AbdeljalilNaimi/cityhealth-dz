@@ -231,7 +231,7 @@ const MapMotherInner = () => {
       
       <main id="main-content" className={cn(
         "flex-1 flex flex-col",
-        isFullscreen ? "fixed inset-0 z-50 pt-0" : "container mx-auto px-4 py-4 md:py-6"
+        isFullscreen ? "fixed inset-0 z-50 pt-0" : "container mx-auto px-4 pt-20 pb-4 md:pt-24 md:pb-6"
       )}>
         {!isFullscreen && (
           <div className="mb-3 flex items-center gap-3">
@@ -258,16 +258,9 @@ const MapMotherInner = () => {
           isFullscreen && "rounded-none border-0",
           isRTL ? "flex-row-reverse" : "flex-row"
         )}>
-          {/* Sidebar */}
-          <MapSidebar
-            providers={sidebarProviders}
-            distances={sidebarDistances}
-            loading={sidebarLoading}
-            label={sidebarLabel}
-          />
-
           {/* Map area (relative for absolute overlays) */}
           <div className="flex-1 relative overflow-hidden">
+
             {!isReady && <MapSkeleton loadingText={t('map', 'loadingMap')} />}
             
             <GeolocationIndicator 
@@ -402,6 +395,14 @@ const MapMotherInner = () => {
             <MapControls mode={mode} />
             <Outlet />
           </div>
+
+          {/* Sidebar on the right */}
+          <MapSidebar
+            providers={sidebarProviders}
+            distances={sidebarDistances}
+            loading={sidebarLoading}
+            label={sidebarLabel}
+          />
         </div>
       </main>
     </div>
