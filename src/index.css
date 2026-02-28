@@ -97,7 +97,7 @@
   }
   
   p {
-    @apply text-lg leading-relaxed;
+    line-height: 1.6;
   }
 }
 

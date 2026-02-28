@@ -629,20 +629,20 @@ const PatientDashboard = () => {
           <div className="mt-10">
             <h2 className="text-lg font-semibold mb-4">{d('quickAccess')}</h2>
             <div className="overflow-hidden relative group">
-              <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-              <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+              <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
               <div className="flex gap-3 w-max animate-marquee group-hover:[animation-play-state:paused]">
-                {[...quickServices, ...quickServices].map((service, i) => (
+                {[...quickServices, ...quickServices, ...quickServices].map((service, i) => (
                   <Link
                     key={`${service.href}-${i}`}
                     to={service.href}
-                    className="shrink-0 w-[200px] p-4 rounded-xl border border-border/50 bg-card hover:shadow-md hover:border-primary/30 transition-all duration-200 group/card"
+                    className="shrink-0 w-[180px] p-3.5 rounded-xl border border-border/50 bg-card hover:shadow-md hover:border-primary/30 transition-all duration-200 group/card"
                   >
                     <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center mb-2 group-hover/card:scale-110 transition-transform", service.color)}>
                       <service.icon className="h-4 w-4" />
                     </div>
-                    <p className="font-medium text-sm text-foreground truncate">{service.label}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{service.description}</p>
+                    <p className="font-medium text-sm text-foreground truncate !text-sm !leading-tight">{service.label}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1 !text-xs !leading-snug">{service.description}</p>
                   </Link>
                 ))}
               </div>
