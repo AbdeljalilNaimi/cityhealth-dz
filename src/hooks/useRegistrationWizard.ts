@@ -106,6 +106,11 @@ export function useRegistrationWizard(): UseRegistrationWizardReturn {
       try {
         const parsed = JSON.parse(saved);
         const restoredData = parsed.formData || getInitialFormData();
+        // Blob URLs and File objects don't survive page reload — clear them
+        restoredData.galleryPreviews = [];
+        restoredData.galleryPhotos = [];
+        restoredData.logoPreview = '';
+        restoredData.logo = null;
         setFormData(restoredData);
         setCurrentStep(parsed.currentStep || 1);
         setCompletedSteps(parsed.completedSteps || []);
