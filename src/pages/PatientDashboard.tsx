@@ -223,26 +223,6 @@ const PatientDashboard = () => {
             ))}
           </div>
 
-          {/* Quick Services Grid */}
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold mb-4">{d('quickAccess')}</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {quickServices.map((service) => (
-                <Link
-                  key={service.href}
-                  to={service.href}
-                  className="group p-4 rounded-xl border border-border/50 bg-card hover:shadow-md hover:border-primary/30 transition-all duration-200"
-                >
-                  <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform", service.color)}>
-                    <service.icon className="h-5 w-5" />
-                  </div>
-                  <p className="font-medium text-sm text-foreground">{service.label}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{service.description}</p>
-                </Link>
-              ))}
-            </div>
-          </div>
-
           {/* ====== MAIN TABBED HUB ====== */}
           <Tabs defaultValue="upcoming" className="space-y-6">
             <TabsList className="w-full bg-muted/50 p-1 rounded-xl flex flex-wrap gap-1">
@@ -644,6 +624,30 @@ const PatientDashboard = () => {
               )}
             </TabsContent>
           </Tabs>
+
+          {/* Quick Services Scrolling Marquee */}
+          <div className="mt-10">
+            <h2 className="text-lg font-semibold mb-4">{d('quickAccess')}</h2>
+            <div className="overflow-hidden relative group">
+              <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+              <div className="flex gap-3 w-max animate-marquee group-hover:[animation-play-state:paused]">
+                {[...quickServices, ...quickServices].map((service, i) => (
+                  <Link
+                    key={`${service.href}-${i}`}
+                    to={service.href}
+                    className="shrink-0 w-[200px] p-4 rounded-xl border border-border/50 bg-card hover:shadow-md hover:border-primary/30 transition-all duration-200 group/card"
+                  >
+                    <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center mb-2 group-hover/card:scale-110 transition-transform", service.color)}>
+                      <service.icon className="h-4 w-4" />
+                    </div>
+                    <p className="font-medium text-sm text-foreground truncate">{service.label}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{service.description}</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
