@@ -163,12 +163,12 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Column 5: Legal + Language */}
+          {/* Column 5: Legal + Language + Extension */}
           <div>
             <h4 className="font-semibold text-foreground mb-4 text-sm uppercase tracking-wide">
               {t('footer', 'legal')}
             </h4>
-            <ul className="space-y-2.5 mb-6">
+            <ul className="space-y-2.5 mb-5">
               {legalLinks.map((link) => (
                 <li key={link.href}>
                   <Link to={link.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
@@ -177,6 +177,29 @@ const Footer = () => {
                 </li>
               ))}
             </ul>
+
+            {/* Browser Extension CTA */}
+            <a
+              href="https://drive.google.com/file/d/1TzuMuHPs8EsYVSXA03Olya1h8RX31PWm/view?usp=sharing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group block p-3 rounded-xl bg-accent/5 hover:bg-accent/10 border border-border/50 hover:border-primary/30 transition-all duration-200 mb-5"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <Globe className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-foreground text-sm">
+                    {language === 'ar' ? 'إضافة المتصفح' : language === 'en' ? 'Browser Extension' : 'Extension Navigateur'}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {language === 'ar' ? 'تحميل مجاني' : language === 'en' ? 'Free download' : 'Télécharger gratuitement'}
+                  </p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary rtl-flip transition-all" />
+              </div>
+            </a>
 
             <div>
               <div className="flex items-center gap-2 mb-2">

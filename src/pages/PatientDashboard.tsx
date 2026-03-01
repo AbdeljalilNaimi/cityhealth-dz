@@ -613,6 +613,29 @@ const PatientDashboard = () => {
             </TabsContent>
           </Tabs>
 
+          {/* Browser Extension Banner */}
+          <div className="mt-10">
+            <a
+              href="https://drive.google.com/file/d/1TzuMuHPs8EsYVSXA03Olya1h8RX31PWm/view?usp=sharing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-primary/5 to-accent/5 border border-border/50 hover:border-primary/30 hover:shadow-md transition-all duration-200"
+            >
+              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                <Download className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-foreground">
+                  {language === 'ar' ? 'حمّل إضافة CityHealth للمتصفح' : language === 'en' ? 'Download CityHealth Browser Extension' : 'Téléchargez l\'extension CityHealth'}
+                </p>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {language === 'ar' ? 'وصول سريع لخدمات الصحة من متصفحك' : language === 'en' ? 'Quick access to health services from your browser' : 'Accès rapide aux services de santé depuis votre navigateur'}
+                </p>
+              </div>
+              <ExternalLink className="h-5 w-5 text-muted-foreground group-hover:text-primary shrink-0 transition-colors" />
+            </a>
+          </div>
+
           {/* Quick Services Scrolling Marquee */}
           <div className="mt-10">
             <h2 className="text-lg font-semibold mb-4">{d('quickAccess')}</h2>
