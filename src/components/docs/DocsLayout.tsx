@@ -9,9 +9,11 @@ import { DocsSidebar } from './DocsSidebar';
 import { DocsContent } from './DocsContent';
 import { DocsFloatingChat } from './DocsFloatingChat';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export const DocsLayout = () => {
   const isMobile = useIsMobile();
+  const { language } = useLanguage();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
 
@@ -28,6 +30,8 @@ export const DocsLayout = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleOpenChat]);
+
+  const homeLabel = language === 'ar' ? 'الرئيسية' : language === 'en' ? 'Home' : 'Accueil';
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -47,7 +51,7 @@ export const DocsLayout = () => {
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="p-0 w-80">
+                <SheetContent side={language === 'ar' ? 'right' : 'left'} className="p-0 w-80">
                   <DocsSidebar className="h-full" onNavigate={() => setSidebarOpen(false)} />
                 </SheetContent>
               </Sheet>
@@ -58,7 +62,7 @@ export const DocsLayout = () => {
               className="group flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-              <span className="text-sm hidden sm:inline">Accueil</span>
+              <span className="text-sm hidden sm:inline">{homeLabel}</span>
             </Link>
 
             <div className="h-6 w-px bg-border hidden md:block" />

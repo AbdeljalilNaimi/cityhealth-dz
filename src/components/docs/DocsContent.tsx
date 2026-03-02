@@ -22,6 +22,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { docsStructure, findDocPage, getAllDocPages } from '@/data/docsStructure';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/hooks/useLanguage';
 
 // Sanitize HTML to prevent XSS
 const sanitizeHtml = (html: string): string => {
@@ -182,6 +183,7 @@ const estimateReadingTime = (content: string): number => {
 
 export const DocsContent = () => {
   const { sectionId, pageId } = useParams();
+  const { language } = useLanguage();
   
   const allPages = getAllDocPages();
   const currentPage = sectionId && pageId ? findDocPage(sectionId, pageId) : null;
@@ -191,6 +193,41 @@ export const DocsContent = () => {
   const currentIndex = allPages.findIndex(p => p.sectionId === sectionId && p.id === pageId);
   const prevPage = currentIndex > 0 ? allPages[currentIndex - 1] : null;
   const nextPage = currentIndex < allPages.length - 1 ? allPages[currentIndex + 1] : null;
+
+  const t = {
+    docTitle: language === 'ar' ? 'وثائق CityHealth' : language === 'en' ? 'CityHealth Documentation' : 'Documentation CityHealth',
+    docSubtitle: language === 'ar'
+      ? 'كل ما تحتاج معرفته لاستخدام CityHealth بفعالية'
+      : language === 'en'
+      ? 'Everything you need to know to use CityHealth effectively'
+      : 'Tout ce que vous devez savoir pour utiliser CityHealth efficacement',
+    articles: 'Articles',
+    sections: 'Sections',
+    languages: language === 'ar' ? 'لغات' : language === 'en' ? 'Languages' : 'Langues',
+    quickStart: language === 'ar' ? 'البدء السريع' : language === 'en' ? 'Quick Start' : 'Démarrage rapide',
+    forCitizens: language === 'ar' ? 'للمواطنين' : language === 'en' ? 'For Citizens' : 'Pour les Citoyens',
+    forProfessionals: language === 'ar' ? 'للمهنيين' : language === 'en' ? 'For Professionals' : 'Pour les Professionnels',
+    firstSteps: language === 'ar' ? 'الخطوات الأولى' : language === 'en' ? 'First Steps' : 'Premiers pas',
+    needHelp: language === 'ar' ? 'هل تحتاج مساعدة؟' : language === 'en' ? 'Need help?' : 'Besoin d\'aide ?',
+    helpDesc: language === 'ar'
+      ? 'مساعدنا الذكي متاح 24/7 للإجابة على أسئلتك.'
+      : language === 'en'
+      ? 'Our AI assistant is available 24/7 to answer your questions.'
+      : 'Notre assistant IA est disponible 24/7 pour répondre à vos questions.',
+    helpHint: language === 'ar'
+      ? 'استخدم الاختصار ⌘K أو زر « اسأل الذكاء الاصطناعي » في الشريط العلوي.'
+      : language === 'en'
+      ? 'Use the shortcut ⌘K or the "Ask AI" button in the header.'
+      : 'Utilisez le raccourci ⌘K ou le bouton « Demandez à l\'IA » dans le header.',
+    docs: 'Docs',
+    readingTime: (min: number) => language === 'ar' ? `${min} دقيقة قراءة` : language === 'en' ? `${min} min read` : `${min} min de lecture`,
+    previous: language === 'ar' ? 'السابق' : language === 'en' ? 'Previous' : 'Précédent',
+    next: language === 'ar' ? 'التالي' : language === 'en' ? 'Next' : 'Suivant',
+    helpful: language === 'ar' ? 'هل كانت هذه المقالة مفيدة؟' : language === 'en' ? 'Was this article helpful?' : 'Cet article vous a-t-il été utile ?',
+    yes: language === 'ar' ? 'نعم' : language === 'en' ? 'Yes' : 'Oui',
+    no: language === 'ar' ? 'لا' : language === 'en' ? 'No' : 'Non',
+    articleWord: (count: number) => language === 'ar' ? `${count} مقال` : language === 'en' ? `${count} article${count > 1 ? 's' : ''}` : `${count} article${count > 1 ? 's' : ''}`,
+  };
 
   // Welcome page when no section/page selected
   if (!currentPage) {
@@ -226,7 +263,7 @@ export const DocsContent = () => {
                 transition={{ delay: 0.2 }}
                 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-foreground via-foreground to-foreground/70 bg-clip-text text-transparent"
               >
-                Documentation CityHealth
+                {t.docTitle}
               </motion.h1>
               
               <motion.p 
@@ -235,7 +272,7 @@ export const DocsContent = () => {
                 transition={{ delay: 0.3 }}
                 className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto"
               >
-                Tout ce que vous devez savoir pour utiliser CityHealth efficacement
+                {t.docSubtitle}
               </motion.p>
             </div>
 
@@ -251,21 +288,21 @@ export const DocsContent = () => {
                   <FileText className="h-5 w-5 text-primary" />
                   <p className="text-3xl font-bold text-primary">{totalArticles}</p>
                 </div>
-                <p className="text-sm text-muted-foreground">Articles</p>
+                <p className="text-sm text-muted-foreground">{t.articles}</p>
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center gap-2 mb-1">
                   <BookOpen className="h-5 w-5 text-primary" />
                   <p className="text-3xl font-bold text-primary">{docsStructure.length}</p>
                 </div>
-                <p className="text-sm text-muted-foreground">Sections</p>
+                <p className="text-sm text-muted-foreground">{t.sections}</p>
               </div>
               <div className="text-center">
                 <div className="flex items-center justify-center gap-2 mb-1">
                   <Sparkles className="h-5 w-5 text-primary" />
                   <p className="text-3xl font-bold text-primary">3</p>
                 </div>
-                <p className="text-sm text-muted-foreground">Langues</p>
+                <p className="text-sm text-muted-foreground">{t.languages}</p>
               </div>
             </motion.div>
 
@@ -278,13 +315,13 @@ export const DocsContent = () => {
             >
               <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" />
-                Démarrage rapide
+                {t.quickStart}
               </h2>
               <div className="grid gap-3 sm:grid-cols-3">
                 {[
-                  { icon: Users, label: 'Pour les Citoyens', to: '/docs/citizens/search-provider' },
-                  { icon: Stethoscope, label: 'Pour les Professionnels', to: '/docs/providers/registration' },
-                  { icon: BookOpen, label: 'Premiers pas', to: '/docs/getting-started/first-steps' },
+                  { icon: Users, label: t.forCitizens, to: '/docs/citizens/search-provider' },
+                  { icon: Stethoscope, label: t.forProfessionals, to: '/docs/providers/registration' },
+                  { icon: BookOpen, label: t.firstSteps, to: '/docs/getting-started/first-steps' },
                 ].map((item, i) => (
                   <Link
                     key={i}
@@ -334,7 +371,7 @@ export const DocsContent = () => {
                     </p>
                     
                     <Badge variant="secondary" className="relative">
-                      {section.pages.length} article{section.pages.length > 1 ? 's' : ''}
+                      {t.articleWord(section.pages.length)}
                     </Badge>
                   </Link>
                 </motion.div>
@@ -349,13 +386,9 @@ export const DocsContent = () => {
               className="mt-16 p-8 rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 text-center"
             >
               <Sparkles className="h-8 w-8 text-primary mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Besoin d'aide ?</h3>
-              <p className="text-muted-foreground mb-4">
-                Notre assistant IA est disponible 24/7 pour répondre à vos questions.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Utilisez le raccourci <kbd className="px-2 py-0.5 bg-muted rounded text-xs font-mono border">⌘K</kbd> ou le bouton <strong>« Demandez à l'IA »</strong> dans le header.
-              </p>
+              <h3 className="text-xl font-semibold mb-2">{t.needHelp}</h3>
+              <p className="text-muted-foreground mb-4">{t.helpDesc}</p>
+              <p className="text-sm text-muted-foreground">{t.helpHint}</p>
             </motion.div>
           </div>
         </ScrollArea>
@@ -383,7 +416,7 @@ export const DocsContent = () => {
               className="flex items-center gap-1 hover:text-foreground transition-colors"
             >
               <Home className="h-3.5 w-3.5" />
-              <span>Docs</span>
+              <span>{t.docs}</span>
             </Link>
             <ChevronRight className="h-4 w-4" />
             <Link 
@@ -400,7 +433,7 @@ export const DocsContent = () => {
           <div className="flex flex-wrap items-center gap-4 mb-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-1.5">
               <Clock className="h-4 w-4" />
-              <span>{readingTime} min de lecture</span>
+              <span>{t.readingTime(readingTime)}</span>
             </div>
             {currentPage.tags && currentPage.tags.length > 0 && (
               <div className="flex flex-wrap gap-2">
@@ -429,7 +462,7 @@ export const DocsContent = () => {
               >
                 <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:-translate-x-1 transition-all" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Précédent</p>
+                  <p className="text-xs text-muted-foreground">{t.previous}</p>
                   <p className="font-medium group-hover:text-primary transition-colors">{prevPage.title}</p>
                 </div>
               </Link>
@@ -441,7 +474,7 @@ export const DocsContent = () => {
                 className="group flex items-center gap-3 p-4 rounded-xl border border-border/50 hover:bg-accent/50 hover:border-primary/30 transition-all flex-1 justify-end text-right"
               >
                 <div>
-                  <p className="text-xs text-muted-foreground">Suivant</p>
+                  <p className="text-xs text-muted-foreground">{t.next}</p>
                   <p className="font-medium group-hover:text-primary transition-colors">{nextPage.title}</p>
                 </div>
                 <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
@@ -451,15 +484,15 @@ export const DocsContent = () => {
 
           {/* Feedback */}
           <div className="mt-10 p-6 rounded-2xl bg-gradient-to-r from-muted/50 to-muted/30 border border-border/50 text-center">
-            <p className="font-medium mb-4">Cet article vous a-t-il été utile ?</p>
+            <p className="font-medium mb-4">{t.helpful}</p>
             <div className="flex justify-center gap-4">
               <Button variant="outline" size="sm" className="gap-2 hover:bg-green-500/10 hover:border-green-500/30 hover:text-green-600">
                 <ThumbsUp className="h-4 w-4" />
-                Oui
+                {t.yes}
               </Button>
               <Button variant="outline" size="sm" className="gap-2 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-600">
                 <ThumbsDown className="h-4 w-4" />
-                Non
+                {t.no}
               </Button>
             </div>
           </div>

@@ -16,9 +16,11 @@ import {
 import { Loader2, BookOpen } from 'lucide-react';
 import Footer from '@/components/Footer';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export default function ResearchHubPage() {
   const { user, profile } = useAuth();
+  const { language } = useLanguage();
   const [articles, setArticles] = useState<ResearchArticle[]>([]);
   const [featured, setFeatured] = useState<ResearchArticle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,11 +80,29 @@ export default function ResearchHubPage() {
     setArticles(prev => prev.map(a => a.id === articleId ? { ...a, saves_count: a.saves_count + (saved ? 1 : -1) } : a));
   };
 
+  const t = {
+    pageTitle: language === 'ar' ? 'البحث الطبي' : language === 'en' ? 'Medical Research' : 'Recherche Médicale',
+    pageDesc: language === 'ar'
+      ? 'منشورات علمية من طرف المهنيين الصحيين'
+      : language === 'en'
+      ? 'Scientific publications by healthcare professionals'
+      : 'Publications scientifiques par les professionnels de santé',
+    metaDesc: language === 'ar'
+      ? 'منشورات البحث الطبي والمقالات العلمية من مهنيي الصحة في CityHealth.'
+      : language === 'en'
+      ? 'Medical research publications and scientific articles by CityHealth healthcare professionals.'
+      : 'Publications de recherche médicale et articles scientifiques par les professionnels de santé de CityHealth.',
+    noResults: language === 'ar' ? 'لم يتم العثور على منشورات' : language === 'en' ? 'No publications found' : 'Aucune publication trouvée',
+    noResultsHint: debouncedSearch
+      ? (language === 'ar' ? 'جرّب تعديل معايير البحث' : language === 'en' ? 'Try adjusting your search criteria' : 'Essayez de modifier vos critères de recherche')
+      : (language === 'ar' ? 'ستظهر المنشورات هنا بمجرد الموافقة عليها' : language === 'en' ? 'Publications will appear here once approved' : 'Les publications apparaîtront ici une fois approuvées'),
+  };
+
   return (
     <>
       <Helmet>
-        <title>Recherche Médicale | CityHealth</title>
-        <meta name="description" content="Publications de recherche médicale et articles scientifiques par les professionnels de santé de CityHealth." />
+        <title>{t.pageTitle} | CityHealth</title>
+        <meta name="description" content={t.metaDesc} />
       </Helmet>
 
       <div className="min-h-screen bg-background pt-20 pb-12">
@@ -94,8 +114,8 @@ export default function ResearchHubPage() {
                 <BookOpen className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Recherche Médicale</h1>
-                <p className="text-sm text-muted-foreground">Publications scientifiques par les professionnels de santé</p>
+                <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{t.pageTitle}</h1>
+                <p className="text-sm text-muted-foreground">{t.pageDesc}</p>
               </div>
             </div>
           </div>
@@ -125,10 +145,8 @@ export default function ResearchHubPage() {
           ) : articles.length === 0 ? (
             <div className="text-center py-16">
               <BookOpen className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
-              <p className="text-lg font-medium text-muted-foreground">Aucune publication trouvée</p>
-              <p className="text-sm text-muted-foreground/70 mt-1">
-                {debouncedSearch ? 'Essayez de modifier vos critères de recherche' : 'Les publications apparaîtront ici une fois approuvées'}
-              </p>
+              <p className="text-lg font-medium text-muted-foreground">{t.noResults}</p>
+              <p className="text-sm text-muted-foreground/70 mt-1">{t.noResultsHint}</p>
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/accordion';
 import { docsStructure, searchDocs } from '@/data/docsStructure';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface DocsSidebarProps {
   className?: string;
@@ -22,6 +23,7 @@ interface DocsSidebarProps {
 
 export const DocsSidebar = ({ className, onNavigate }: DocsSidebarProps) => {
   const { sectionId, pageId } = useParams();
+  const { language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   
   const searchResults = searchQuery.length >= 2 ? searchDocs(searchQuery) : [];
@@ -31,9 +33,23 @@ export const DocsSidebar = ({ className, onNavigate }: DocsSidebarProps) => {
     onNavigate?.();
   };
 
+  const t = {
+    searchPlaceholder: language === 'ar' ? 'بحث...' : language === 'en' ? 'Search...' : 'Rechercher...',
+    results: (count: number) => language === 'ar'
+      ? `${count} نتيجة`
+      : language === 'en'
+      ? `${count} result${count !== 1 ? 's' : ''}`
+      : `${count} résultat${count !== 1 ? 's' : ''}`,
+    noResults: language === 'ar' ? 'لم يتم العثور على نتائج' : language === 'en' ? 'No results found' : 'Aucun résultat trouvé',
+    support: 'Support',
+    app: 'App',
+    docTitle: language === 'ar' ? 'وثائق CityHealth' : language === 'en' ? 'CityHealth Documentation' : 'Documentation CityHealth',
+    lastUpdate: language === 'ar' ? 'آخر تحديث: يناير 2026' : language === 'en' ? 'Last updated: January 2026' : 'Dernière mise à jour : Janvier 2026',
+  };
+
   return (
     <motion.aside
-      initial={{ opacity: 0, x: -20 }}
+      initial={{ opacity: 0, x: language === 'ar' ? 20 : -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3 }}
       className={cn(
@@ -46,7 +62,7 @@ export const DocsSidebar = ({ className, onNavigate }: DocsSidebarProps) => {
         <div className="relative group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <Input
-            placeholder="Rechercher..."
+            placeholder={t.searchPlaceholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9 bg-background/50 border-transparent focus:border-primary/50 transition-all"
@@ -61,7 +77,7 @@ export const DocsSidebar = ({ className, onNavigate }: DocsSidebarProps) => {
             <div className="space-y-2">
               <p className="text-xs text-muted-foreground mb-3 flex items-center gap-2">
                 <Search className="h-3 w-3" />
-                {searchResults.length} résultat{searchResults.length !== 1 ? 's' : ''}
+                {t.results(searchResults.length)}
               </p>
               {searchResults.map((result) => (
                 <Link
@@ -85,7 +101,7 @@ export const DocsSidebar = ({ className, onNavigate }: DocsSidebarProps) => {
                 <div className="text-center py-8">
                   <BookOpen className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
                   <p className="text-sm text-muted-foreground">
-                    Aucun résultat trouvé
+                    {t.noResults}
                   </p>
                 </div>
               )}
@@ -171,12 +187,12 @@ export const DocsSidebar = ({ className, onNavigate }: DocsSidebarProps) => {
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="flex-1 text-xs h-8" asChild>
             <Link to="/contact">
-              Support
+              {t.support}
             </Link>
           </Button>
           <Button variant="outline" size="sm" className="flex-1 text-xs h-8 gap-1" asChild>
             <a href="/" target="_blank" rel="noopener noreferrer">
-              App <ExternalLink className="h-3 w-3" />
+              {t.app} <ExternalLink className="h-3 w-3" />
             </a>
           </Button>
         </div>
@@ -184,10 +200,10 @@ export const DocsSidebar = ({ className, onNavigate }: DocsSidebarProps) => {
         {/* Version info */}
         <div className="text-center">
           <p className="text-[10px] text-muted-foreground">
-            Documentation CityHealth
+            {t.docTitle}
           </p>
           <p className="text-[10px] text-muted-foreground/60 mt-0.5">
-            Dernière mise à jour : Janvier 2026
+            {t.lastUpdate}
           </p>
         </div>
       </div>

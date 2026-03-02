@@ -10,15 +10,11 @@ import { Ad, getApprovedAds, getUserLikes, getUserSaves, AdFilters } from '@/ser
 import { cn } from '@/lib/utils';
 import Footer from '@/components/Footer';
 import { Helmet } from 'react-helmet-async';
-
-const SORT_OPTIONS = [
-  { value: 'newest' as const, label: 'Récentes', icon: Clock },
-  { value: 'popular' as const, label: 'Populaires', icon: TrendingUp },
-  { value: 'featured' as const, label: 'Sponsorisées', icon: Star },
-];
+import { useLanguage } from '@/hooks/useLanguage';
 
 export default function AdsPage() {
   const { user } = useAuth();
+  const { language } = useLanguage();
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -26,6 +22,12 @@ export default function AdsPage() {
   const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
   const [userLikes, setUserLikes] = useState<string[]>([]);
   const [userSaves, setUserSaves] = useState<string[]>([]);
+
+  const SORT_OPTIONS = [
+    { value: 'newest' as const, label: language === 'ar' ? 'الأحدث' : language === 'en' ? 'Recent' : 'Récentes', icon: Clock },
+    { value: 'popular' as const, label: language === 'ar' ? 'الأكثر شعبية' : language === 'en' ? 'Popular' : 'Populaires', icon: TrendingUp },
+    { value: 'featured' as const, label: language === 'ar' ? 'مُموَّلة' : language === 'en' ? 'Sponsored' : 'Sponsorisées', icon: Star },
+  ];
 
   const fetchAds = useCallback(async () => {
     setLoading(true);
@@ -56,11 +58,33 @@ export default function AdsPage() {
     setUserSaves(prev => saved ? [...prev, adId] : prev.filter(id => id !== adId));
   };
 
+  const t = {
+    pageTitle: language === 'ar' ? 'إعلانات احترافية' : language === 'en' ? 'Pro Ads' : 'Annonces Pro',
+    metaTitle: language === 'ar' ? 'إعلانات احترافية - CityHealth سيدي بلعباس' : language === 'en' ? 'Pro Ads - CityHealth Sidi Bel Abbès' : 'Annonces Pro - CityHealth Sidi Bel Abbès',
+    metaDesc: language === 'ar'
+      ? 'اكتشف إعلانات وعروض المهنيين الصحيين المعتمدين في سيدي بلعباس.'
+      : language === 'en'
+      ? 'Discover ads and offers from our verified healthcare professionals in Sidi Bel Abbès.'
+      : 'Découvrez les annonces et offres de nos professionnels de santé vérifiés à Sidi Bel Abbès.',
+    heroDesc: language === 'ar'
+      ? 'اكتشف الخدمات والعروض والأحداث من مهنيي الصحة المعتمدين لدينا.'
+      : language === 'en'
+      ? 'Discover services, offers, and events from our verified healthcare professionals.'
+      : 'Découvrez les services, offres et événements de nos professionnels de santé vérifiés.',
+    searchPlaceholder: language === 'ar'
+      ? 'البحث حسب العنوان أو الوصف أو مقدم الخدمة...'
+      : language === 'en'
+      ? 'Search by title, description, or provider...'
+      : 'Rechercher par titre, description ou prestataire...',
+    noAds: language === 'ar' ? 'لا توجد إعلانات حالياً' : language === 'en' ? 'No ads at the moment' : 'Aucune annonce pour le moment',
+    noAdsHint: language === 'ar' ? 'ستظهر الإعلانات الموافق عليها هنا.' : language === 'en' ? 'Approved ads will appear here.' : 'Les annonces approuvées apparaîtront ici.',
+  };
+
   return (
     <>
       <Helmet>
-        <title>Annonces Pro - CityHealth Sidi Bel Abbès</title>
-        <meta name="description" content="Découvrez les annonces et offres de nos professionnels de santé vérifiés à Sidi Bel Abbès." />
+        <title>{t.metaTitle}</title>
+        <meta name="description" content={t.metaDesc} />
       </Helmet>
 
       <div className="min-h-screen bg-muted/30 pt-20">
@@ -71,18 +95,16 @@ export default function AdsPage() {
               <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
                 <Megaphone className="h-5 w-5 text-primary" />
               </div>
-              <h1 className="text-2xl font-bold">Annonces Pro</h1>
+              <h1 className="text-2xl font-bold">{t.pageTitle}</h1>
             </div>
-            <p className="text-muted-foreground max-w-xl">
-              Découvrez les services, offres et événements de nos professionnels de santé vérifiés.
-            </p>
+            <p className="text-muted-foreground max-w-xl">{t.heroDesc}</p>
 
             {/* Search + Filters */}
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1 max-w-lg">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Rechercher par titre, description ou prestataire..."
+                  placeholder={t.searchPlaceholder}
                   className="pl-10 h-11 bg-card"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -116,8 +138,8 @@ export default function AdsPage() {
           ) : ads.length === 0 ? (
             <div className="text-center py-20">
               <Megaphone className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-muted-foreground">Aucune annonce pour le moment</h3>
-              <p className="text-sm text-muted-foreground/70 mt-1">Les annonces approuvées apparaîtront ici.</p>
+              <h3 className="text-lg font-medium text-muted-foreground">{t.noAds}</h3>
+              <p className="text-sm text-muted-foreground/70 mt-1">{t.noAdsHint}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
