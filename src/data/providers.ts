@@ -291,7 +291,7 @@ export const AREAS = [
 ];
 
 const STORAGE_KEYS = {
-  providers: 'ch_providers_v2',
+  providers: 'ch_providers_v3',
   favorites: 'ch_favorites_v1',
 }
 
@@ -317,15 +317,25 @@ function genPhone(i: number) {
 function makeName(type: ProviderType, specialty: string | undefined, i: number) {
   switch (type) {
     case 'doctor':
-      return `Dr. ${['Ahmed', 'Sara', 'Youssef', 'Imen', 'Nadia', 'Khaled', 'Rania'][i % 7]} ${['Benali', 'Bendaoud', 'Merabet', 'Saadi', 'Zerrouki'][i % 5]}${specialty ? ' - ' + specialty : ''}`
+      return `Dr. ${['Ahmed', 'Sara', 'Youssef', 'Imen', 'Nadia', 'Khaled', 'Rania', 'Leila', 'Mohamed', 'Amira'][i % 10]} ${['Benali', 'Bendaoud', 'Merabet', 'Saadi', 'Zerrouki', 'Boudiaf', 'Cherif', 'Mesbah'][i % 8]}${specialty ? ' - ' + specialty : ''}`
     case 'clinic':
-      return `Clinique ${['El Amal', 'El Chifa', 'Ibn Sina', 'An Nasr', 'El Rahma'][i % 5]}`
+      return `Clinique ${['El Amal', 'El Chifa', 'Ibn Sina', 'An Nasr', 'El Rahma', 'El Hayat', 'Sidi Bel Abbès'][i % 7]}`
     case 'pharmacy':
-      return `Pharmacie ${['Centrale', 'El Fajr', 'El Baraka', 'El Wafa'][i % 4]}`
+      return `Pharmacie ${['Centrale', 'El Fajr', 'El Baraka', 'El Wafa', 'Ibn Rochd', 'El Afia'][i % 6]}`
     case 'lab':
-      return `Laboratoire ${['Atlas', 'Pasteur', 'BioLab', 'El Yakine'][i % 4]}`
+      return `Laboratoire ${['Atlas', 'Pasteur', 'BioLab', 'El Yakine', 'Alpha Bio', 'MedLab'][i % 6]}`
     case 'hospital':
-      return `Hôpital ${['Universitaire', 'Régional', 'Privé Al Hayat'][i % 3]}`
+      return `Hôpital ${['Universitaire de SBA', 'Régional Hassani', 'Privé Al Hayat', 'Militaire'][i % 4]}`
+    case 'birth_hospital':
+      return `Maternité ${['El Amel', 'Sidi Bel Abbès', 'El Afya', 'Mère et Enfant'][i % 4]}`
+    case 'blood_cabin':
+      return `Centre de Don de Sang ${['Central', 'El Wiam', 'Croissant Rouge', 'Universitaire'][i % 4]}`
+    case 'radiology_center':
+      return `Centre de Radiologie ${['El Nour', 'ImagiMed', 'ScanPlus', 'RadioDiag'][i % 4]}`
+    case 'medical_equipment':
+      return `${['MedEquip', 'OrthoPharma', 'SBA MedTech', 'Al Shifa Équipements', 'SantéPlus'][i % 5]}`
+    default:
+      return `Prestataire ${i + 1}`
   }
 }
 
@@ -341,7 +351,17 @@ function makeDescription(type: ProviderType) {
     case 'lab':
       return base + ' Analyses médicales rapides et précises, résultats numériques.'
     case 'hospital':
-      return base + ' Plateaux techniques complets et services d’urgences 24/7.'
+      return base + " Plateaux techniques complets et services d'urgences 24/7."
+    case 'birth_hospital':
+      return base + ' Suivi de grossesse, accouchement et soins néonatals.'
+    case 'blood_cabin':
+      return base + ' Don de sang volontaire, collecte et distribution de produits sanguins.'
+    case 'radiology_center':
+      return base + ' Imagerie médicale avancée : radiographie, échographie, scanner et IRM.'
+    case 'medical_equipment':
+      return base + " Vente, location et maintenance d'équipements médicaux professionnels."
+    default:
+      return base
   }
 }
 
@@ -390,7 +410,14 @@ export function generateMockProviders(count = 50): CityHealthProvider[] {
 
   for (let i = 0; i < count; i++) {
     const type = randomFrom(PROVIDER_TYPES, i);
-    const specialty = type === 'doctor' ? randomFrom(SPECIALTIES, i) : (type === 'lab' ? 'Analyses médicales' : (type === 'pharmacy' ? 'Pharmacie' : undefined));
+    const specialty = type === 'doctor' ? randomFrom(SPECIALTIES, i) 
+      : type === 'lab' ? 'Analyses médicales' 
+      : type === 'pharmacy' ? 'Pharmacie' 
+      : type === 'radiology_center' ? randomFrom(['Radiologie générale', 'Scanner', 'IRM', 'Échographie'], i)
+      : type === 'birth_hospital' ? 'Obstétrique & Néonatalogie'
+      : type === 'medical_equipment' ? randomFrom(['Orthopédie', 'Respiratoire', 'Mobilité', 'Diagnostic'], i)
+      : type === 'blood_cabin' ? 'Hématologie'
+      : undefined;
     const rating = Math.min(5, Math.max(3.6, 3.5 + (i % 15) * 0.1 + (i % 3) * 0.05));
     const distance = pseudoRandom(i, 0.3, 18);
     const lat = centerLat + (pseudoRandom(i, -0.03, 0.03) as number);
@@ -431,13 +458,26 @@ export function generateMockProviders(count = 50): CityHealthProvider[] {
       isPublic,
       // Type-specific fields for blood_cabin
       ...(type === 'blood_cabin' ? {
-        bloodTypes: ['A+', 'B+', 'O+', 'AB+'].slice(0, (i % 4) + 1),
+        bloodTypes: ['A+', 'B+', 'O+', 'AB+', 'A-', 'B-', 'O-', 'AB-'].slice(0, (i % 4) + 2),
         urgentNeed: i % 7 === 0,
         stockStatus: (['normal', 'low', 'critical', 'high'] as const)[i % 4],
       } : {}),
       // Type-specific fields for radiology_center
       ...(type === 'radiology_center' ? {
-        imagingTypes: ['Radiographie standard', 'Scanner (CT)', 'Échographie'].slice(0, (i % 3) + 1),
+        imagingTypes: ['Radiographie standard', 'Scanner (CT)', 'Échographie', 'IRM'].slice(0, (i % 3) + 1),
+      } : {}),
+      // Type-specific fields for medical_equipment
+      ...(type === 'medical_equipment' ? {
+        productCategories: ['Fauteuils roulants', 'Oxygénothérapie', 'Lits médicaux', 'Prothèses'].slice(0, (i % 3) + 1),
+        rentalAvailable: i % 2 === 0,
+        deliveryAvailable: i % 3 !== 0,
+      } : {}),
+      // Type-specific fields for birth_hospital
+      ...(type === 'birth_hospital' ? {
+        deliveryRooms: 2 + (i % 4),
+        maternityServices: ['Accouchement naturel', 'Césarienne', 'Suivi post-natal'].slice(0, (i % 2) + 2),
+        pediatricianOnSite: i % 2 === 0,
+        hasNICU: i % 3 === 0,
       } : {}),
     };
     list.push(item);
