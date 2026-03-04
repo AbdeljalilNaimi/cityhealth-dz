@@ -78,8 +78,7 @@ export const ProviderCard = ({ provider, distance, onClose }: ProviderCardProps)
       "absolute z-20 w-[calc(100%-2rem)] sm:w-80 border border-border/50 animate-fade-in",
       "top-4 rounded-2xl shadow-2xl ring-1 ring-black/[0.04] dark:ring-white/[0.04]",
       "bg-card/95 backdrop-blur-xl",
-      isRTL ? "right-4" : "right-4",
-      "md:right-4 md:left-auto"
+      isRTL ? "right-4" : "left-4",
     )}>
       <CardContent className="p-4">
         {/* New badge */}

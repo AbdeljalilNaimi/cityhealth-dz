@@ -18,7 +18,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { CityHealthProvider, ProviderType, PROVIDER_TYPE_LABELS, PROVIDER_TYPES } from '@/data/providers';
 import { useMapContext } from '@/contexts/MapContext';
@@ -102,8 +101,14 @@ export const MapSidebar = ({
   const tx = t[language as keyof typeof t] || t.fr;
 
   const handleProviderClick = (provider: CityHealthProvider) => {
-    setSelectedProvider(provider);
-    flyTo(provider.lat, provider.lng, 16);
+    try {
+      setSelectedProvider(provider);
+      if (provider.lat != null && provider.lng != null) {
+        flyTo(provider.lat, provider.lng, 16);
+      }
+    } catch (error) {
+      console.error('Error selecting provider:', error);
+    }
   };
 
   const handleRoute = (e: React.MouseEvent, provider: CityHealthProvider) => {
@@ -235,7 +240,7 @@ export const MapSidebar = ({
 
   // ─── Provider List Content ───
   const ListContent = ({ maxH }: { maxH: string }) => (
-    <ScrollArea className={maxH}>
+    <div className={cn(maxH, "overflow-y-auto")}>
       {loading ? (
         <div className="p-2 space-y-2">
           {[1, 2, 3, 4, 5].map(i => (
@@ -274,7 +279,7 @@ export const MapSidebar = ({
           )}
         </div>
       )}
-    </ScrollArea>
+    </div>
   );
 
   // ─── DESKTOP: Sidebar Panel ───

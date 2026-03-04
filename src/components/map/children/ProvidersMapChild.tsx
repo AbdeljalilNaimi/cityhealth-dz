@@ -80,8 +80,14 @@ const ProvidersMapChild = () => {
   }, [sortedProviders, distances, isLoading, setSidebarProviders, setSidebarDistances, setSidebarLoading, setSidebarLabel]);
 
   const handleProviderClick = useCallback((provider: CityHealthProvider) => {
-    setSelectedProvider(provider);
-    flyTo(provider.lat, provider.lng, 16);
+    try {
+      setSelectedProvider(provider);
+      if (provider.lat != null && provider.lng != null) {
+        flyTo(provider.lat, provider.lng, 16);
+      }
+    } catch (error) {
+      console.error('Error selecting provider:', error);
+    }
   }, [setSelectedProvider, flyTo]);
 
   // Marker management
