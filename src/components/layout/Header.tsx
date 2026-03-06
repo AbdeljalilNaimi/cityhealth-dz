@@ -321,16 +321,19 @@ export const Header = () => {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          {/* Emergency Button - Always visible */}
+          {/* Emergency Button - Always visible with pulse */}
           <Button
             variant="destructive"
             size="sm"
-            className="hidden md:flex items-center gap-2"
+            className="hidden md:flex items-center gap-2 relative"
             asChild
           >
             <a href="tel:15">
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-400 rounded-full animate-ping" />
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-400 rounded-full" />
               <Phone className="h-4 w-4" />
-              <span className="hidden lg:inline">15</span>
+              <span className="hidden lg:inline">{texts.emergency} 24/7</span>
+              <span className="lg:hidden">15</span>
             </a>
           </Button>
 
