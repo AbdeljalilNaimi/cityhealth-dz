@@ -295,6 +295,8 @@ export interface Translations {
     connectWith: string;
     simpleQuickFree: string;
     searchPlaceholder: string;
+    searchPlaceholderDetailed: string;
+    heroSubtitleFull: string;
     searchButton: string;
     voiceSearch: string;
     myLocation: string;

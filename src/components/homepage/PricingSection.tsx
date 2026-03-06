@@ -12,6 +12,8 @@ type BillingPeriod = 'monthly' | 'annual';
 const i18n = {
   fr: {
     badge: 'Tarification transparente',
+    audienceLabel: 'Pour les professionnels de santé',
+    citizenFreeNote: 'Les citoyens naviguent et recherchent gratuitement — ces forfaits sont réservés aux praticiens souhaitant être référencés.',
     title: 'Des forfaits adaptés à vos besoins',
     subtitle: 'Tous les forfaits sont',
     subtitleBold: 'entièrement gratuits la première année',
@@ -24,6 +26,8 @@ const i18n = {
   },
   ar: {
     badge: 'أسعار شفافة',
+    audienceLabel: 'لمقدمي الرعاية الصحية',
+    citizenFreeNote: 'يتصفح المواطنون ويبحثون مجاناً — هذه الباقات مخصصة للممارسين الراغبين في التسجيل.',
     title: 'باقات مصممة لاحتياجاتك',
     subtitle: 'جميع الباقات',
     subtitleBold: 'مجانية بالكامل في السنة الأولى',
@@ -36,6 +40,8 @@ const i18n = {
   },
   en: {
     badge: 'Transparent pricing',
+    audienceLabel: 'For Healthcare Providers',
+    citizenFreeNote: 'Citizens always browse for free — these plans are for providers who want to list their practice and reach thousands of patients.',
     title: 'Plans tailored to your needs',
     subtitle: 'All plans are',
     subtitleBold: 'completely free for the first year',
