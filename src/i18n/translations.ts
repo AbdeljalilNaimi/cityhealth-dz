@@ -1212,6 +1212,8 @@ export const translations: Record<Language, Translations> = {
       connectWith: 'Connectez-vous avec les meilleurs praticiens de santé.',
       simpleQuickFree: 'Simple, rapide et gratuit.',
       searchPlaceholder: 'Rechercher un praticien, une spécialité...',
+      searchPlaceholderDetailed: 'Rechercher par nom de médecin, spécialité, clinique…',
+      heroSubtitleFull: 'Le répertoire santé n°1 de Sidi Bel Abbès, Algérie — trouvez médecins, cliniques, pharmacies, laboratoires et plus. Gratuit pour les citoyens.',
       searchButton: 'Rechercher',
       voiceSearch: 'Recherche vocale',
       myLocation: 'Ma position',
