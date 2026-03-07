@@ -286,7 +286,7 @@ export const Header = () => {
             <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-primary via-primary/60 to-primary opacity-0 blur-md group-hover:opacity-75 transition-all duration-500" />
             
             {/* Container principal */}
-            <div className="relative w-11 h-11 bg-gradient-to-br from-primary via-primary/90 to-blue-600 rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-105 group-hover:shadow-2xl group-hover:shadow-primary/25 transition-all duration-300">
+            <div className="relative w-11 h-11 bg-primary rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-105 group-hover:shadow-md group-hover:shadow-primary/20 transition-all duration-300">
               {/* Effet de brillance interne */}
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-white/20 via-transparent to-transparent" />
               
