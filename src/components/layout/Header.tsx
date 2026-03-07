@@ -304,7 +304,7 @@ export const Header = () => {
           <div className="hidden sm:flex flex-col -space-y-0.5">
             <span className="text-xl font-bold tracking-tight">
               <span className="text-foreground">City</span>
-              <span className="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">Health</span>
+              <span className="text-primary">Health</span>
             </span>
             <span className="text-[10px] text-muted-foreground tracking-[0.2em] uppercase font-medium">
               Sidi Bel Abbès
