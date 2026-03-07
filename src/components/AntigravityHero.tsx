@@ -217,40 +217,10 @@ export const AntigravityHero = () => {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="text-base md:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto mb-8"
+            className="text-base md:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto mb-10"
           >
-            {t('homepage', 'heroSubtitleFull')}
+            Le répertoire de santé n°1 à Sidi Bel Abbès, Algérie — trouvez facilement médecins, cliniques, pharmacies, laboratoires et autres services médicaux.
           </motion.p>
-
-          {/* Category Pills */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.45 }}
-            className="flex flex-wrap justify-center gap-2.5 mb-10"
-          >
-            {[
-              { label: t('homepage', 'doctors'), icon: '🩺', type: 'doctor' },
-              { label: t('homepage', 'pharmacies'), icon: '💊', type: 'pharmacy' },
-              { label: t('homepage', 'clinics'), icon: '🏥', type: 'clinic' },
-              { label: t('homepage', 'labs'), icon: '🔬', type: 'lab' },
-            ].map((cat, i) => (
-              <motion.button
-                key={cat.type}
-                type="button"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.5 + i * 0.08 }}
-                whileHover={{ scale: 1.08, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate(`/search?type=${cat.type}`)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm font-medium text-primary hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer"
-              >
-                <span>{cat.icon}</span>
-                {cat.label}
-              </motion.button>
-            ))}
-          </motion.div>
 
           {/* Search Bar */}
           <motion.form 
