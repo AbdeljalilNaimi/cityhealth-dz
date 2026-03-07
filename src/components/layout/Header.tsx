@@ -522,7 +522,7 @@ export const Header = () => {
                 </Button>
                 <Button 
                   size="sm" 
-                  className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
                   onClick={() => navigate('/citizen/login')}
                 >
                   {t('header', 'signup')}
