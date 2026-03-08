@@ -83,9 +83,9 @@ export const ProviderRegistrationSection = () => {
   const t = content[language];
 
   return (
-    <section className={`py-20 md:py-28 px-4 relative overflow-hidden ${isRTL ? 'rtl' : 'ltr'}`}>
-      <div className="absolute inset-0 bg-muted/30" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/[0.04] rounded-full blur-3xl" />
+    <section className={`py-20 md:py-28 px-4 relative overflow-hidden border-t-4 border-primary/30 ${isRTL ? 'rtl' : 'ltr'}`}>
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-primary/5" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/[0.08] rounded-full blur-3xl" />
 
       <div className="container mx-auto max-w-6xl relative z-10">
         {/* Header */}
