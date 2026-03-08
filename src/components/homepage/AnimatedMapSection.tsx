@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Star, Clock, ArrowRight, Search, Plus, Minus } from 'lucide-react';
+import { MapPin, Star, Clock, ArrowRight, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import sbaSatelliteMap from '@/assets/sba-satellite-map.jpg';
@@ -234,10 +234,6 @@ export const AnimatedMapSection = () => {
                 <span className="text-xs font-medium text-foreground">{providers.length} {t('homepage', 'practitionersOnline')}</span>
               </motion.div>
               
-              <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.5 }} className="absolute top-4 right-4 flex flex-col gap-1">
-                <button className="w-8 h-8 bg-card border border-border rounded-md flex items-center justify-center hover:bg-muted transition-colors shadow-sm"><Plus className="h-4 w-4 text-foreground" /></button>
-                <button className="w-8 h-8 bg-card border border-border rounded-md flex items-center justify-center hover:bg-muted transition-colors shadow-sm"><Minus className="h-4 w-4 text-foreground" /></button>
-              </motion.div>
               
               <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.6 }} className="absolute bottom-4 left-4 flex items-center gap-4 px-3 py-2 bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-sm">
                 <span className="flex items-center gap-1.5 text-xs text-foreground"><span className="w-2 h-2 bg-emerald-500 rounded-full" /> {t('homepage', 'availableStatus')}</span>

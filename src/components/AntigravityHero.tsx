@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
-import { Search, MapPin, Mic, Users, CalendarCheck, Star, Sparkles } from 'lucide-react';
+import { Search, MapPin, Users, CalendarCheck, Star, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -236,7 +236,7 @@ export const AntigravityHero = () => {
             transition={{ duration: 0.5, delay: 0.4 }}
             className="text-base md:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto mb-10"
           >
-            Le répertoire de santé n°1 à Sidi Bel Abbès, Algérie — trouvez facilement médecins, cliniques, pharmacies, laboratoires et autres services médicaux.
+            {t('homepage', 'heroSubtitleFull')}
           </motion.p>
 
           {/* Search Bar */}
@@ -280,25 +280,7 @@ export const AntigravityHero = () => {
               />
               
               <div className="flex items-center gap-1 flex-shrink-0">
-                <Button 
-                  type="button"
-                  variant="ghost" 
-                  size="icon" 
-                  className="rounded-xl h-10 w-10 hidden sm:flex"
-                  aria-label={t('homepage', 'voiceSearch')}
-                >
-                  <Mic className="h-4 w-4" />
-                </Button>
-                <Button 
-                  type="button"
-                  variant="ghost" 
-                  size="icon" 
-                  className="rounded-xl h-10 w-10 hidden sm:flex"
-                  aria-label={t('homepage', 'myLocation')}
-                >
-                  <MapPin className="h-4 w-4" />
-                </Button>
-                <Button 
+                <Button
                   type="submit"
                   className="h-12 px-4 sm:px-6 rounded-xl bg-foreground text-background hover:bg-foreground/90"
                 >

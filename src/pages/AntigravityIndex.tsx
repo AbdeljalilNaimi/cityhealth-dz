@@ -13,7 +13,6 @@ const AnimatedMapSection = lazy(() => import('@/components/homepage/AnimatedMapS
 const FeaturedProviders = lazy(() => import('@/components/homepage/FeaturedProviders').then(m => ({ default: m.FeaturedProviders })));
 const TestimonialsSlider = lazy(() => import('@/components/homepage/TestimonialsSlider').then(m => ({ default: m.TestimonialsSlider })));
 const PricingSection = lazy(() => import('@/components/homepage/PricingSection').then(m => ({ default: m.PricingSection })));
-const ProviderCTA = lazy(() => import('@/components/homepage/ProviderCTA').then(m => ({ default: m.ProviderCTA })));
 const ProviderRegistrationSection = lazy(() => import('@/components/homepage/ProviderRegistrationSection').then(m => ({ default: m.ProviderRegistrationSection })));
 
 const SectionFallback = () => <div className="min-h-[200px]" />;
@@ -62,12 +61,10 @@ const AntigravityIndex = () => {
 
         <div id="annonces">
           <div id="publicite">
-            <ProviderCTA />
+            <div id="inscription-provider">
+              <ProviderRegistrationSection />
+            </div>
           </div>
-        </div>
-
-        <div id="inscription-provider">
-          <ProviderRegistrationSection />
         </div>
       </Suspense>
 

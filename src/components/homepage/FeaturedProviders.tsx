@@ -35,12 +35,12 @@ const typeIcons: Record<string, typeof Stethoscope> = {
 };
 
 const filterTabs = [
-  { key: 'all', label: 'Tous' },
-  { key: 'doctor', label: 'Médecins' },
-  { key: 'pharmacy', label: 'Pharmacies' },
-  { key: 'clinic', label: 'Cliniques' },
-  { key: 'hospital', label: 'Hôpitaux' },
-  { key: 'lab', label: 'Laboratoires' },
+  { key: 'all', label: { fr: 'Tous', ar: 'الكل', en: 'All' } },
+  { key: 'doctor', label: { fr: 'Médecins', ar: 'أطباء', en: 'Doctors' } },
+  { key: 'pharmacy', label: { fr: 'Pharmacies', ar: 'صيدليات', en: 'Pharmacies' } },
+  { key: 'clinic', label: { fr: 'Cliniques', ar: 'عيادات', en: 'Clinics' } },
+  { key: 'hospital', label: { fr: 'Hôpitaux', ar: 'مستشفيات', en: 'Hospitals' } },
+  { key: 'lab', label: { fr: 'Laboratoires', ar: 'مختبرات', en: 'Laboratories' } },
 ];
 
 const SkeletonCard = () => (
@@ -56,7 +56,7 @@ const SkeletonCard = () => (
 
 export const FeaturedProviders = () => {
   const { data: verifiedProviders = [], isLoading } = useVerifiedProviders();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [activeFilter, setActiveFilter] = useState('all');
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -187,7 +187,7 @@ export const FeaturedProviders = () => {
                   : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
               )}
             >
-              {tab.label}
+              {tab.label[language]}
             </button>
           ))}
         </motion.div>
@@ -315,7 +315,7 @@ export const FeaturedProviders = () => {
                               <span className="text-[11px] text-muted-foreground">({provider.reviewCount})</span>
                             </div>
                             <span className="text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                              Voir →
+                              {t('providers', 'viewProfile')} →
                             </span>
                           </div>
                         </div>
