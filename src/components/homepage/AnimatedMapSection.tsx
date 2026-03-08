@@ -184,7 +184,7 @@ export const AnimatedMapSection = () => {
             </div>
             
             {/* Map area */}
-            <div className="flex-1 relative bg-muted overflow-hidden">
+            <div className="flex-1 relative bg-muted overflow-hidden min-h-[280px]">
               <img src={sbaSatelliteMap} alt={t('homepage', 'interactiveMap')} loading="lazy" width={800} height={450} className="w-full h-full object-cover opacity-70" />
               <div className="absolute inset-0 bg-background/20" />
               
