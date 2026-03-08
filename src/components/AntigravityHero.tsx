@@ -280,25 +280,7 @@ export const AntigravityHero = () => {
               />
               
               <div className="flex items-center gap-1 flex-shrink-0">
-                <Button 
-                  type="button"
-                  variant="ghost" 
-                  size="icon" 
-                  className="rounded-xl h-10 w-10 hidden sm:flex"
-                  aria-label={t('homepage', 'voiceSearch')}
-                >
-                  <Mic className="h-4 w-4" />
-                </Button>
-                <Button 
-                  type="button"
-                  variant="ghost" 
-                  size="icon" 
-                  className="rounded-xl h-10 w-10 hidden sm:flex"
-                  aria-label={t('homepage', 'myLocation')}
-                >
-                  <MapPin className="h-4 w-4" />
-                </Button>
-                <Button 
+                <Button
                   type="submit"
                   className="h-12 px-4 sm:px-6 rounded-xl bg-foreground text-background hover:bg-foreground/90"
                 >
