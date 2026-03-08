@@ -223,7 +223,7 @@ const ContactPage = () => {
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-medium">{t('contact', 'email')} *</label>
-                        <Input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="votre@email.com" required className="focus:ring-primary/30 transition-shadow focus:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)]" />
+                        <Input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder={t('contact', 'emailPlaceholder')} required className="focus:ring-primary/30 transition-shadow focus:shadow-[0_0_0_3px_hsl(var(--primary)/0.1)]" />
                       </div>
                     </div>
 
