@@ -306,7 +306,7 @@ const ContactPage = () => {
               <Card className="border-border/50 hover:border-primary/30 transition-all group">
                 <CardContent className="p-8 text-center">
                   <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 ring-2 ring-primary/10 group-hover:ring-primary/30 flex items-center justify-center mx-auto transition-all">
-                    <span className="text-xl font-bold text-primary">{member.initials}</span>
+                    <member.icon className="text-primary" size={32} />
                   </div>
                   <h3 className="text-lg font-bold mt-4">{member.name}</h3>
                   <span className="inline-flex mt-2 bg-primary/10 text-primary rounded-full px-3 py-1 text-xs font-medium">
