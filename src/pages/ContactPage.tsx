@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Mail, Phone, MapPin, Clock, Send, MessageSquare, Code2, Shield, CheckCircle2, Linkedin, Github } from 'lucide-react';
 import { Button } from '@/components/ui/button';
