@@ -59,35 +59,75 @@ export const createMarkerIcon = (
   
   const iconSVG = renderToStaticMarkup(getIconSVG(effectiveType, iconSize));
   
+  const selectedRingColor = colors.bg;
+  
   const html = `
-    <div style="
-      width: ${size}px;
-      height: ${size}px;
-      background: ${colors.bg};
-      border: 3px solid ${colors.border};
-      border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg);
+    <div class="marker-container ${isSelected ? 'marker-selected' : ''}" style="
+      position: relative;
+      width: ${size + (isSelected ? 16 : 0)}px;
+      height: ${size + (isSelected ? 16 : 0)}px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      ${isSelected ? 'animation: pulse 1.5s infinite;' : ''}
-      ${isEmergency ? 'animation: emergency-pulse 1s infinite;' : ''}
     ">
+      ${isSelected ? `
+        <div class="selection-ring" style="
+          position: absolute;
+          inset: 0;
+          border-radius: 50%;
+          border: 3px solid ${selectedRingColor};
+          animation: selection-pulse 1.5s ease-out infinite;
+        "></div>
+        <div class="selection-glow" style="
+          position: absolute;
+          inset: 4px;
+          border-radius: 50%;
+          background: ${selectedRingColor}20;
+          animation: glow-pulse 1.5s ease-out infinite;
+        "></div>
+      ` : ''}
       <div style="
-        transform: rotate(45deg);
-        color: ${colors.icon};
+        width: ${size}px;
+        height: ${size}px;
+        background: ${colors.bg};
+        border: 3px solid ${isSelected ? 'white' : colors.border};
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
         display: flex;
         align-items: center;
         justify-content: center;
+        box-shadow: ${isSelected 
+          ? `0 0 20px ${selectedRingColor}80, 0 4px 12px rgba(0,0,0,0.4)` 
+          : '0 4px 12px rgba(0,0,0,0.3)'};
+        ${isSelected ? 'animation: marker-bounce 0.6s ease-out;' : ''}
+        ${isEmergency ? 'animation: emergency-pulse 1s infinite;' : ''}
+        z-index: 1;
       ">
-        ${iconSVG}
+        <div style="
+          transform: rotate(45deg);
+          color: ${colors.icon};
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
+          ${iconSVG}
+        </div>
       </div>
     </div>
     <style>
-      @keyframes pulse {
-        0%, 100% { transform: rotate(-45deg) scale(1); }
+      @keyframes selection-pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.3); opacity: 0.5; }
+        100% { transform: scale(1.5); opacity: 0; }
+      }
+      @keyframes glow-pulse {
+        0%, 100% { opacity: 0.6; transform: scale(1); }
+        50% { opacity: 0.3; transform: scale(1.1); }
+      }
+      @keyframes marker-bounce {
+        0% { transform: rotate(-45deg) scale(0.8); }
         50% { transform: rotate(-45deg) scale(1.1); }
+        100% { transform: rotate(-45deg) scale(1); }
       }
       @keyframes emergency-pulse {
         0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
