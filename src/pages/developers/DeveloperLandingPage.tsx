@@ -8,6 +8,8 @@ import Footer from '@/components/Footer';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 const getPlans = (language: string) => [
   {
@@ -68,18 +70,41 @@ const responseExample = `{
   "meta": { "total": 42, "page": 1 }
 }`;
 
-const stats = [
-  { value: '48', label: 'Wilayas couvertes' },
-  { value: '1 200+', label: 'Prestataires référencés' },
-  { value: '6', label: 'Endpoints REST' },
-  { value: 'Open', label: 'Tier gratuit' },
-];
+
 
 export default function DeveloperLandingPage() {
   const navigate = useNavigate();
   const { language } = useLanguage();
   const plans = getPlans(language);
   const [copied, setCopied] = useState(false);
+
+  const { data: dbStats } = useQuery({
+    queryKey: ['developer-landing-stats'],
+    queryFn: async () => {
+      const [providersRes, keysRes, reviewsRes, citiesRes] = await Promise.all([
+        supabase.from('providers_public').select('id', { count: 'exact', head: true }),
+        supabase.from('api_keys').select('id', { count: 'exact', head: true }),
+        supabase.from('provider_reviews').select('id', { count: 'exact', head: true }),
+        supabase.from('providers_public').select('city'),
+      ]);
+      const uniqueCities = new Set(citiesRes.data?.map(p => p.city).filter(Boolean));
+      return {
+        providers: providersRes.count ?? 0,
+        apiKeys: keysRes.count ?? 0,
+        reviews: reviewsRes.count ?? 0,
+        cities: uniqueCities.size,
+      };
+    },
+    staleTime: 60_000,
+  });
+
+  const stats = [
+    { value: String(dbStats?.providers ?? '—'), label: language === 'ar' ? 'مقدم خدمة' : language === 'en' ? 'Providers' : 'Prestataires' },
+    { value: String(dbStats?.cities ?? '—'), label: language === 'ar' ? 'مدن مغطاة' : language === 'en' ? 'Cities covered' : 'Villes couvertes' },
+    { value: String(dbStats?.apiKeys ?? '—'), label: language === 'ar' ? 'مفاتيح API نشطة' : language === 'en' ? 'Active API keys' : 'Clés API actives' },
+    { value: String(dbStats?.reviews ?? '—'), label: language === 'ar' ? 'تقييمات' : language === 'en' ? 'Reviews' : 'Avis patients' },
+  ];
+
 
   const handleCopy = () => {
     navigator.clipboard.writeText(codeExample);
