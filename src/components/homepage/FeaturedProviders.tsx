@@ -187,7 +187,7 @@ export const FeaturedProviders = () => {
                   : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
               )}
             >
-              {tab.label}
+              {tab.label[language]}
             </button>
           ))}
         </motion.div>
