@@ -1,34 +1,22 @@
 import { 
   collection, 
-  query, 
-  where, 
   getDocs,
-  orderBy,
-  limit,
-  Timestamp
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 export interface PlatformStats {
-  // Users
   totalCitizens: number;
   totalProviders: number;
   totalAdmins: number;
   newUsersToday: number;
   newUsersThisWeek: number;
-  
-  // Providers
   verifiedProviders: number;
   pendingProviders: number;
   rejectedProviders: number;
-  
-  // Engagement
   totalAppointments: number;
   appointmentsToday: number;
   totalReviews: number;
   averageRating: number;
-  
-  // Platform health
   totalPageViews: number;
   activeUsersToday: number;
 }
@@ -64,9 +52,20 @@ const PROVIDER_TYPE_COLORS: Record<string, string> = {
   other: '#6B7280',
 };
 
-/**
- * Get platform-wide statistics
- */
+function getDateStr(date: Date): string {
+  return date.toISOString().split('T')[0];
+}
+
+function parseFirestoreDate(field: any): Date | null {
+  if (!field) return null;
+  if (typeof field.toDate === 'function') return field.toDate();
+  if (typeof field === 'string' || typeof field === 'number') {
+    const d = new Date(field);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  return null;
+}
+
 export async function getPlatformStats(): Promise<PlatformStats> {
   try {
     const now = new Date();
@@ -74,57 +73,39 @@ export async function getPlatformStats(): Promise<PlatformStats> {
     const weekStart = new Date(todayStart);
     weekStart.setDate(weekStart.getDate() - 7);
 
-    // Get providers
-    const providersSnap = await getDocs(collection(db, 'providers'));
+    const [providersSnap, citizensSnap, adminsSnap, appointmentsSnap, reviewsSnap] = await Promise.all([
+      getDocs(collection(db, 'providers')),
+      getDocs(collection(db, 'citizens')),
+      getDocs(collection(db, 'admin_profiles')),
+      getDocs(collection(db, 'appointments')),
+      getDocs(collection(db, 'reviews')),
+    ]);
+
     const providers = providersSnap.docs.map(doc => doc.data());
-
-    // Get citizens
-    const citizensSnap = await getDocs(collection(db, 'citizens'));
-    
-    // Get admin profiles
-    const adminsSnap = await getDocs(collection(db, 'admin_profiles'));
-
-    // Get appointments
-    const appointmentsSnap = await getDocs(collection(db, 'appointments'));
+    const reviews = reviewsSnap.docs.map(doc => doc.data());
     const appointments = appointmentsSnap.docs.map(doc => doc.data());
 
-    // Get reviews
-    const reviewsSnap = await getDocs(collection(db, 'reviews'));
-    const reviews = reviewsSnap.docs.map(doc => doc.data());
-
-    // Calculate stats
-    const verifiedProviders = providers.filter(p => 
-      p.verified === true || p.verificationStatus === 'verified'
-    ).length;
-
-    const pendingProviders = providers.filter(p => 
-      p.verificationStatus === 'pending'
-    ).length;
-
-    const rejectedProviders = providers.filter(p => 
-      p.verificationStatus === 'rejected'
-    ).length;
+    const verifiedProviders = providers.filter(p => p.verified === true || p.verificationStatus === 'verified').length;
+    const pendingProviders = providers.filter(p => p.verificationStatus === 'pending').length;
+    const rejectedProviders = providers.filter(p => p.verificationStatus === 'rejected').length;
 
     const todayAppointments = appointments.filter(a => {
-      const date = a.createdAt?.toDate?.() || new Date(a.createdAt);
-      return date >= todayStart;
+      const date = parseFirestoreDate(a.createdAt);
+      return date && date >= todayStart;
     }).length;
 
     const averageRating = reviews.length > 0
       ? reviews.reduce((acc, r) => acc + (r.rating || 0), 0) / reviews.length
       : 0;
 
-    // Count new users today (simplified - checking createdAt)
     const newUsersToday = citizensSnap.docs.filter(doc => {
-      const data = doc.data();
-      const createdAt = data.createdAt?.toDate?.() || new Date(data.createdAt);
-      return createdAt >= todayStart;
+      const date = parseFirestoreDate(doc.data().createdAt);
+      return date && date >= todayStart;
     }).length;
 
     const newUsersThisWeek = citizensSnap.docs.filter(doc => {
-      const data = doc.data();
-      const createdAt = data.createdAt?.toDate?.() || new Date(data.createdAt);
-      return createdAt >= weekStart;
+      const date = parseFirestoreDate(doc.data().createdAt);
+      return date && date >= weekStart;
     }).length;
 
     return {
@@ -140,80 +121,92 @@ export async function getPlatformStats(): Promise<PlatformStats> {
       appointmentsToday: todayAppointments,
       totalReviews: reviewsSnap.size,
       averageRating: Math.round(averageRating * 10) / 10,
-      totalPageViews: 0, // Would need analytics integration
-      activeUsersToday: newUsersToday, // Simplified
+      totalPageViews: 0,
+      activeUsersToday: newUsersToday,
     };
   } catch (error) {
     console.error('Failed to get platform stats:', error);
-    // Return default stats on error
     return {
-      totalCitizens: 0,
-      totalProviders: 0,
-      totalAdmins: 0,
-      newUsersToday: 0,
-      newUsersThisWeek: 0,
-      verifiedProviders: 0,
-      pendingProviders: 0,
-      rejectedProviders: 0,
-      totalAppointments: 0,
-      appointmentsToday: 0,
-      totalReviews: 0,
-      averageRating: 0,
-      totalPageViews: 0,
-      activeUsersToday: 0,
+      totalCitizens: 0, totalProviders: 0, totalAdmins: 0,
+      newUsersToday: 0, newUsersThisWeek: 0,
+      verifiedProviders: 0, pendingProviders: 0, rejectedProviders: 0,
+      totalAppointments: 0, appointmentsToday: 0,
+      totalReviews: 0, averageRating: 0,
+      totalPageViews: 0, activeUsersToday: 0,
     };
   }
 }
 
 /**
- * Get daily statistics for charts
+ * Get daily statistics from real Firestore data
  */
 export async function getDailyStats(days: number = 30): Promise<DailyStats[]> {
   try {
-    const stats: DailyStats[] = [];
     const now = new Date();
+    const startDate = new Date(now);
+    startDate.setDate(startDate.getDate() - days + 1);
+    startDate.setHours(0, 0, 0, 0);
 
-    // Generate last N days
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
+    // Fetch all collections in parallel
+    const [citizensSnap, providersSnap, appointmentsSnap] = await Promise.all([
+      getDocs(collection(db, 'citizens')),
+      getDocs(collection(db, 'providers')),
+      getDocs(collection(db, 'appointments')),
+    ]);
 
-      // For demo purposes, generate realistic mock data
-      // In production, you'd query actual data per day
-      stats.push({
-        date: dateStr,
-        newUsers: Math.floor(Math.random() * 15) + 2,
-        newProviders: Math.floor(Math.random() * 5) + 1,
-        appointments: Math.floor(Math.random() * 25) + 5,
-        pageViews: Math.floor(Math.random() * 500) + 100,
-      });
+    // Build date buckets
+    const dateBuckets: Record<string, DailyStats> = {};
+    for (let i = 0; i < days; i++) {
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + i);
+      const dateStr = getDateStr(d);
+      dateBuckets[dateStr] = { date: dateStr, newUsers: 0, newProviders: 0, appointments: 0, pageViews: 0 };
     }
 
-    return stats;
+    // Aggregate citizens by createdAt date
+    citizensSnap.docs.forEach(doc => {
+      const date = parseFirestoreDate(doc.data().createdAt);
+      if (date) {
+        const dateStr = getDateStr(date);
+        if (dateBuckets[dateStr]) dateBuckets[dateStr].newUsers++;
+      }
+    });
+
+    // Aggregate providers by createdAt date
+    providersSnap.docs.forEach(doc => {
+      const date = parseFirestoreDate(doc.data().createdAt);
+      if (date) {
+        const dateStr = getDateStr(date);
+        if (dateBuckets[dateStr]) dateBuckets[dateStr].newProviders++;
+      }
+    });
+
+    // Aggregate appointments by createdAt date
+    appointmentsSnap.docs.forEach(doc => {
+      const date = parseFirestoreDate(doc.data().createdAt);
+      if (date) {
+        const dateStr = getDateStr(date);
+        if (dateBuckets[dateStr]) dateBuckets[dateStr].appointments++;
+      }
+    });
+
+    return Object.values(dateBuckets).sort((a, b) => a.date.localeCompare(b.date));
   } catch (error) {
     console.error('Failed to get daily stats:', error);
     return [];
   }
 }
 
-/**
- * Get providers grouped by type
- */
 export async function getProvidersByType(): Promise<ProviderTypeCount[]> {
   try {
     const providersSnap = await getDocs(collection(db, 'providers'));
     const typeCount: Record<string, number> = {};
-
     providersSnap.docs.forEach(doc => {
       const type = doc.data().type || 'other';
       typeCount[type] = (typeCount[type] || 0) + 1;
     });
-
     return Object.entries(typeCount).map(([type, count]) => ({
-      type,
-      count,
-      color: PROVIDER_TYPE_COLORS[type] || PROVIDER_TYPE_COLORS.other,
+      type, count, color: PROVIDER_TYPE_COLORS[type] || PROVIDER_TYPE_COLORS.other,
     }));
   } catch (error) {
     console.error('Failed to get providers by type:', error);
@@ -221,19 +214,10 @@ export async function getProvidersByType(): Promise<ProviderTypeCount[]> {
   }
 }
 
-/**
- * Get verification status distribution
- */
 export async function getVerificationStats(): Promise<VerificationStats[]> {
   try {
     const providersSnap = await getDocs(collection(db, 'providers'));
-    const statusCount: Record<string, number> = {
-      verified: 0,
-      pending: 0,
-      rejected: 0,
-      unverified: 0,
-    };
-
+    const statusCount: Record<string, number> = { verified: 0, pending: 0, rejected: 0, unverified: 0 };
     providersSnap.docs.forEach(doc => {
       const data = doc.data();
       if (data.verificationStatus) {
@@ -244,50 +228,12 @@ export async function getVerificationStats(): Promise<VerificationStats[]> {
         statusCount.unverified++;
       }
     });
-
-    const colors: Record<string, string> = {
-      verified: '#10B981',
-      pending: '#F59E0B',
-      rejected: '#EF4444',
-      unverified: '#6B7280',
-    };
-
+    const colors: Record<string, string> = { verified: '#10B981', pending: '#F59E0B', rejected: '#EF4444', unverified: '#6B7280' };
     return Object.entries(statusCount)
       .filter(([_, count]) => count > 0)
-      .map(([status, count]) => ({
-        status,
-        count,
-        color: colors[status],
-      }));
+      .map(([status, count]) => ({ status, count, color: colors[status] }));
   } catch (error) {
     console.error('Failed to get verification stats:', error);
-    return [];
-  }
-}
-
-/**
- * Get registration trends
- */
-export async function getRegistrationTrends(days: number = 30): Promise<{ date: string; registrations: number }[]> {
-  try {
-    const trends: { date: string; registrations: number }[] = [];
-    const now = new Date();
-
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-
-      // Mock data for demo - in production, query actual registration dates
-      trends.push({
-        date: dateStr,
-        registrations: Math.floor(Math.random() * 8) + 1,
-      });
-    }
-
-    return trends;
-  } catch (error) {
-    console.error('Failed to get registration trends:', error);
     return [];
   }
 }

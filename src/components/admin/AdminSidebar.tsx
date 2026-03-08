@@ -44,7 +44,7 @@ const navItems: NavItem[] = [
   { title: 'Utilisateurs', icon: Users, tabValue: 'users' },
   { title: 'Analytiques', icon: BarChart3, tabValue: 'analytics' },
   { title: 'Journal d\'audit', icon: FileText, tabValue: 'audit' },
-  { title: 'Rendez-vous', icon: CalendarDays, tabValue: 'appointments' },
+  
   { title: 'Signalements', icon: Flag, tabValue: 'reports' },
   { title: 'Configuration', icon: Settings, tabValue: 'settings' },
   { title: 'Documentation IA', icon: BookOpen, tabValue: 'documentation' },

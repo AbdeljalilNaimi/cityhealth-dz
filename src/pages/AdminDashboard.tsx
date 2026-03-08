@@ -16,15 +16,15 @@ import { AdminNotificationsPanel } from '@/components/admin/AdminNotificationsPa
 import { ProviderDetailDialog } from '@/components/admin/ProviderDetailDialog';
 import { AdminDocUpload } from '@/components/admin/AdminDocUpload';
 import { ReportsModerationPanel } from '@/components/admin/ReportsModerationPanel';
-import { AdminAppointmentsOverview } from '@/components/admin/AdminAppointmentsOverview';
 import { ApiManagementPanel } from '@/components/admin/ApiManagementPanel';
 import { notificationService } from '@/services/notificationService';
 import { getUnreadCount } from '@/services/adminNotificationService';
-import { usePendingProviders, useAllProviders, useUpdateVerification } from '@/hooks/useProviders';
+import { useAllProviders, useUpdateVerification } from '@/hooks/useProviders';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table,
   TableBody,
@@ -36,10 +36,7 @@ import {
 import { CheckCircle, XCircle, Eye, Search, Mail } from 'lucide-react';
 import { CityHealthProvider } from '@/data/providers';
 
-interface PendingProvider extends CityHealthProvider {
-  submittedAt?: string;
-  status?: 'pending' | 'approved' | 'rejected';
-}
+type ProviderStatusFilter = 'all' | 'pending' | 'verified' | 'rejected';
 
 const TAB_TITLES: Record<string, string> = {
   overview: 'Tableau de bord',
@@ -49,11 +46,16 @@ const TAB_TITLES: Record<string, string> = {
   users: 'Utilisateurs',
   analytics: 'Analytiques',
   audit: 'Journal d\'audit',
-  appointments: 'Rendez-vous',
   reports: 'Signalements',
   settings: 'Configuration',
   documentation: 'Documentation IA',
   api: 'Gestion API',
+};
+
+const STATUS_BADGE_CONFIG: Record<string, { label: string; className: string }> = {
+  pending: { label: 'En attente', className: 'bg-amber-100 text-amber-800' },
+  verified: { label: 'Vérifié', className: 'bg-green-100 text-green-800' },
+  rejected: { label: 'Rejeté', className: 'bg-red-100 text-red-800' },
 };
 
 export default function AdminDashboard() {
@@ -63,120 +65,67 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [adminNotifCount, setAdminNotifCount] = useState(0);
   const [selectedProvider, setSelectedProvider] = useState<CityHealthProvider | null>(null);
+  const [statusFilter, setStatusFilter] = useState<ProviderStatusFilter>('all');
 
-  // Use TanStack Query for provider data
-  const { data: pendingProvidersRaw = [], isLoading: loadingPending, isError: errorPending } = usePendingProviders();
   const { data: allProviders = [], isLoading: loadingAll, isError: errorAll } = useAllProviders();
   const updateVerification = useUpdateVerification();
-  
-  const loading = loadingPending || loadingAll;
-  const hasDataError = errorPending || errorAll;
-
-  // Transform pending providers
-  const pendingProviders: PendingProvider[] = pendingProvidersRaw.map(p => ({
-    ...p,
-    status: 'pending' as const,
-    submittedAt: new Date().toISOString()
-  }));
 
   useEffect(() => {
     getUnreadCount().then(setAdminNotifCount).catch(() => setAdminNotifCount(0));
   }, []);
 
   const handleApprove = async (id: string) => {
-    const provider = pendingProviders.find(p => p.id === id);
-    
+    const provider = allProviders.find(p => p.id === id);
     try {
       await updateVerification.mutateAsync({ providerId: id, status: 'verified', isPublic: true });
-      
-      // Audit log (non-blocking)
       try {
-        await logAdminAction(
-          user?.uid || 'unknown',
-          user?.email || 'unknown',
-          'provider_approved',
-          id,
-          'provider',
-          { providerName: provider?.name }
-        );
-      } catch (e) {
-        console.warn('Audit log failed:', e);
-      }
-
+        await logAdminAction(user?.uid || 'unknown', user?.email || 'unknown', 'provider_approved', id, 'provider', { providerName: provider?.name });
+      } catch (e) { console.warn('Audit log failed:', e); }
       if (provider) {
-        notificationService.sendVerificationNotification({
-          type: 'verification_approved',
-          providerEmail: provider.email || provider.phone,
-          providerName: provider.name
-        });
+        notificationService.sendVerificationNotification({ type: 'verification_approved', providerEmail: provider.email || provider.phone, providerName: provider.name });
       }
-
-      toast({
-        title: "Profil approuvé",
-        description: "Le professionnel est maintenant visible dans les recherches.",
-      });
+      toast({ title: "Profil approuvé", description: "Le professionnel est maintenant visible dans les recherches." });
       setSelectedProvider(null);
     } catch {
-      toast({
-        title: "Erreur",
-        description: "Impossible d'approuver ce profil.",
-        variant: "destructive",
-      });
+      toast({ title: "Erreur", description: "Impossible d'approuver ce profil.", variant: "destructive" });
     }
   };
 
   const handleReject = async (id: string) => {
-    const provider = pendingProviders.find(p => p.id === id);
+    const provider = allProviders.find(p => p.id === id);
     const reason = 'Documents non conformes ou informations incomplètes';
-    
     try {
       await updateVerification.mutateAsync({ providerId: id, status: 'rejected', isPublic: false });
-      
-      // Audit log (non-blocking)
       try {
-        await logAdminAction(
-          user?.uid || 'unknown',
-          user?.email || 'unknown',
-          'provider_rejected',
-          id,
-          'provider',
-          { providerName: provider?.name },
-          reason
-        );
-      } catch (e) {
-        console.warn('Audit log failed:', e);
-      }
-
+        await logAdminAction(user?.uid || 'unknown', user?.email || 'unknown', 'provider_rejected', id, 'provider', { providerName: provider?.name }, reason);
+      } catch (e) { console.warn('Audit log failed:', e); }
       if (provider) {
-        notificationService.sendVerificationNotification({
-          type: 'verification_rejected',
-          providerEmail: provider.email || provider.phone,
-          providerName: provider.name,
-          reason
-        });
+        notificationService.sendVerificationNotification({ type: 'verification_rejected', providerEmail: provider.email || provider.phone, providerName: provider.name, reason });
       }
-
-      toast({
-        title: "Profil rejeté",
-        description: "Le professionnel ne sera pas visible dans les recherches.",
-        variant: "destructive",
-      });
+      toast({ title: "Profil rejeté", description: "Le professionnel ne sera pas visible dans les recherches.", variant: "destructive" });
       setSelectedProvider(null);
     } catch {
-      toast({
-        title: "Erreur",
-        description: "Impossible de rejeter ce profil.",
-        variant: "destructive",
-      });
+      toast({ title: "Erreur", description: "Impossible de rejeter ce profil.", variant: "destructive" });
     }
   };
 
-  const filteredProviders = pendingProviders.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
+  // Filter providers by status and search
+  const filteredProviders = allProviders.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.type?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.city?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || p.verificationStatus === statusFilter;
+    return matchesSearch && matchesStatus;
   });
 
-  if (loading) {
+  const statusCounts = {
+    all: allProviders.length,
+    pending: allProviders.filter(p => p.verificationStatus === 'pending').length,
+    verified: allProviders.filter(p => p.verificationStatus === 'verified').length,
+    rejected: allProviders.filter(p => p.verificationStatus === 'rejected').length,
+  };
+
+  if (loadingAll) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -184,8 +133,7 @@ export default function AdminDashboard() {
     );
   }
 
-  // Show error banner if provider data failed to load (e.g. permission denied)
-  const dataWarningBanner = hasDataError ? (
+  const dataWarningBanner = errorAll ? (
     <Card className="border-destructive/50 mb-6">
       <CardContent className="flex items-center gap-3 py-4">
         <Loader2 className="h-5 w-5 text-destructive" />
@@ -211,9 +159,9 @@ export default function AdminDashboard() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Demandes d'inscription</CardTitle>
+                    <CardTitle>Tous les prestataires</CardTitle>
                     <CardDescription>
-                      {pendingProviders.length} demandes en attente de validation
+                      {allProviders.length} prestataires au total — {statusCounts.pending} en attente
                     </CardDescription>
                   </div>
                   <div className="relative w-64">
@@ -226,6 +174,14 @@ export default function AdminDashboard() {
                     />
                   </div>
                 </div>
+                <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as ProviderStatusFilter)} className="mt-3">
+                  <TabsList>
+                    <TabsTrigger value="all">Tous ({statusCounts.all})</TabsTrigger>
+                    <TabsTrigger value="pending">En attente ({statusCounts.pending})</TabsTrigger>
+                    <TabsTrigger value="verified">Vérifiés ({statusCounts.verified})</TabsTrigger>
+                    <TabsTrigger value="rejected">Rejetés ({statusCounts.rejected})</TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -243,65 +199,75 @@ export default function AdminDashboard() {
                     {filteredProviders.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center text-muted-foreground py-12">
-                          Aucune demande d'inscription en attente
+                          Aucun prestataire trouvé
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredProviders.map((provider) => (
-                        <TableRow key={provider.id}>
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                <span className="text-sm font-medium text-primary">
-                                  {provider.name.charAt(0)}
-                                </span>
+                      filteredProviders.map((provider) => {
+                        const status = provider.verificationStatus || 'pending';
+                        const badgeConfig = STATUS_BADGE_CONFIG[status] || STATUS_BADGE_CONFIG.pending;
+                        const isPending = status === 'pending';
+                        
+                        return (
+                          <TableRow key={provider.id}>
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                  <span className="text-sm font-medium text-primary">
+                                    {provider.name.charAt(0)}
+                                  </span>
+                                </div>
+                                <div>
+                                  <p className="font-medium">{provider.name}</p>
+                                  <p className="text-xs text-muted-foreground">{provider.specialty}</p>
+                                </div>
                               </div>
-                              <div>
-                                <p className="font-medium">{provider.name}</p>
-                                <p className="text-xs text-muted-foreground">{provider.specialty}</p>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{provider.type}</Badge>
+                            </TableCell>
+                            <TableCell>{provider.city}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1 text-sm">
+                                <Mail className="h-3 w-3" />
+                                {provider.phone || provider.email || '—'}
                               </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{provider.type}</Badge>
-                          </TableCell>
-                          <TableCell>{provider.city}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1 text-sm">
-                              <Mail className="h-3 w-3" />
-                              {provider.phone}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary" className="bg-amber-100 text-amber-800">
-                              En attente
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <Button variant="ghost" size="icon" onClick={() => setSelectedProvider(provider)}>
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                onClick={() => handleApprove(provider.id)}
-                              >
-                                <CheckCircle className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                onClick={() => handleReject(provider.id)}
-                              >
-                                <XCircle className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="secondary" className={badgeConfig.className}>
+                                {badgeConfig.label}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <Button variant="ghost" size="icon" onClick={() => setSelectedProvider(provider)}>
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                {isPending && (
+                                  <>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                      onClick={() => handleApprove(provider.id)}
+                                    >
+                                      <CheckCircle className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                      onClick={() => handleReject(provider.id)}
+                                    >
+                                      <XCircle className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
                     )}
                   </TableBody>
                 </Table>
@@ -330,9 +296,6 @@ export default function AdminDashboard() {
       case 'audit':
         return <AuditLogViewer />;
       
-      case 'appointments':
-        return <AdminAppointmentsOverview />;
-      
       case 'reports':
         return <ReportsModerationPanel />;
       
@@ -352,24 +315,17 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Sidebar */}
       <AdminSidebar currentTab={currentTab} onTabChange={setCurrentTab} />
-
-      {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
         <AdminHeader 
           title={TAB_TITLES[currentTab] || 'Tableau de bord'} 
           notificationCount={adminNotifCount}
         />
-
-        {/* Content */}
         <main className="flex-1 p-6 overflow-auto">
           {dataWarningBanner}
           {renderTabContent()}
         </main>
       </div>
-
       <ProviderDetailDialog
         provider={selectedProvider}
         open={!!selectedProvider}
