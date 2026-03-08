@@ -154,6 +154,10 @@ export const MapSidebar = ({
 
     return (
       <div
+        ref={(el) => {
+          if (el) providerRefs.current.set(provider.id, el);
+          else providerRefs.current.delete(provider.id);
+        }}
         className={cn(
           'w-full flex gap-2.5 p-2.5 rounded-xl text-left transition-all duration-150 cursor-pointer',
           'hover:bg-accent/50',
