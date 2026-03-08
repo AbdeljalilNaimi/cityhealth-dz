@@ -449,7 +449,7 @@ export default function DeveloperLandingPage() {
                 transition={{ delay: i * 0.08 }}
                 className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
               >
-                <span className="text-2xl">{partner.icon}</span>
+                <partner.Icon className="w-6 h-6 text-primary" />
                 <span className="font-semibold text-sm md:text-base">{partner.name}</span>
               </motion.div>
             ))}
