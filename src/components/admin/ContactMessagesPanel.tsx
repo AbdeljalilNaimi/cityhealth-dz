@@ -65,8 +65,38 @@ export function ContactMessagesPanel() {
     setLoading(false);
   };
 
+  const fetchSettings = async () => {
+    setSettingsLoading(true);
+    const { data, error } = await supabase
+      .from('contact_settings')
+      .select('*');
+    if (!error && data) {
+      const map: Record<string, string> = {};
+      data.forEach((row: any) => { map[row.key] = row.value; });
+      setSettings(map);
+    }
+    setSettingsLoading(false);
+  };
+
+  const saveSettings = async () => {
+    setSavingSettings(true);
+    try {
+      for (const [key, value] of Object.entries(settings)) {
+        await supabase
+          .from('contact_settings')
+          .update({ value, updated_at: new Date().toISOString() })
+          .eq('key', key);
+      }
+      toast({ title: 'Informations mises à jour', description: 'Les coordonnées de contact ont été sauvegardées.' });
+    } catch {
+      toast({ title: 'Erreur', description: 'Impossible de sauvegarder.', variant: 'destructive' });
+    }
+    setSavingSettings(false);
+  };
+
   useEffect(() => {
     fetchMessages();
+    fetchSettings();
   }, []);
 
   const updateStatus = async (id: string, newStatus: string) => {
