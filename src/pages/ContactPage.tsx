@@ -33,6 +33,7 @@ const ContactPage = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [contactSettings, setContactSettings] = useState<Record<string, string>>({});
 
   const { toasts, addToast } = useToastNotifications();
 
