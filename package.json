@@ -87,6 +87,7 @@
     "sonner": "^1.5.0",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
+    "terser": "^5.46.0",
     "tesseract.js": "^5.1.1",
     "vaul": "^0.9.3",
     "vite-plugin-pwa": "^1.2.0",
