@@ -35,12 +35,12 @@ const typeIcons: Record<string, typeof Stethoscope> = {
 };
 
 const filterTabs = [
-  { key: 'all', label: 'Tous' },
-  { key: 'doctor', label: 'Médecins' },
-  { key: 'pharmacy', label: 'Pharmacies' },
-  { key: 'clinic', label: 'Cliniques' },
-  { key: 'hospital', label: 'Hôpitaux' },
-  { key: 'lab', label: 'Laboratoires' },
+  { key: 'all', label: { fr: 'Tous', ar: 'الكل', en: 'All' } },
+  { key: 'doctor', label: { fr: 'Médecins', ar: 'أطباء', en: 'Doctors' } },
+  { key: 'pharmacy', label: { fr: 'Pharmacies', ar: 'صيدليات', en: 'Pharmacies' } },
+  { key: 'clinic', label: { fr: 'Cliniques', ar: 'عيادات', en: 'Clinics' } },
+  { key: 'hospital', label: { fr: 'Hôpitaux', ar: 'مستشفيات', en: 'Hospitals' } },
+  { key: 'lab', label: { fr: 'Laboratoires', ar: 'مختبرات', en: 'Laboratories' } },
 ];
 
 const SkeletonCard = () => (
