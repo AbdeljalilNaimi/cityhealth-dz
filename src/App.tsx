@@ -504,6 +504,14 @@ const AppRoutes = () => {
             </PageTransition>
           } 
         />
+        <Route 
+          path="/tarifs" 
+          element={
+            <PageTransition>
+              <TarifsPage />
+            </PageTransition>
+          } 
+        />
         
         {/* ============================================ */}
         {/* ADS PUBLIC PAGE */}
