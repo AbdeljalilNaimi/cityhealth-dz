@@ -63,7 +63,7 @@ export const EmergencyProvidersSection = () => {
         </motion.div>
 
         {/* Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <div className="flex overflow-x-auto gap-4 mb-6 pb-2 scrollbar-none snap-x snap-mandatory -mx-4 px-4">
           {emergencyProviders.map((provider, index) => (
             <motion.div
               key={provider.phone}
