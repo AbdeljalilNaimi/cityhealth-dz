@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { supabase, SUPABASE_URL } from '@/lib/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Upload, FileText, Trash2, CheckCircle, Loader2, AlertTriangle } from 'lucide-react';

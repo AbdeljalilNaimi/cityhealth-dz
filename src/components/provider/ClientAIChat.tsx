@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Send, Loader2, Bot, User, X, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { SUPABASE_URL } from '@/lib/supabaseClient';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { toast } from 'sonner';

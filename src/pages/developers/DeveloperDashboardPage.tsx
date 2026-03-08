@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 import { Copy, Key, RefreshCw, XCircle, Plus, ArrowLeft, LogOut, UserCircle, Code2 } from 'lucide-react';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';

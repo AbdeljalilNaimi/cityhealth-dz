@@ -62,7 +62,7 @@ import {
   BloodEmergency, BloodEmergencyResponse, 
   getEmergenciesByProvider, subscribeToResponses, BLOOD_TYPES 
 } from '@/services/bloodEmergencyService';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 import { ProviderArticlesManager } from '@/components/research/ProviderArticlesManager';
 import { SubscriptionCard } from '@/components/provider/SubscriptionCard';
 
