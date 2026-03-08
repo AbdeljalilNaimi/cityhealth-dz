@@ -27,12 +27,16 @@ import { cn } from '@/lib/utils';
 import { isProviderVerified } from '@/utils/verificationUtils';
 import { VerifiedBadge } from '@/components/trust/VerifiedBadge';
 import { ProviderAvatar } from '@/components/ui/ProviderAvatar';
+import { Switch } from '@/components/ui/switch';
+
+export type MapSidebarMode = 'providers' | 'emergency' | 'blood';
 
 interface MapSidebarProps {
   providers: CityHealthProvider[];
   distances: Map<string, number>;
   loading: boolean;
   label?: string;
+  mode?: MapSidebarMode;
 }
 
 export const MapSidebar = ({
