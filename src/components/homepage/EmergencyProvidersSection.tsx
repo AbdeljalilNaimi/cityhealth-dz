@@ -71,7 +71,7 @@ export const EmergencyProvidersSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className="group relative rounded-2xl border-2 border-destructive/20 bg-card p-5 hover:border-destructive/40 hover:shadow-lg hover:shadow-destructive/5 transition-all"
+              className="group relative rounded-2xl border-2 border-destructive/20 bg-card p-5 hover:border-destructive/40 hover:shadow-lg hover:shadow-destructive/5 transition-all min-w-[280px] w-[85vw] sm:w-[320px] lg:w-[340px] flex-shrink-0 snap-start"
             >
               {/* Status dot */}
               <div className="absolute top-4 right-4 flex items-center gap-1.5">
