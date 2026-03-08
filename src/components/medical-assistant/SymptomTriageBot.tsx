@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { CityHealthProvider } from "@/data/providers";
 import { getVerifiedProviders } from "@/services/firestoreProviderService";
 import { DoctorProfileCard } from "./DoctorProfileCard";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 

@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 
 export type CommunityCategory = 'suggestion' | 'feedback' | 'experience' | 'question';
 export type ReportReason = 'spam' | 'abuse' | 'false_info' | 'other';

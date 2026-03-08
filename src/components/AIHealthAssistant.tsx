@@ -11,7 +11,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { CityHealthProvider } from '@/data/providers';
 import { getVerifiedProviders } from '@/services/firestoreProviderService';
 import { DoctorProfileCard } from '@/components/medical-assistant/DoctorProfileCard';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TriageMessage {
   role: "user" | "assistant";

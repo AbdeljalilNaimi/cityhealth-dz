@@ -3,7 +3,7 @@
  * Handles uploading provider logos and gallery images to cloud storage
  */
 
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 
 const BUCKET = 'provider-images';
 

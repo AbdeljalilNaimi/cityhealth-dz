@@ -50,7 +50,7 @@ export const AdminAnnouncements = () => {
     }
     setSubmitting(true);
     try {
-      const { supabase } = await import('@/lib/supabaseClient');
+      const { supabase } = await import('@/integrations/supabase/client');
       const { data: post, error } = await supabase
         .from('community_posts')
         .insert({

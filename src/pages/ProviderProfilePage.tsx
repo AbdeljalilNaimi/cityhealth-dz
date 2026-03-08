@@ -24,7 +24,7 @@ import { useSupabaseReviews } from "@/hooks/useSupabaseReviews";
 import { ReportProviderDialog } from "@/components/provider/ReportProviderDialog";
 import { useLanguage } from "@/hooks/useLanguage";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/integrations/supabase/client";
 import ProviderMap from "@/components/ProviderMap";
 import { Skeleton } from "@/components/ui/skeleton";
 import { QRCodeSVG } from 'qrcode.react';

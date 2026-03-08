@@ -5,7 +5,7 @@ import { Search, MapPin, Users, CalendarCheck, Star, Sparkles } from 'lucide-rea
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 
 // Word animation variants
 const containerVariants = {

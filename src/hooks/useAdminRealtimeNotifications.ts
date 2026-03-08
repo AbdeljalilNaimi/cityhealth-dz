@@ -5,7 +5,7 @@ import {
   markAllAsRead,
   type AdminNotification 
 } from '@/services/adminNotificationService';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export interface RealtimeEvent {
