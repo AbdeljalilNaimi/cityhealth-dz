@@ -89,7 +89,7 @@ export const EmergencyProvidersSection = () => {
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Clock className="h-3.5 w-3.5 flex-shrink-0" />
-                  <span>24h/24 — 7j/7</span>
+                  <span>{language === 'ar' ? '24/24 — 7/7' : language === 'en' ? '24/7' : '24h/24 — 7j/7'}</span>
                 </div>
               </div>
 

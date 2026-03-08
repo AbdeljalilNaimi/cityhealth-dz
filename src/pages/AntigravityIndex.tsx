@@ -61,12 +61,10 @@ const AntigravityIndex = () => {
 
         <div id="annonces">
           <div id="publicite">
-            <ProviderCTA />
+            <div id="inscription-provider">
+              <ProviderRegistrationSection />
+            </div>
           </div>
-        </div>
-
-        <div id="inscription-provider">
-          <ProviderRegistrationSection />
         </div>
       </Suspense>
 

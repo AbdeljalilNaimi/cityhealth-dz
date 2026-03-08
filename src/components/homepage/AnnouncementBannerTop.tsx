@@ -32,7 +32,7 @@ export const AnnouncementBannerTop = () => {
               {bannerText[language]}
             </p>
             <button
-              onClick={() => setVisible(false)}
+              onClick={() => { localStorage.setItem(BANNER_DISMISS_KEY, 'true'); setVisible(false); }}
               className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-white/20 transition-colors"
               aria-label="Close banner"
             >

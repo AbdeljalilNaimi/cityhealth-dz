@@ -315,7 +315,7 @@ export const FeaturedProviders = () => {
                               <span className="text-[11px] text-muted-foreground">({provider.reviewCount})</span>
                             </div>
                             <span className="text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                              Voir →
+                              {t('featuredProviders', 'viewProfile')} →
                             </span>
                           </div>
                         </div>

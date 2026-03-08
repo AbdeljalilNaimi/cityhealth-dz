@@ -1,16 +1,16 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, UserPlus, FileText, ShieldCheck, Building2, Stethoscope, Pill, FlaskConical, ScanLine, Syringe, Sparkles } from 'lucide-react';
+import { ArrowRight, UserPlus, FileText, ShieldCheck, Building2, Stethoscope, Pill, FlaskConical, ScanLine, Syringe, Sparkles, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { PROVIDER_TYPES } from '@/constants/providerTypes';
 
 const content = {
   fr: {
-    badge: 'Inscription Professionnelle',
+    badge: 'Pour les Professionnels de Santé',
     title: 'Rejoignez CityHealth',
-    titleAccent: 'en 3 étapes',
-    subtitle: 'Inscrivez votre établissement gratuitement et commencez à recevoir des patients dès aujourd\'hui.',
+    titleAccent: 'gratuitement',
+    subtitle: 'Inscrivez votre établissement et commencez à recevoir des patients à Sidi Bel Abbès dès aujourd\'hui.',
     cta: 'Commencer l\'inscription',
     ctaSub: 'Gratuit • Aucun engagement',
     steps: [
@@ -18,12 +18,18 @@ const content = {
       { title: 'Complétez votre profil', desc: 'Ajoutez vos informations, horaires et services.' },
       { title: 'Vérification & publication', desc: 'Notre équipe valide votre profil sous 24h.' },
     ],
+    benefits: [
+      'Visibilité accrue auprès des patients',
+      'Gestion simplifiée des rendez-vous',
+      'Profil professionnel vérifié',
+      'Statistiques et analytics détaillés',
+    ],
   },
   ar: {
-    badge: 'التسجيل المهني',
+    badge: 'لمتخصصي الرعاية الصحية',
     title: 'انضم إلى CityHealth',
-    titleAccent: 'في 3 خطوات',
-    subtitle: 'سجّل مؤسستك مجانًا وابدأ في استقبال المرضى اليوم.',
+    titleAccent: 'مجانًا',
+    subtitle: 'سجّل مؤسستك وابدأ في استقبال المرضى في سيدي بلعباس اليوم.',
     cta: 'ابدأ التسجيل',
     ctaSub: 'مجاني • بدون التزام',
     steps: [
@@ -31,18 +37,30 @@ const content = {
       { title: 'أكمل ملفك', desc: 'أضف معلوماتك وساعات العمل والخدمات.' },
       { title: 'التحقق والنشر', desc: 'فريقنا يتحقق من ملفك خلال 24 ساعة.' },
     ],
+    benefits: [
+      'رؤية متزايدة للمرضى',
+      'إدارة مبسطة للمواعيد',
+      'ملف تعريف مهني موثق',
+      'إحصائيات وتحليلات مفصلة',
+    ],
   },
   en: {
-    badge: 'Professional Registration',
+    badge: 'For Healthcare Professionals',
     title: 'Join CityHealth',
-    titleAccent: 'in 3 Steps',
-    subtitle: 'Register your facility for free and start receiving patients today.',
+    titleAccent: 'for free',
+    subtitle: 'Register your facility and start receiving patients in Sidi Bel Abbès today.',
     cta: 'Start Registration',
     ctaSub: 'Free • No commitment',
     steps: [
       { title: 'Choose your type', desc: 'Select your specialty from our categories.' },
       { title: 'Complete your profile', desc: 'Add your info, schedule, and services.' },
       { title: 'Verification & publish', desc: 'Our team validates your profile within 24h.' },
+    ],
+    benefits: [
+      'Increased visibility to patients',
+      'Simplified appointment management',
+      'Verified professional profile',
+      'Detailed statistics and analytics',
     ],
   },
 };
@@ -66,14 +84,13 @@ export const ProviderRegistrationSection = () => {
 
   return (
     <section className={`py-20 md:py-28 px-4 relative overflow-hidden ${isRTL ? 'rtl' : 'ltr'}`}>
-      {/* Subtle background */}
       <div className="absolute inset-0 bg-muted/30" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/[0.04] rounded-full blur-3xl" />
 
-      <div className="container mx-auto max-w-5xl relative z-10">
+      <div className="container mx-auto max-w-6xl relative z-10">
         {/* Header */}
         <motion.div
-          className="text-center mb-16"
+          className="text-center mb-14"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -87,57 +104,74 @@ export const ProviderRegistrationSection = () => {
             {t.title}{' '}
             <span className="text-primary">{t.titleAccent}</span>
           </h2>
-          <p className="text-muted-foreground max-w-md mx-auto text-base">{t.subtitle}</p>
+          <p className="text-muted-foreground max-w-lg mx-auto text-base">{t.subtitle}</p>
         </motion.div>
 
-        {/* Steps — horizontal timeline style */}
-        <div className="grid md:grid-cols-3 gap-0 mb-16 relative">
-          {/* Connector line (desktop) */}
-          <div className="hidden md:block absolute top-8 left-[16.6%] right-[16.6%] h-px bg-border" />
-
-          {t.steps.map((step, i) => {
-            const Icon = stepIcons[i];
-            return (
-              <motion.div
-                key={i}
-                className="relative flex flex-col items-center text-center px-6 py-4"
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.15 }}
-              >
-                {/* Step number circle */}
-                <div className="relative z-10 h-16 w-16 rounded-2xl bg-card border-2 border-primary/20 flex items-center justify-center mb-5 shadow-sm">
-                  <Icon className="h-6 w-6 text-primary" />
-                  <span className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shadow-sm">
-                    {i + 1}
-                  </span>
-                </div>
-                <h3 className="font-semibold text-foreground mb-1.5 text-sm">{step.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed max-w-[200px]">{step.desc}</p>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {/* Provider types — compact pill grid */}
-        <motion.div
-          className="flex flex-wrap justify-center gap-2 mb-12"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
-          {providerTypes.map((pt) => (
-            <div
-              key={pt.key}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-card border border-border/60 hover:border-primary/30 hover:bg-primary/[0.03] transition-all duration-200 cursor-default"
-            >
-              <pt.icon className="h-3.5 w-3.5 text-primary/70" />
-              <span className="text-xs font-medium text-foreground/80">{pt.label[language]}</span>
+        <div className="grid lg:grid-cols-2 gap-12 mb-14">
+          {/* Left: Steps timeline */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="space-y-6">
+              {t.steps.map((step, i) => {
+                const Icon = stepIcons[i];
+                return (
+                  <div key={i} className="flex gap-4">
+                    <div className="relative flex flex-col items-center">
+                      <div className="h-12 w-12 rounded-xl bg-card border-2 border-primary/20 flex items-center justify-center shadow-sm">
+                        <Icon className="h-5 w-5 text-primary" />
+                        <span className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                          {i + 1}
+                        </span>
+                      </div>
+                      {i < t.steps.length - 1 && (
+                        <div className="w-px flex-1 bg-border mt-2" />
+                      )}
+                    </div>
+                    <div className="pt-1 pb-4">
+                      <h3 className="font-semibold text-foreground text-sm mb-1">{step.title}</h3>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{step.desc}</p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </motion.div>
+          </motion.div>
+
+          {/* Right: Benefits + Provider types */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="flex flex-col justify-center"
+          >
+            <div className="space-y-3 mb-8">
+              {t.benefits.map((benefit, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                  <span className="text-foreground text-sm">{benefit}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Provider types pills */}
+            <div className="flex flex-wrap gap-2">
+              {providerTypes.map((pt) => (
+                <div
+                  key={pt.key}
+                  className="flex items-center gap-2 px-3.5 py-2 rounded-full bg-card border border-border/60 hover:border-primary/30 hover:bg-primary/[0.03] transition-all duration-200 cursor-default"
+                >
+                  <pt.icon className="h-3.5 w-3.5 text-primary/70" />
+                  <span className="text-xs font-medium text-foreground/80">{pt.label[language]}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
 
         {/* CTA */}
         <motion.div
@@ -145,7 +179,7 @@ export const ProviderRegistrationSection = () => {
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.4, delay: 0.4 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
         >
           <Link to="/provider/register">
             <Button
