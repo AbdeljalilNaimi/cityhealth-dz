@@ -46,11 +46,23 @@ const ContactPage = () => {
     t('contact', 'other'),
   ];
 
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const { data } = await supabase.from('contact_settings').select('*');
+      if (data) {
+        const map: Record<string, string> = {};
+        data.forEach((row: any) => { map[row.key] = row.value; });
+        setContactSettings(map);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   const contactInfo = [
-    { icon: Phone, title: t('contact', 'phone'), details: t('contact', 'phoneNumber'), description: t('contact', 'phoneHours'), iconBg: 'bg-primary/10', iconColor: 'text-primary' },
-    { icon: Mail, title: t('contact', 'emailLabel'), details: t('contact', 'emailAddress'), description: t('contact', 'emailResponse'), iconBg: 'bg-secondary/10', iconColor: 'text-secondary' },
-    { icon: MapPin, title: t('contact', 'address'), details: t('contact', 'addressDetails'), description: t('contact', 'addressCity'), iconBg: 'bg-destructive/10', iconColor: 'text-destructive' },
-    { icon: Clock, title: t('contact', 'hours'), details: t('contact', 'workingHours'), description: t('contact', 'saturdayHours'), iconBg: 'bg-accent', iconColor: 'text-accent-foreground' },
+    { icon: Phone, title: t('contact', 'phone'), details: contactSettings.phone || t('contact', 'phoneNumber'), description: contactSettings.phone_hours || t('contact', 'phoneHours'), iconBg: 'bg-primary/10', iconColor: 'text-primary' },
+    { icon: Mail, title: t('contact', 'emailLabel'), details: contactSettings.email || t('contact', 'emailAddress'), description: contactSettings.email_response || t('contact', 'emailResponse'), iconBg: 'bg-secondary/10', iconColor: 'text-secondary' },
+    { icon: MapPin, title: t('contact', 'address'), details: contactSettings.address || t('contact', 'addressDetails'), description: contactSettings.address_city || t('contact', 'addressCity'), iconBg: 'bg-destructive/10', iconColor: 'text-destructive' },
+    { icon: Clock, title: t('contact', 'hours'), details: contactSettings.working_hours || t('contact', 'workingHours'), description: contactSettings.saturday_hours || t('contact', 'saturdayHours'), iconBg: 'bg-accent', iconColor: 'text-accent-foreground' },
   ];
 
   const faqItems = [
