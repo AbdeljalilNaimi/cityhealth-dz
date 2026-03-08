@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Code2, Zap, Shield, Rocket, ArrowRight, Terminal, Copy, Check, Globe, Database, Lock, Clock } from 'lucide-react';
+import { Code2, Zap, Shield, Rocket, ArrowRight, Terminal, Copy, Check, Globe, Database, Lock, Clock, Hospital, Pill, MapPin, Ambulance, Link2, Stethoscope } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -434,12 +434,12 @@ export default function DeveloperLandingPage() {
             className="flex flex-wrap items-center justify-center gap-8 md:gap-12 mb-16 py-8 px-4 rounded-2xl border border-border/30 bg-card/30 backdrop-blur-sm"
           >
             {[
-              { name: 'SBA MedTech', icon: '🏥' },
-              { name: 'PharmaDZ', icon: '💊' },
-              { name: 'HealthMap Pro', icon: '🗺️' },
-              { name: 'DZ Emergency', icon: '🚑' },
-              { name: 'MedConnect', icon: '🔗' },
-              { name: 'Tabib.dz', icon: '👨‍⚕️' },
+              { name: 'SBA MedTech', Icon: Hospital },
+              { name: 'PharmaDZ', Icon: Pill },
+              { name: 'HealthMap Pro', Icon: MapPin },
+              { name: 'DZ Emergency', Icon: Ambulance },
+              { name: 'MedConnect', Icon: Link2 },
+              { name: 'Tabib.dz', Icon: Stethoscope },
             ].map((partner, i) => (
               <motion.div
                 key={partner.name}
@@ -449,7 +449,7 @@ export default function DeveloperLandingPage() {
                 transition={{ delay: i * 0.08 }}
                 className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
               >
-                <span className="text-2xl">{partner.icon}</span>
+                <partner.Icon className="w-6 h-6 text-primary" />
                 <span className="font-semibold text-sm md:text-base">{partner.name}</span>
               </motion.div>
             ))}
