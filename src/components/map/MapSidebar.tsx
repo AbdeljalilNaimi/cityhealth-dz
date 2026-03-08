@@ -44,6 +44,7 @@ export const MapSidebar = ({
   distances,
   loading,
   label,
+  mode = 'providers',
 }: MapSidebarProps) => {
   const { selectedProvider, setSelectedProvider, calculateRoute, isRouting, isRTL, flyTo, sidebarOpen, setSidebarOpen } = useMapContext();
   const { language } = useLanguage();
