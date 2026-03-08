@@ -412,10 +412,12 @@ export const MapSidebar = ({
           setMobileExpanded={setMobileExpanded}
           tx={tx}
           ListContent={ListContent}
-          TypeFilters={TypeFilters}
+          TypeFilters={showTypeFilters ? TypeFilters : null}
           searchQuery={searchQuery}
           updateParam={updateParam}
           isRTL={isRTL}
+          showOpenToggle={showOpenToggle}
+          openOnly={openOnly}
         />
       </>
     );
