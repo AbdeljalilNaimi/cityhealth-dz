@@ -1,5 +1,5 @@
 import { useEffect, useRef, memo } from 'react';
-import { MapPin, Maximize2 } from 'lucide-react';
+import { MapPin, Maximize2, Navigation } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
@@ -13,7 +13,7 @@ interface MiniMapPreviewProps {
   className?: string;
 }
 
-const TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+const TILE_URL = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 
 export const MiniMapPreview = memo(({ providers, onOpenFullMap, className }: MiniMapPreviewProps) => {
   const { language } = useLanguage();
@@ -21,22 +21,20 @@ export const MiniMapPreview = memo(({ providers, onOpenFullMap, className }: Min
   const mapRef = useRef<L.Map | null>(null);
 
   const tx = {
-    fr: { viewFullMap: 'Voir la carte complète', providers: 'prestataires' },
-    ar: { viewFullMap: 'عرض الخريطة الكاملة', providers: 'مقدمي الخدمات' },
-    en: { viewFullMap: 'View full map', providers: 'providers' }
-  }[language as 'fr' | 'ar' | 'en'] || { viewFullMap: 'View full map', providers: 'providers' };
+    fr: { viewFullMap: 'Explorer la carte', providers: 'prestataires', explore: 'Carte interactive' },
+    ar: { viewFullMap: 'استكشاف الخريطة', providers: 'مقدمي الخدمات', explore: 'خريطة تفاعلية' },
+    en: { viewFullMap: 'Explore map', providers: 'providers', explore: 'Interactive map' }
+  }[language as 'fr' | 'ar' | 'en'] || { viewFullMap: 'Explore map', providers: 'providers', explore: 'Interactive map' };
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // Clean up any existing map instance first
     if (mapRef.current) {
       mapRef.current.off();
       mapRef.current.remove();
       mapRef.current = null;
     }
 
-    // Create map with disabled interactions
     const map = L.map(mapContainerRef.current, {
       center: [35.1975, -0.6300],
       zoom: 11,
@@ -50,14 +48,10 @@ export const MiniMapPreview = memo(({ providers, onOpenFullMap, className }: Min
       attributionControl: false,
     });
 
-    L.tileLayer(TILE_URL, {
-      maxZoom: 19,
-    }).addTo(map);
-
+    L.tileLayer(TILE_URL, { maxZoom: 19 }).addTo(map);
     mapRef.current = map;
 
     return () => {
-      // Robust cleanup: remove all listeners before destroying
       if (mapRef.current) {
         mapRef.current.off();
         mapRef.current.remove();
@@ -66,71 +60,67 @@ export const MiniMapPreview = memo(({ providers, onOpenFullMap, className }: Min
     };
   }, []);
 
-  // Update markers when providers change
   useEffect(() => {
     if (!mapRef.current) return;
-
     const map = mapRef.current;
 
-    // Clear existing markers
     map.eachLayer((layer) => {
-      if (layer instanceof L.Marker) {
-        map.removeLayer(layer);
-      }
+      if (layer instanceof L.CircleMarker) map.removeLayer(layer);
     });
 
-    // Add small markers for each provider
     providers.forEach((provider) => {
-      const marker = L.circleMarker([provider.lat, provider.lng], {
-        radius: 4,
-        fillColor: '#1a73e8',
-        color: '#fff',
-        weight: 1,
+      L.circleMarker([provider.lat, provider.lng], {
+        radius: 5,
+        fillColor: 'hsl(var(--primary))',
+        color: 'hsl(var(--background))',
+        weight: 2,
         opacity: 1,
-        fillOpacity: 0.8,
-      });
-      marker.addTo(map);
+        fillOpacity: 0.9,
+      }).addTo(map);
     });
 
-    // Fit bounds if we have providers
     if (providers.length > 0) {
       const bounds = L.latLngBounds(providers.map(p => [p.lat, p.lng]));
-      map.fitBounds(bounds, { padding: [20, 20], maxZoom: 13 });
+      map.fitBounds(bounds, { padding: [25, 25], maxZoom: 13 });
     }
   }, [providers]);
 
   return (
-    <div 
+    <div
       className={cn(
-        "relative rounded-lg overflow-hidden border border-border bg-muted cursor-pointer group",
+        "relative rounded-2xl overflow-hidden border border-border/50 bg-card cursor-pointer group shadow-sm hover:shadow-lg transition-all duration-300",
         className
       )}
       onClick={onOpenFullMap}
     >
-      {/* Mini map container */}
-      <div 
-        ref={mapContainerRef} 
-        className="w-full h-[180px]"
-      />
-      
-      {/* Overlay with action button */}
-      <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2">
-          <Button 
-            size="sm" 
-            variant="secondary"
-            className="shadow-lg gap-2"
-          >
-            <Maximize2 size={14} />
-            {tx.viewFullMap}
-          </Button>
+      {/* Map */}
+      <div ref={mapContainerRef} className="w-full h-[200px]" />
+
+      {/* Gradient overlay — always visible, stronger on hover */}
+      <div className="absolute inset-0 bg-gradient-to-t from-card via-card/10 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300 pointer-events-none" />
+
+      {/* Bottom bar */}
+      <div className="absolute bottom-0 inset-x-0 p-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Navigation className="h-3.5 w-3.5 text-primary" />
+          </div>
+          <span className="text-xs font-semibold text-foreground">{tx.explore}</span>
         </div>
+        <Button
+          size="sm"
+          className="h-7 rounded-lg text-[11px] gap-1.5 px-3 shadow-md"
+        >
+          <Maximize2 className="h-3 w-3" />
+          {tx.viewFullMap}
+        </Button>
       </div>
-      
+
       {/* Provider count badge */}
-      <div className="absolute top-2 right-2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 shadow-sm">
+      <div className="absolute top-2.5 right-2.5 bg-card/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 shadow-md border border-border/30">
         <MapPin size={12} className="text-primary" />
-        {providers.length} {tx.providers}
+        <span className="text-foreground">{providers.length}</span>
+        <span className="text-muted-foreground">{tx.providers}</span>
       </div>
     </div>
   );
