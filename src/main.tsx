@@ -4,6 +4,14 @@ import { HelmetProvider } from 'react-helmet-async';
 import App from './App.tsx';
 import './index.css';
 
+// Global error loggers — capture crashes outside React tree
+window.addEventListener('error', (event) => {
+  console.error('[GLOBAL_ERROR]', event.message, event.filename, event.lineno, event.error);
+});
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('[UNHANDLED_REJECTION]', event.reason);
+});
+
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <HelmetProvider>

@@ -4,8 +4,8 @@ import Footer from '@/components/Footer';
 import { AnnouncementBannerTop } from '@/components/homepage/AnnouncementBannerTop';
 import { FloatingProviderBanner } from '@/components/homepage/FloatingProviderBanner';
 import { useLanguage } from '@/hooks/useLanguage';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
-// Lazy-load below-the-fold sections to reduce main-thread work
 const EmergencyProvidersSection = lazy(() => import('@/components/homepage/EmergencyProvidersSection').then(m => ({ default: m.EmergencyProvidersSection })));
 const EmergencyBanner = lazy(() => import('@/components/homepage/EmergencyBanner').then(m => ({ default: m.EmergencyBanner })));
 const HowItWorksSection = lazy(() => import('@/components/homepage/HowItWorksSection').then(m => ({ default: m.HowItWorksSection })));
@@ -17,6 +17,14 @@ const PricingSection = lazy(() => import('@/components/homepage/PricingSection')
 const ProviderRegistrationSection = lazy(() => import('@/components/homepage/ProviderRegistrationSection').then(m => ({ default: m.ProviderRegistrationSection })));
 
 const SectionFallback = () => <div className="min-h-[200px]" />;
+
+const SafeSection = ({ children }: { children: React.ReactNode }) => (
+  <ErrorBoundary fallback={null}>
+    <Suspense fallback={<SectionFallback />}>
+      {children}
+    </Suspense>
+  </ErrorBoundary>
+);
 
 const AntigravityIndex = () => {
   const { t, language } = useLanguage();
@@ -30,32 +38,44 @@ const AntigravityIndex = () => {
       <AnnouncementBannerTop />
       <AntigravityHero />
 
-      <Suspense fallback={<SectionFallback />}>
+      <SafeSection>
         <div id="urgences">
           <EmergencyProvidersSection />
           <EmergencyBanner />
         </div>
+      </SafeSection>
 
+      <SafeSection>
         <div id="assistant-ia">
           <HowItWorksSection />
         </div>
+      </SafeSection>
 
+      <SafeSection>
         <ServicesGrid />
+      </SafeSection>
 
+      <SafeSection>
         <div id="recherche-medecins">
           <div id="carte-interactive">
             <AnimatedMapSection />
           </div>
         </div>
+      </SafeSection>
 
+      <SafeSection>
         <div id="recherche-medicale">
           <FeaturedProviders />
         </div>
+      </SafeSection>
 
+      <SafeSection>
         <div id="avis-idees">
           <TestimonialsSlider />
         </div>
+      </SafeSection>
 
+      <SafeSection>
         <div id="annonces">
           <div id="publicite">
             <div id="inscription-provider">
@@ -63,11 +83,13 @@ const AntigravityIndex = () => {
             </div>
           </div>
         </div>
+      </SafeSection>
 
+      <SafeSection>
         <div id="pricing">
           <PricingSection />
         </div>
-      </Suspense>
+      </SafeSection>
 
       <Footer />
       <FloatingProviderBanner />
