@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Star, Clock, ArrowRight, Search, Plus, Minus } from 'lucide-react';
+import { MapPin, Star, Clock, ArrowRight, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import sbaSatelliteMap from '@/assets/sba-satellite-map.jpg';
