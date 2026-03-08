@@ -70,6 +70,7 @@ const AntigravityIndex = () => {
       </Suspense>
 
       <Footer />
+      <FloatingProviderBanner />
     </div>
   );
 };
