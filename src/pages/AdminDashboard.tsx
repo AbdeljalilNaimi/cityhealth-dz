@@ -18,7 +18,7 @@ import { AdminDocUpload } from '@/components/admin/AdminDocUpload';
 import { ReportsModerationPanel } from '@/components/admin/ReportsModerationPanel';
 import { ApiManagementPanel } from '@/components/admin/ApiManagementPanel';
 import { notificationService } from '@/services/notificationService';
-import { getUnreadCount } from '@/services/adminNotificationService';
+
 import { useAllProviders, useUpdateVerification } from '@/hooks/useProviders';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
