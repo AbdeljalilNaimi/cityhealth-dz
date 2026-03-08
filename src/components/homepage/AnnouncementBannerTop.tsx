@@ -9,8 +9,10 @@ const bannerText = {
   en: '🇩🇿 CityHealth is now live in Sidi Bel Abbès — discover 500+ verified healthcare providers',
 };
 
+const BANNER_DISMISS_KEY = 'cityhealth_announcement_dismissed';
+
 export const AnnouncementBannerTop = () => {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(() => localStorage.getItem(BANNER_DISMISS_KEY) !== 'true');
   const { language } = useLanguage();
 
   if (!visible) return null;
