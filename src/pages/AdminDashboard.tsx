@@ -287,6 +287,9 @@ export default function AdminDashboard() {
       case 'users':
         return <UserManagement />;
       
+      case 'contact':
+        return <ContactMessagesPanel />;
+      
       case 'analytics':
         return <AdminAnalyticsCharts />;
       
