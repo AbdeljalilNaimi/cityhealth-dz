@@ -55,6 +55,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [
+    deferCssPlugin(),
     react(),
     mode === 'development' && componentTagger(),
     VitePWA({
