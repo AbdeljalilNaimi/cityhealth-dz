@@ -583,7 +583,7 @@ const MobileBottomSheet = ({
 
       {/* Type pills + Open Now */}
       {(TypeFilters || showOpenToggle) && (
-        <div className="px-3 pb-1.5 space-y-1.5">
+        <div className="px-3 pb-1.5 space-y-1.5 pointer-events-auto" onMouseDown={(e) => e.stopPropagation()}>
           {TypeFilters && <TypeFilters />}
           {showOpenToggle && (
             <div className="flex items-center gap-2">
