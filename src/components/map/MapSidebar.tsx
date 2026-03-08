@@ -275,6 +275,7 @@ export const MapSidebar = ({
         {/* Left arrow */}
         {canScrollLeft && (
           <button
+            type="button"
             onClick={() => scroll('left')}
             className={cn(
               "absolute top-1/2 -translate-y-1/2 z-10 h-6 w-6 rounded-full bg-card/90 border border-border/50 shadow-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-all",
