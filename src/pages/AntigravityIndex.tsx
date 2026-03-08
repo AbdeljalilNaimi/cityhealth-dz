@@ -2,6 +2,7 @@ import { useEffect, lazy, Suspense } from 'react';
 import { AntigravityHero } from '@/components/AntigravityHero';
 import Footer from '@/components/Footer';
 import { AnnouncementBannerTop } from '@/components/homepage/AnnouncementBannerTop';
+import { FloatingProviderBanner } from '@/components/homepage/FloatingProviderBanner';
 import { useLanguage } from '@/hooks/useLanguage';
 
 // Lazy-load below-the-fold sections to reduce main-thread work
