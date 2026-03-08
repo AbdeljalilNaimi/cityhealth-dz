@@ -56,11 +56,31 @@ export const AntigravityHero = () => {
     t('homepage', 'emergency247'),
   ];
 
-  // Stats data
+  // Real stats from DB
+  const [providerCount, setProviderCount] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
+  const [avgRating, setAvgRating] = useState(0);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      const [providersRes, reviewsRes] = await Promise.all([
+        supabase.from('providers_public').select('id', { count: 'exact', head: true }),
+        supabase.from('provider_reviews').select('rating'),
+      ]);
+      if (providersRes.count != null) setProviderCount(providersRes.count);
+      if (reviewsRes.data && reviewsRes.data.length > 0) {
+        setReviewCount(reviewsRes.data.length);
+        const avg = reviewsRes.data.reduce((s, r) => s + r.rating, 0) / reviewsRes.data.length;
+        setAvgRating(Math.round(avg * 10) / 10);
+      }
+    };
+    fetchStats();
+  }, []);
+
   const stats = [
-    { value: '500+', label: t('homepage', 'practitioners'), icon: Users },
-    { value: '50k+', label: t('homepage', 'consultations'), icon: CalendarCheck },
-    { value: '4.9', label: t('homepage', 'averageRating'), icon: Star },
+    { value: providerCount > 0 ? `${providerCount}+` : '—', label: t('homepage', 'practitioners'), icon: Users },
+    { value: reviewCount > 0 ? `${reviewCount}+` : '—', label: t('homepage', 'consultations'), icon: CalendarCheck },
+    { value: avgRating > 0 ? avgRating.toFixed(1) : '—', label: t('homepage', 'averageRating'), icon: Star },
   ];
 
   // Mouse tracking for interactive background — cached rect to avoid forced reflow
