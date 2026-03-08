@@ -3239,6 +3239,10 @@ export const translations: Record<Language, Translations> = {
       coFounderCTO: 'Co-Founder and Chief Technology Officer',
       descNaimi: 'Co-founder of CityHealth, dedicated to building accessible digital health solutions for Algeria.',
       descAbdelilah: 'Co-founder and technical architect of CityHealth, specialized in scalable infrastructure for the medical sector.',
+      support247: 'Support 24/7',
+      errorTitle: 'Error',
+      errorDesc: 'An error occurred. Please try again.',
+      emailPlaceholder: 'your@email.com',
     },
     notFound: {
       title: '404',
