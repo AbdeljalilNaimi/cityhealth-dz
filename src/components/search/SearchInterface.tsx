@@ -136,7 +136,7 @@ export const SearchInterface = ({
   const currentSuggestions = suggestions[language] || suggestions.en;
 
   return (
-    <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b">
+    <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
       <div className="max-w-7xl mx-auto px-4 py-4">
         {/* Main Search Bar — hidden in map mode */}
         {!hideSearchBar && (
