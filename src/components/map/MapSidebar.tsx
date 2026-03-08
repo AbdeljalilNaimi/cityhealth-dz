@@ -520,16 +520,20 @@ const MobileBottomSheet = ({
   searchQuery,
   updateParam,
   isRTL,
+  showOpenToggle,
+  openOnly,
 }: {
   providers: CityHealthProvider[];
   mobileExpanded: boolean;
   setMobileExpanded: (v: boolean) => void;
   tx: any;
   ListContent: React.FC<{ maxH: string }>;
-  TypeFilters: React.FC;
+  TypeFilters: React.FC | null;
   searchQuery: string;
   updateParam: (key: string, value: string | null) => void;
   isRTL: boolean;
+  showOpenToggle: boolean;
+  openOnly: boolean;
 }) => (
   <div className={cn(
     "md:hidden fixed bottom-0 left-0 right-0 z-[1000] bg-card/95 backdrop-blur-xl border-t border-border/50 rounded-t-2xl shadow-2xl transition-all duration-300",
@@ -573,10 +577,25 @@ const MobileBottomSheet = ({
         </div>
       </div>
 
-      {/* Type pills + Open Now (only in providers mode - passed via props) */}
-      <div className="px-3 pb-1.5">
-        <TypeFilters />
-      </div>
+      {/* Type pills + Open Now */}
+      {(TypeFilters || showOpenToggle) && (
+        <div className="px-3 pb-1.5 space-y-1.5">
+          {TypeFilters && <TypeFilters />}
+          {showOpenToggle && (
+            <div className="flex items-center gap-2">
+              <Switch
+                id="open-now-filter-mobile"
+                checked={openOnly}
+                onCheckedChange={(checked) => updateParam('open', checked ? '1' : null)}
+              />
+              <label htmlFor="open-now-filter-mobile" className="text-[10px] font-medium text-muted-foreground flex items-center gap-1 cursor-pointer select-none">
+                <Clock className="h-3 w-3" />
+                {tx.openNow}
+              </label>
+            </div>
+          )}
+        </div>
+      )}
 
       <ListContent maxH="max-h-[calc(70vh-10rem)]" />
     </div>
