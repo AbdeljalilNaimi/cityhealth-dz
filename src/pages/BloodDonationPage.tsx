@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { 
   Droplet, 
@@ -66,9 +67,31 @@ export default function BloodDonationPage() {
   const [bloodProfile, setBloodProfile] = useState<BloodProfile>({ reminderEnabled: false });
   const [profileLoaded, setProfileLoaded] = useState(false);
   
+  // Real stats
+  const [donationCount, setDonationCount] = useState(0);
+  const [donorCount, setDonorCount] = useState(0);
+  const [centerCount, setCenterCount] = useState(0);
+
   useEffect(() => {
     const unsub = subscribeToEmergencies(setActiveEmergencies);
     return unsub;
+  }, []);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      const [donationsRes, centersRes] = await Promise.all([
+        supabase.from('donation_history').select('citizen_id'),
+        supabase.from('providers_public').select('id', { count: 'exact', head: true })
+          .or('type.eq.hospital,type.eq.blood_cabin'),
+      ]);
+      if (donationsRes.data) {
+        setDonationCount(donationsRes.data.length);
+        const unique = new Set(donationsRes.data.map(d => d.citizen_id));
+        setDonorCount(unique.size);
+      }
+      if (centersRes.count != null) setCenterCount(centersRes.count);
+    };
+    fetchStats();
   }, []);
   
   // Auto-fill from profile and donation history
@@ -345,9 +368,9 @@ export default function BloodDonationPage() {
           {/* Hero stats */}
           <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto">
             {[
-              { value: '1,200+', label: tx.heroStat1 },
-              { value: '850+', label: tx.heroStat2 },
-              { value: '12', label: tx.heroStat3 },
+              { value: donationCount > 0 ? `${donationCount}+` : '—', label: tx.heroStat1 },
+              { value: donorCount > 0 ? `${donorCount}+` : '—', label: tx.heroStat2 },
+              { value: centerCount > 0 ? String(centerCount) : '—', label: tx.heroStat3 },
             ].map((stat, i) => (
               <div key={i} className="text-center">
                 <p className="text-2xl md:text-3xl font-bold text-white">{stat.value}</p>
