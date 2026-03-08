@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabaseClient';
 
 const sectionText = {
   fr: { title: 'Urgences Maintenant', subtitle: 'Prestataires disponibles 24h/24 et 7j/7', viewAll: 'Voir toutes les urgences', noResults: 'Aucun prestataire d\'urgence trouvé' },
