@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Droplet, 
-  Search, 
   Hospital, 
   Clock, 
   MapPin, 
@@ -15,10 +14,10 @@ import {
   CheckCircle2,
   XCircle,
   Info,
-  Star,
   Shield,
   Users,
-  Map
+  Map,
+  Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -26,7 +25,6 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -52,13 +50,8 @@ export default function BloodDonationPage() {
   const { isRTL, language } = useLanguage();
   const { isAuthenticated, profile } = useAuth();
   
-  // Emergency response state
   const [respondingEmergency, setRespondingEmergency] = useState<BloodEmergency | null>(null);
-  
-  // Real-time emergencies feed
   const [activeEmergencies, setActiveEmergencies] = useState<BloodEmergency[]>([]);
-  
-  // Eligibility checker state
   const [eligibilityAge, setEligibilityAge] = useState('');
   const [eligibilityWeight, setEligibilityWeight] = useState('');
   const [eligibilityHeight, setEligibilityHeight] = useState('');
@@ -70,16 +63,9 @@ export default function BloodDonationPage() {
   const [profileAutoFilledWeight, setProfileAutoFilledWeight] = useState(false);
   const [profileAutoFilledHeight, setProfileAutoFilledHeight] = useState(false);
   const [bmiValue, setBmiValue] = useState<number | null>(null);
-  
-  // Blood profile (for authenticated users)
-  const [bloodProfile, setBloodProfile] = useState<BloodProfile>({
-    reminderEnabled: false
-  });
-  
-  // Track if profile auto-fill has been applied
+  const [bloodProfile, setBloodProfile] = useState<BloodProfile>({ reminderEnabled: false });
   const [profileLoaded, setProfileLoaded] = useState(false);
   
-  // Subscribe to real-time emergencies
   useEffect(() => {
     const unsub = subscribeToEmergencies(setActiveEmergencies);
     return unsub;
@@ -88,73 +74,44 @@ export default function BloodDonationPage() {
   // Auto-fill from profile and donation history
   useEffect(() => {
     if (!isAuthenticated || !profile || profileLoaded) return;
-    
     const profileAny = profile as any;
-    
-    // Pre-fill blood type from profile
     if (profileAny.blood_group) {
       setBloodProfile(prev => ({ ...prev, bloodType: profileAny.blood_group }));
     }
-
-    // Auto-fill age from date_of_birth
     if (profileAny.date_of_birth) {
       const dob = new Date(profileAny.date_of_birth);
       const today = new Date();
       let age = today.getFullYear() - dob.getFullYear();
       const monthDiff = today.getMonth() - dob.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-        age--;
-      }
-      if (age > 0 && age < 150) {
-        setEligibilityAge(String(age));
-        setProfileAutoFilledAge(true);
-      }
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) age--;
+      if (age > 0 && age < 150) { setEligibilityAge(String(age)); setProfileAutoFilledAge(true); }
     }
-
-    // Auto-fill weight from profile
-    if (profileAny.weight && profileAny.weight > 0) {
-      setEligibilityWeight(String(profileAny.weight));
-      setProfileAutoFilledWeight(true);
-    }
-
-    // Auto-fill height from profile
-    if (profileAny.height && profileAny.height > 0) {
-      setEligibilityHeight(String(profileAny.height));
-      setProfileAutoFilledHeight(true);
-    }
-    
-    // Fetch latest donation and pre-fill dates
-    // Priority: donation_history (most accurate) > profile.last_donation_date (fallback)
+    if (profileAny.weight && profileAny.weight > 0) { setEligibilityWeight(String(profileAny.weight)); setProfileAutoFilledWeight(true); }
+    if (profileAny.height && profileAny.height > 0) { setEligibilityHeight(String(profileAny.height)); setProfileAutoFilledHeight(true); }
     if (profileAny.id || profileAny.uid) {
       const citizenId = profileAny.id || profileAny.uid;
       getDonationHistory(citizenId).then(history => {
         if (history.length > 0) {
-          const latestDonation = history[0];
-          const donatedDate = latestDonation.donated_at.split('T')[0];
+          const donatedDate = history[0].donated_at.split('T')[0];
           setLastDonation(donatedDate);
           setBloodProfile(prev => ({ ...prev, lastDonationDate: donatedDate }));
         } else if (profileAny.last_donation_date) {
-          // Fallback: use the date stored in citizen profile
           setLastDonation(profileAny.last_donation_date);
           setBloodProfile(prev => ({ ...prev, lastDonationDate: profileAny.last_donation_date }));
         }
       }).catch(() => {
-        // On error, still try profile fallback
         if (profileAny.last_donation_date) {
           setLastDonation(profileAny.last_donation_date);
           setBloodProfile(prev => ({ ...prev, lastDonationDate: profileAny.last_donation_date }));
         }
       });
     } else if (profileAny.last_donation_date) {
-      // No citizen ID available but profile has the date
       setLastDonation(profileAny.last_donation_date);
       setBloodProfile(prev => ({ ...prev, lastDonationDate: profileAny.last_donation_date }));
     }
-    
     setProfileLoaded(true);
   }, [isAuthenticated, profile, profileLoaded]);
 
-  // Translations
   const texts = useMemo(() => ({
     fr: {
       title: 'Don de Sang & Recherche d\'Urgence',
@@ -164,8 +121,8 @@ export default function BloodDonationPage() {
       reminders: 'Rappels',
       info: 'Informations',
       selectBloodType: 'Sélectionnez votre groupe sanguin',
-      disclaimer: 'La disponibilité du sang dépend du stock en temps réel des hôpitaux. Pour les urgences vitales, contactez immédiatement les services d\'urgence.',
-      emergencyCall: 'Appelez le 15 pour les urgences',
+      disclaimer: 'Pour les urgences vitales, contactez immédiatement les services d\'urgence.',
+      emergencyCall: 'Appelez le 15',
       eligibilityChecker: 'Vérificateur d\'éligibilité',
       age: 'Âge',
       weight: 'Poids (kg)',
@@ -187,6 +144,16 @@ export default function BloodDonationPage() {
       fact2: 'Seulement 10-15 minutes',
       fact3: 'Don possible tous les 56 jours',
       fact4: 'Totalement sécurisé et médicalement supervisé',
+      heroStat1: 'Vies sauvées',
+      heroStat2: 'Donneurs actifs',
+      heroStat3: 'Centres de don',
+      ctaFinal: 'Chaque goutte compte',
+      ctaFinalSub: 'Votre don peut faire la différence entre la vie et la mort. Rejoignez des milliers de donneurs.',
+      ctaFinalBtn: 'Je veux donner',
+      noEmergencies: 'Aucune urgence en cours',
+      noEmergenciesSub: 'Toutes les réserves de sang sont stables',
+      currentEmergencies: 'Urgences Actuelles à Sidi Bel Abbès',
+      canDonate: 'Je peux donner',
     },
     ar: {
       title: 'التبرع بالدم والبحث الطارئ',
@@ -196,8 +163,8 @@ export default function BloodDonationPage() {
       reminders: 'التذكيرات',
       info: 'معلومات',
       selectBloodType: 'اختر فصيلة دمك',
-      disclaimer: 'يعتمد توفر الدم على المخزون الفعلي للمستشفيات. للحالات الطارئة، اتصل فوراً بخدمات الطوارئ.',
-      emergencyCall: 'اتصل بـ 15 للطوارئ',
+      disclaimer: 'للحالات الطارئة، اتصل فوراً بخدمات الطوارئ.',
+      emergencyCall: 'اتصل بـ 15',
       eligibilityChecker: 'فحص الأهلية',
       age: 'العمر',
       weight: 'الوزن (كجم)',
@@ -219,6 +186,16 @@ export default function BloodDonationPage() {
       fact2: '10-15 دقيقة فقط',
       fact3: 'التبرع ممكن كل 56 يومًا',
       fact4: 'آمن تمامًا ومراقب طبيًا',
+      heroStat1: 'أرواح أُنقذت',
+      heroStat2: 'متبرعون نشطون',
+      heroStat3: 'مراكز التبرع',
+      ctaFinal: 'كل قطرة مهمة',
+      ctaFinalSub: 'تبرعك يمكن أن يحدث الفرق بين الحياة والموت. انضم إلى آلاف المتبرعين.',
+      ctaFinalBtn: 'أريد أن أتبرع',
+      noEmergencies: 'لا توجد حالات طوارئ حالياً',
+      noEmergenciesSub: 'جميع احتياطيات الدم مستقرة',
+      currentEmergencies: 'الحالات الطارئة الحالية في سيدي بلعباس',
+      canDonate: 'يمكنني التبرع',
     },
     en: {
       title: 'Blood Donation & Emergency Finder',
@@ -228,8 +205,8 @@ export default function BloodDonationPage() {
       reminders: 'Reminders',
       info: 'Information',
       selectBloodType: 'Select your blood type',
-      disclaimer: 'Blood availability depends on real-time hospital stock. For life-threatening emergencies, contact emergency services immediately.',
-      emergencyCall: 'Call 15 for emergencies',
+      disclaimer: 'For life-threatening emergencies, contact emergency services immediately.',
+      emergencyCall: 'Call 15',
       eligibilityChecker: 'Eligibility Checker',
       age: 'Age',
       weight: 'Weight (kg)',
@@ -251,39 +228,37 @@ export default function BloodDonationPage() {
       fact2: 'Only 10-15 minutes',
       fact3: 'Donation possible every 56 days',
       fact4: 'Completely safe and medically supervised',
+      heroStat1: 'Lives saved',
+      heroStat2: 'Active donors',
+      heroStat3: 'Donation centers',
+      ctaFinal: 'Every drop counts',
+      ctaFinalSub: 'Your donation can make the difference between life and death. Join thousands of donors.',
+      ctaFinalBtn: 'I want to donate',
+      noEmergencies: 'No active emergencies',
+      noEmergenciesSub: 'All blood reserves are stable',
+      currentEmergencies: 'Current Emergencies in Sidi Bel Abbès',
+      canDonate: 'I can donate',
     }
   }), []);
   
   const tx = texts[language as keyof typeof texts] || texts.fr;
   
-  // Check eligibility
   const checkEligibility = () => {
     const age = parseInt(eligibilityAge);
     const weight = parseInt(eligibilityWeight);
     const height = parseInt(eligibilityHeight);
-    
     setDaysRemaining(null);
-
-    // Calculate BMI if both weight and height are available
     if (weight > 0 && height > 0) {
       const heightM = height / 100;
       setBmiValue(Math.round((weight / (heightM * heightM)) * 10) / 10);
     } else {
       setBmiValue(null);
     }
-    
-    if (age < 18 || weight < 50) {
-      setEligibilityResult('not_yet');
-      setNextEligibleDate(null);
-      return;
-    }
-    
+    if (age < 18 || weight < 50) { setEligibilityResult('not_yet'); setNextEligibleDate(null); return; }
     if (lastDonation) {
       const lastDate = new Date(lastDonation);
-      const minWait = 56;
       const nextDate = new Date(lastDate);
-      nextDate.setDate(nextDate.getDate() + minWait);
-      
+      nextDate.setDate(nextDate.getDate() + 56);
       if (nextDate > new Date()) {
         const remaining = Math.ceil((nextDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
         setDaysRemaining(remaining);
@@ -292,123 +267,174 @@ export default function BloodDonationPage() {
         return;
       }
     }
-    
     setEligibilityResult('eligible');
     setNextEligibleDate(null);
   };
   
-  // Save blood profile
   const saveBloodProfile = () => {
     localStorage.setItem('blood_profile', JSON.stringify(bloodProfile));
   };
 
   const profileBloodGroup = (profile as any)?.blood_group;
   const hasAutoFilledDonationDate = profileLoaded && !!bloodProfile.lastDonationDate;
+
+  const factItems = [
+    { icon: Users, text: tx.fact1, color: 'text-destructive', bg: 'bg-destructive/10 border-destructive/20' },
+    { icon: Clock, text: tx.fact2, color: 'text-primary', bg: 'bg-primary/10 border-primary/20' },
+    { icon: Calendar, text: tx.fact3, color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/20' },
+    { icon: Shield, text: tx.fact4, color: 'text-green-500', bg: 'bg-green-500/10 border-green-500/20' }
+  ];
   
   return (
     <div className={cn("min-h-screen bg-background", isRTL && "rtl")}>
       
-      <main className="container mx-auto px-4 pt-20 pb-8">
-        {/* Emergency Alert Banner - visible to ALL users */}
+      {/* ===== PREMIUM HERO SECTION ===== */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-destructive/90 via-destructive/80 to-rose-600/90 pt-24 pb-16">
+        {/* Decorative blobs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute -bottom-32 -left-32 w-80 h-80 rounded-full bg-rose-300/20 blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-white/5 blur-3xl" />
+        </div>
+
+        <div className="container mx-auto px-4 relative z-10">
+          {/* Emergency compact banner */}
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <a
+              href="tel:15"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 text-white/90 text-sm hover:bg-white/25 transition-colors"
+            >
+              <AlertTriangle className="h-3.5 w-3.5" />
+              {tx.emergencyCall} — {tx.disclaimer}
+            </a>
+          </div>
+
+          {/* Animated droplet icon */}
+          <div className="flex justify-center mb-6">
+            <div className="relative">
+              <div className="absolute inset-0 animate-ping rounded-full bg-white/20" style={{ animationDuration: '2s' }} />
+              <div className="relative w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <Droplet className="h-8 w-8 text-white fill-white/30" />
+              </div>
+            </div>
+          </div>
+
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white text-center mb-4 tracking-tight">
+            {tx.title}
+          </h1>
+          <p className="text-lg md:text-xl text-white/80 text-center max-w-2xl mx-auto mb-10">
+            {tx.subtitle}
+          </p>
+
+          {/* Hero CTA buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <Button size="lg" asChild className="rounded-full bg-white text-destructive hover:bg-white/90 shadow-xl hover:shadow-2xl hover:scale-105 transition-all font-semibold gap-2 px-8">
+              <Link to="/map/blood">
+                <Map className="h-5 w-5" />
+                {tx.viewMap}
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild className="rounded-full border-white/40 text-white hover:bg-white/15 backdrop-blur-sm gap-2 px-8">
+              <Link to="/map/emergency">
+                <AlertTriangle className="h-5 w-5" />
+                {tx.emergencyFinder}
+              </Link>
+            </Button>
+          </div>
+
+          {/* Hero stats */}
+          <div className="grid grid-cols-3 gap-4 max-w-lg mx-auto">
+            {[
+              { value: '1,200+', label: tx.heroStat1 },
+              { value: '850+', label: tx.heroStat2 },
+              { value: '12', label: tx.heroStat3 },
+            ].map((stat, i) => (
+              <div key={i} className="text-center">
+                <p className="text-2xl md:text-3xl font-bold text-white">{stat.value}</p>
+                <p className="text-xs md:text-sm text-white/60">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <main className="container mx-auto px-4 py-10 space-y-12">
+        {/* Emergency Alert Banner */}
         {!respondingEmergency && (
           <EmergencyAlertBanner onRespond={setRespondingEmergency} />
         )}
-
-        {/* Donation Confirmation View */}
         {respondingEmergency && (
-          <div className="mb-6">
-            <DonationConfirmationView
-              emergency={respondingEmergency}
-              onClose={() => setRespondingEmergency(null)}
-            />
-          </div>
+          <DonationConfirmationView
+            emergency={respondingEmergency}
+            onClose={() => setRespondingEmergency(null)}
+          />
         )}
 
-        {/* Hero Section - removed redundant pill badge */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-destructive to-primary bg-clip-text text-transparent">
-            {tx.title}
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            {tx.subtitle}
-          </p>
-        </div>
-        
-        {/* Emergency Disclaimer */}
-        <Alert variant="destructive" className="mb-8 border-destructive/50 bg-destructive/5">
-          <AlertTriangle className="h-5 w-5" />
-          <AlertTitle>{tx.emergencyCall}</AlertTitle>
-          <AlertDescription>{tx.disclaimer}</AlertDescription>
-        </Alert>
-        
-        {/* CTA - View Map */}
-        <div className="mb-8 flex flex-col sm:flex-row gap-4 justify-center">
-          <Button size="lg" asChild className="gap-2">
-            <Link to="/map/blood">
-              <Map className="h-5 w-5" />
-              {tx.viewMap}
-            </Link>
-          </Button>
-          <Button size="lg" variant="outline" asChild className="gap-2">
-            <Link to="/map/emergency">
-              <AlertTriangle className="h-5 w-5" />
-              {tx.emergencyFinder}
-            </Link>
-          </Button>
-        </div>
-
-        {/* Real-Time Urgent Needs Feed */}
-        <section className="mb-8">
-          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+        {/* ===== REAL-TIME EMERGENCIES FEED ===== */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <Droplet className="h-5 w-5 text-destructive" />
-            {language === 'ar' ? 'الحالات الطارئة الحالية في سيدي بلعباس' : 'Urgences Actuelles à Sidi Bel Abbès'}
+            {tx.currentEmergencies}
           </h2>
           {activeEmergencies.length === 0 ? (
-            <div className="p-6 rounded-lg border border-border bg-muted/30 text-center">
-              <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
-              <p className="text-muted-foreground font-medium">
-                {language === 'ar' ? 'لا توجد حالات طوارئ حالياً' : 'Aucune urgence en cours'}
-              </p>
+            <div className="py-12 rounded-2xl border-2 border-dashed border-border bg-muted/20 text-center">
+              <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
+                <CheckCircle2 className="h-8 w-8 text-green-500" />
+              </div>
+              <p className="text-lg font-semibold text-foreground">{tx.noEmergencies}</p>
+              <p className="text-sm text-muted-foreground mt-1">{tx.noEmergenciesSub}</p>
             </div>
           ) : (
-            <div className="flex overflow-x-auto gap-4 pb-2 -mx-1 px-1">
-              {activeEmergencies.map((emergency) => (
+            <div className="flex overflow-x-auto gap-4 pb-2 -mx-1 px-1 snap-x">
+              {activeEmergencies.map((emergency, idx) => (
                 <div
                   key={emergency.id}
                   className={cn(
-                    "flex-shrink-0 w-72 p-4 rounded-lg border-2",
+                    "flex-shrink-0 w-80 p-5 rounded-2xl border-2 snap-start animate-fade-in transition-shadow hover:shadow-lg",
                     emergency.urgency_level === 'critical'
-                      ? "border-destructive bg-destructive/10"
-                      : "border-orange-400 bg-orange-50 dark:bg-orange-950/30"
+                      ? "border-destructive/60 bg-destructive/5"
+                      : "border-amber-400/60 bg-amber-50 dark:bg-amber-950/20"
                   )}
+                  style={{ animationDelay: `${idx * 100}ms` }}
                 >
-                  <div className="flex items-center gap-2 mb-2">
-                    <Droplet className={cn(
-                      "h-6 w-6",
-                      emergency.urgency_level === 'critical' ? "text-destructive" : "text-orange-600"
-                    )} />
-                    <span className="text-2xl font-bold">{emergency.blood_type_needed}</span>
-                    <Badge variant={emergency.urgency_level === 'critical' ? 'destructive' : 'secondary'} className="ml-auto">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className={cn(
+                      "w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg",
+                      emergency.urgency_level === 'critical'
+                        ? "bg-destructive/15 text-destructive"
+                        : "bg-amber-500/15 text-amber-600"
+                    )}>
+                      {emergency.blood_type_needed}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      {emergency.provider_name && (
+                        <p className="text-sm font-medium truncate">
+                          <MapPin className="h-3 w-3 inline mr-1 text-muted-foreground" />
+                          {emergency.provider_name}
+                        </p>
+                      )}
+                    </div>
+                    <Badge
+                      variant={emergency.urgency_level === 'critical' ? 'destructive' : 'secondary'}
+                      className={cn(
+                        "shrink-0",
+                        emergency.urgency_level === 'critical' && "animate-pulse"
+                      )}
+                    >
                       {emergency.urgency_level === 'critical' ? 'Critique' : 'Urgent'}
                     </Badge>
                   </div>
-                  {emergency.provider_name && (
-                    <p className="text-sm text-muted-foreground mb-3 truncate">
-                      <MapPin className="h-3 w-3 inline mr-1" />
-                      {emergency.provider_name}
-                    </p>
-                  )}
                   {emergency.message && (
-                    <p className="text-xs text-muted-foreground mb-3 italic line-clamp-2">"{emergency.message}"</p>
+                    <p className="text-xs text-muted-foreground mb-4 italic line-clamp-2">"{emergency.message}"</p>
                   )}
                   <Button
                     variant="destructive"
                     size="sm"
-                    className="w-full"
+                    className="w-full rounded-xl"
                     onClick={() => setRespondingEmergency(emergency)}
                   >
                     <Heart className="h-4 w-4 mr-1" />
-                    Je peux donner
+                    {tx.canDonate}
                   </Button>
                 </div>
               ))}
@@ -416,20 +442,20 @@ export default function BloodDonationPage() {
           )}
         </section>
         
-        {/* Main Tabs */}
-        <Tabs defaultValue="donate" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-muted/50">
-            <TabsTrigger value="donate" className="flex flex-col sm:flex-row items-center gap-2 py-3">
+        {/* ===== MAIN TABS ===== */}
+        <Tabs defaultValue="donate" className="space-y-8">
+          <TabsList className="grid w-full grid-cols-3 h-auto p-1.5 rounded-xl bg-muted/60 backdrop-blur-sm">
+            <TabsTrigger value="donate" className="flex items-center gap-2 py-3 rounded-lg data-[state=active]:bg-destructive data-[state=active]:text-white data-[state=active]:shadow-md transition-all">
               <Heart className="h-4 w-4" />
-              <span className="text-xs sm:text-sm">{tx.donateBlood}</span>
+              <span className="text-xs sm:text-sm font-medium">{tx.donateBlood}</span>
             </TabsTrigger>
-            <TabsTrigger value="reminders" className="flex flex-col sm:flex-row items-center gap-2 py-3">
+            <TabsTrigger value="reminders" className="flex items-center gap-2 py-3 rounded-lg data-[state=active]:bg-destructive data-[state=active]:text-white data-[state=active]:shadow-md transition-all">
               <Bell className="h-4 w-4" />
-              <span className="text-xs sm:text-sm">{tx.reminders}</span>
+              <span className="text-xs sm:text-sm font-medium">{tx.reminders}</span>
             </TabsTrigger>
-            <TabsTrigger value="info" className="flex flex-col sm:flex-row items-center gap-2 py-3">
+            <TabsTrigger value="info" className="flex items-center gap-2 py-3 rounded-lg data-[state=active]:bg-destructive data-[state=active]:text-white data-[state=active]:shadow-md transition-all">
               <Info className="h-4 w-4" />
-              <span className="text-xs sm:text-sm">{tx.info}</span>
+              <span className="text-xs sm:text-sm font-medium">{tx.info}</span>
             </TabsTrigger>
           </TabsList>
           
@@ -437,81 +463,40 @@ export default function BloodDonationPage() {
           <TabsContent value="donate" className="space-y-6">
             <div className="grid lg:grid-cols-2 gap-6">
               {/* Eligibility Checker */}
-              <Card className="glass-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-primary" />
+              <Card className="border-2 shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <CheckCircle2 className="h-5 w-5 text-primary" />
+                    </div>
                     {tx.eligibilityChecker}
                   </CardTitle>
                   <CardDescription>
-                    <Alert className="mt-2">
-                      <Info className="h-4 w-4" />
-                      <AlertDescription>{tx.eligibilityNote}</AlertDescription>
-                    </Alert>
+                    <div className="mt-2 flex items-start gap-2 p-3 rounded-lg bg-muted/50 text-xs text-muted-foreground">
+                      <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                      {tx.eligibilityNote}
+                    </div>
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="age">{tx.age}</Label>
-                      <Input
-                        id="age"
-                        type="number"
-                        min="1"
-                        max="100"
-                        value={eligibilityAge}
-                        onChange={(e) => setEligibilityAge(e.target.value)}
-                        placeholder="≥ 18"
-                        readOnly={profileAutoFilledAge}
-                        className={profileAutoFilledAge ? "opacity-70 cursor-not-allowed" : ""}
-                      />
-                      {profileAutoFilledAge && (
-                        <p className="text-xs text-muted-foreground">
-                          {language === 'ar' ? 'تم حسابه من ملفك الشخصي' : 'Calculé depuis votre profil'}
-                        </p>
-                      )}
+                      <Input id="age" type="number" min="1" max="100" value={eligibilityAge} onChange={(e) => setEligibilityAge(e.target.value)} placeholder="≥ 18" readOnly={profileAutoFilledAge} className={profileAutoFilledAge ? "opacity-70 cursor-not-allowed" : ""} />
+                      {profileAutoFilledAge && <p className="text-xs text-muted-foreground">{language === 'ar' ? 'تم حسابه من ملفك الشخصي' : 'Calculé depuis votre profil'}</p>}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="weight">{tx.weight}</Label>
-                      <Input
-                        id="weight"
-                        type="number"
-                        min="1"
-                        max="300"
-                        value={eligibilityWeight}
-                        onChange={(e) => setEligibilityWeight(e.target.value)}
-                        placeholder="≥ 50"
-                        readOnly={profileAutoFilledWeight}
-                        className={profileAutoFilledWeight ? "opacity-70 cursor-not-allowed" : ""}
-                      />
-                      {profileAutoFilledWeight && (
-                        <p className="text-xs text-muted-foreground">
-                          {language === 'ar' ? 'تم ملؤه من ملفك الشخصي' : 'Pré-rempli depuis votre profil'}
-                        </p>
-                      )}
+                      <Input id="weight" type="number" min="1" max="300" value={eligibilityWeight} onChange={(e) => setEligibilityWeight(e.target.value)} placeholder="≥ 50" readOnly={profileAutoFilledWeight} className={profileAutoFilledWeight ? "opacity-70 cursor-not-allowed" : ""} />
+                      {profileAutoFilledWeight && <p className="text-xs text-muted-foreground">{language === 'ar' ? 'تم ملؤه من ملفك الشخصي' : 'Pré-rempli depuis votre profil'}</p>}
                     </div>
                   </div>
 
-                  {/* Height + BMI row */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="height">{language === 'ar' ? 'الطول (سم)' : 'Taille (cm)'}</Label>
-                      <Input
-                        id="height"
-                        type="number"
-                        min="50"
-                        max="250"
-                        value={eligibilityHeight}
-                        onChange={(e) => setEligibilityHeight(e.target.value)}
-                        placeholder="≥ 100"
-                        readOnly={profileAutoFilledHeight}
-                        className={profileAutoFilledHeight ? "opacity-70 cursor-not-allowed" : ""}
-                      />
-                      {profileAutoFilledHeight && (
-                        <p className="text-xs text-muted-foreground">
-                          {language === 'ar' ? 'تم ملؤه من ملفك الشخصي' : 'Pré-rempli depuis votre profil'}
-                        </p>
-                      )}
+                      <Input id="height" type="number" min="50" max="250" value={eligibilityHeight} onChange={(e) => setEligibilityHeight(e.target.value)} placeholder="≥ 100" readOnly={profileAutoFilledHeight} className={profileAutoFilledHeight ? "opacity-70 cursor-not-allowed" : ""} />
+                      {profileAutoFilledHeight && <p className="text-xs text-muted-foreground">{language === 'ar' ? 'تم ملؤه من ملفك الشخصي' : 'Pré-rempli depuis votre profil'}</p>}
                     </div>
                     <div className="space-y-2">
                       <Label>{language === 'ar' ? 'مؤشر كتلة الجسم' : 'IMC'}</Label>
@@ -541,121 +526,107 @@ export default function BloodDonationPage() {
                   
                   <div className="space-y-2">
                     <Label htmlFor="lastDonation">{tx.lastDonationDate}</Label>
-                    <Input
-                      id="lastDonation"
-                      type="date"
-                      value={lastDonation}
-                      onChange={(e) => setLastDonation(e.target.value)}
-                      readOnly={hasAutoFilledDonationDate}
-                      className={hasAutoFilledDonationDate ? "opacity-70 cursor-not-allowed" : ""}
-                    />
-                    {hasAutoFilledDonationDate && (
-                      <p className="text-xs text-muted-foreground">
-                        {language === 'ar' ? 'تم ملؤه تلقائياً من سجل التبرعات' : 'Pré-rempli depuis votre historique de dons'}
-                      </p>
-                    )}
+                    <Input id="lastDonation" type="date" value={lastDonation} onChange={(e) => setLastDonation(e.target.value)} readOnly={hasAutoFilledDonationDate} className={hasAutoFilledDonationDate ? "opacity-70 cursor-not-allowed" : ""} />
+                    {hasAutoFilledDonationDate && <p className="text-xs text-muted-foreground">{language === 'ar' ? 'تم ملؤه تلقائياً من سجل التبرعات' : 'Pré-rempli depuis votre historique de dons'}</p>}
                   </div>
                   
-                  <Button onClick={checkEligibility} className="w-full">
+                  <Button onClick={checkEligibility} className="w-full rounded-xl bg-destructive hover:bg-destructive/90 text-white font-semibold">
+                    <Sparkles className="h-4 w-4 mr-2" />
                     {tx.checkEligibility}
                   </Button>
                   
                   {eligibilityResult && (
                     <div className={cn(
-                      "p-4 rounded-lg border",
+                      "p-5 rounded-xl border-2 animate-fade-in",
                       eligibilityResult === 'eligible'
-                        ? "bg-green-50 border-green-200 dark:bg-green-900/20"
-                        : "bg-amber-50 border-amber-200 dark:bg-amber-900/20"
+                        ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800"
+                        : "bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800"
                     )}>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
                         {eligibilityResult === 'eligible' ? (
                           <>
-                            <CheckCircle2 className="h-5 w-5 text-green-600" />
-                            <span className="font-medium text-green-700 dark:text-green-300">
-                              {tx.eligible}
-                            </span>
+                            <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
+                              <CheckCircle2 className="h-5 w-5 text-green-600" />
+                            </div>
+                            <span className="font-semibold text-green-700 dark:text-green-300">{tx.eligible}</span>
                           </>
                         ) : (
                           <>
-                            <XCircle className="h-5 w-5 text-amber-600" />
-                            <span className="font-medium text-amber-700 dark:text-amber-300">
-                              {tx.notYetEligible}
-                            </span>
+                            <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center">
+                              <XCircle className="h-5 w-5 text-amber-600" />
+                            </div>
+                            <span className="font-semibold text-amber-700 dark:text-amber-300">{tx.notYetEligible}</span>
                           </>
                         )}
                       </div>
                       {daysRemaining !== null && (
-                        <p className="mt-2 text-sm font-medium text-amber-700 dark:text-amber-300">
+                        <p className="mt-3 text-sm font-medium text-amber-700 dark:text-amber-300">
                           {language === 'ar'
                             ? `يجب الانتظار ${daysRemaining} يومًا إضافيًا قبل التبرع التالي.`
-                            : `Vous devez attendre encore ${daysRemaining} jours avant votre prochain don.`
-                          }
+                            : `Vous devez attendre encore ${daysRemaining} jours avant votre prochain don.`}
                         </p>
                       )}
                       {nextEligibleDate && (
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          {tx.nextEligible}: <strong>{nextEligibleDate}</strong>
-                        </p>
+                        <p className="mt-1 text-sm text-muted-foreground">{tx.nextEligible}: <strong>{nextEligibleDate}</strong></p>
                       )}
-
-                      {/* BMI Alert when outside normal range */}
                       {bmiValue !== null && (bmiValue < 18.5 || bmiValue > 30) && (
-                        <Alert variant="destructive" className="mt-3 border-destructive/40 bg-destructive/5">
+                        <Alert variant="destructive" className="mt-4 border-destructive/40 bg-destructive/5">
                           <AlertTriangle className="h-4 w-4" />
-                          <AlertTitle>
-                            {language === 'ar' ? 'تنبيه بشأن مؤشر كتلة الجسم' : 'Alerte IMC'}
-                          </AlertTitle>
+                          <AlertTitle>{language === 'ar' ? 'تنبيه بشأن مؤشر كتلة الجسم' : 'Alerte IMC'}</AlertTitle>
                           <AlertDescription className="text-sm">
                             {bmiValue < 18.5
                               ? (language === 'ar'
-                                  ? `مؤشر كتلة الجسم الخاص بك (${bmiValue.toFixed(1)}) أقل من 18.5. قد يؤثر نقص الوزن على أهليتك للتبرع. يُنصح باستشارة طبيب.`
-                                  : `Votre IMC (${bmiValue.toFixed(1)}) est inférieur à 18.5. L'insuffisance pondérale peut affecter votre éligibilité au don. Consultez un médecin.`)
+                                  ? `مؤشر كتلة الجسم الخاص بك (${bmiValue.toFixed(1)}) أقل من 18.5. قد يؤثر نقص الوزن على أهليتك للتبرع.`
+                                  : `Votre IMC (${bmiValue.toFixed(1)}) est inférieur à 18.5. L'insuffisance pondérale peut affecter votre éligibilité.`)
                               : (language === 'ar'
-                                  ? `مؤشر كتلة الجسم الخاص بك (${bmiValue.toFixed(1)}) أعلى من 30 (سمنة). قد يطلب الطاقم الطبي فحصاً إضافياً قبل التبرع.`
-                                  : `Votre IMC (${bmiValue.toFixed(1)}) est supérieur à 30 (obésité). Le personnel médical pourrait demander un examen complémentaire avant le don.`)}
+                                  ? `مؤشر كتلة الجسم الخاص بك (${bmiValue.toFixed(1)}) أعلى من 30. قد يطلب الطاقم الطبي فحصاً إضافياً.`
+                                  : `Votre IMC (${bmiValue.toFixed(1)}) est supérieur à 30. Un examen complémentaire pourrait être demandé.`)}
                           </AlertDescription>
                         </Alert>
                       )}
                     </div>
                   )}
 
-                  {/* BMI Info Notification */}
-                  <Alert className="border-primary/30 bg-primary/5">
-                    <Info className="h-4 w-4" />
-                    <AlertTitle>{language === 'ar' ? 'ما هو مؤشر كتلة الجسم (IMC)؟' : "Qu'est-ce que l'IMC ?"}</AlertTitle>
-                    <AlertDescription className="text-sm text-muted-foreground">
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 border border-primary/10 text-xs text-muted-foreground">
+                    <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />
+                    <span>
                       {language === 'ar'
-                        ? 'مؤشر كتلة الجسم (IMC) هو مقياس يُحسب من الوزن والطول (الوزن ÷ الطول²). يساعد في تقييم ما إذا كان وزنك مناسباً. القيم الطبيعية بين 18.5 و 25. أقل من 18.5 يعني نقص الوزن، بين 25 و 30 يعني زيادة الوزن، وأكثر من 30 يعني السمنة.'
-                        : "L'Indice de Masse Corporelle (IMC) est calculé à partir de votre poids et taille (poids ÷ taille²). Il permet d'évaluer si votre corpulence est adaptée. Les valeurs normales se situent entre 18.5 et 25. En dessous de 18.5 : insuffisance pondérale. Entre 25 et 30 : surpoids. Au-dessus de 30 : obésité."}
-                    </AlertDescription>
-                  </Alert>
+                        ? "مؤشر كتلة الجسم (IMC) يُحسب من الوزن والطول. القيم الطبيعية بين 18.5 و 25."
+                        : "L'IMC est calculé à partir du poids et de la taille. Les valeurs normales se situent entre 18.5 et 25."}
+                    </span>
+                  </div>
                 </CardContent>
               </Card>
               
               {/* Blood Facts */}
-              <Card className="glass-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Heart className="h-5 w-5 text-destructive" />
+              <Card className="border-2 shadow-sm hover:shadow-md transition-shadow">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center">
+                      <Heart className="h-5 w-5 text-destructive" />
+                    </div>
                     {tx.whyDonate}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid gap-4">
-                    {[
-                      { icon: Users, text: tx.fact1 },
-                      { icon: Clock, text: tx.fact2 },
-                      { icon: Calendar, text: tx.fact3 },
-                      { icon: Shield, text: tx.fact4 }
-                    ].map((item, i) => (
-                      <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                        <item.icon className="h-5 w-5 text-primary" />
-                        <span>{item.text}</span>
+                  <div className="grid gap-3">
+                    {factItems.map((item, i) => (
+                      <div
+                        key={i}
+                        className={cn(
+                          "flex items-center gap-4 p-4 rounded-xl border transition-all hover:scale-[1.02]",
+                          item.bg
+                        )}
+                      >
+                        <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0", item.color)}>
+                          <item.icon className="h-5 w-5" />
+                        </div>
+                        <span className="font-medium text-sm">{item.text}</span>
                       </div>
                     ))}
                   </div>
                   
-                  <Button className="w-full mt-4" asChild>
+                  <Button className="w-full mt-4 rounded-xl" asChild>
                     <Link to="/map/blood">
                       <MapPin className="h-4 w-4 mr-2" />
                       {tx.findCenter}
@@ -668,92 +639,51 @@ export default function BloodDonationPage() {
           
           {/* Tab 2: Reminders */}
           <TabsContent value="reminders" className="space-y-6">
-            <Card className="glass-card max-w-xl mx-auto">
+            <Card className="border-2 shadow-sm max-w-xl mx-auto">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Bell className="h-5 w-5 text-primary" />
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Bell className="h-5 w-5 text-primary" />
+                  </div>
                   {language === 'ar' ? 'تذكيرات التبرع' : 'Rappels de Don'}
                 </CardTitle>
-                <CardDescription>
-                  {tx.reminderInfo}
-                </CardDescription>
+                <CardDescription>{tx.reminderInfo}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {!isAuthenticated ? (
-                  <Alert>
-                    <Info className="h-4 w-4" />
-                    <AlertDescription>{tx.loginRequired}</AlertDescription>
-                  </Alert>
+                  <Alert><Info className="h-4 w-4" /><AlertDescription>{tx.loginRequired}</AlertDescription></Alert>
                 ) : (
                   <>
                     <div className="space-y-2">
                       <Label>{tx.bloodType}</Label>
                       {profileBloodGroup ? (
                         <div className="flex items-center gap-2">
-                          <Badge variant="destructive" className="text-lg py-2 px-4">
-                            <Droplet className="h-4 w-4 mr-1" />
-                            {profileBloodGroup}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {language === 'ar' ? 'من ملفك الشخصي' : 'Depuis votre profil'}
-                          </span>
+                          <Badge variant="destructive" className="text-lg py-2 px-4"><Droplet className="h-4 w-4 mr-1" />{profileBloodGroup}</Badge>
+                          <span className="text-xs text-muted-foreground">{language === 'ar' ? 'من ملفك الشخصي' : 'Depuis votre profil'}</span>
                         </div>
                       ) : (
-                        <Select
-                          value={bloodProfile.bloodType || ''}
-                          onValueChange={(value) => setBloodProfile({ ...bloodProfile, bloodType: value as BloodType })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder={tx.selectBloodType} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {BLOOD_TYPES.map((type) => (
-                              <SelectItem key={type} value={type}>
-                                {type}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
+                        <Select value={bloodProfile.bloodType || ''} onValueChange={(value) => setBloodProfile({ ...bloodProfile, bloodType: value as BloodType })}>
+                          <SelectTrigger><SelectValue placeholder={tx.selectBloodType} /></SelectTrigger>
+                          <SelectContent>{BLOOD_TYPES.map((type) => (<SelectItem key={type} value={type}>{type}</SelectItem>))}</SelectContent>
                         </Select>
                       )}
                     </div>
-                    
                     <div className="space-y-2">
                       <Label>{tx.lastDonationDate}</Label>
-                      <Input
-                        type="date"
-                        value={bloodProfile.lastDonationDate || ''}
-                        onChange={(e) => setBloodProfile({ ...bloodProfile, lastDonationDate: e.target.value })}
-                        readOnly={hasAutoFilledDonationDate}
-                        className={hasAutoFilledDonationDate ? "opacity-70 cursor-not-allowed" : ""}
-                      />
-                      {hasAutoFilledDonationDate && (
-                        <p className="text-xs text-muted-foreground">
-                          {language === 'ar' ? 'تم ملؤه تلقائياً من سجل التبرعات' : 'Pré-rempli depuis votre historique de dons'}
-                        </p>
-                      )}
+                      <Input type="date" value={bloodProfile.lastDonationDate || ''} onChange={(e) => setBloodProfile({ ...bloodProfile, lastDonationDate: e.target.value })} readOnly={hasAutoFilledDonationDate} className={hasAutoFilledDonationDate ? "opacity-70 cursor-not-allowed" : ""} />
+                      {hasAutoFilledDonationDate && <p className="text-xs text-muted-foreground">{language === 'ar' ? 'تم ملؤه تلقائياً من سجل التبرعات' : 'Pré-rempli depuis votre historique de dons'}</p>}
                     </div>
-                    
-                    <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border">
                       <div className="flex items-center gap-3">
-                        {bloodProfile.reminderEnabled ? (
-                          <Bell className="h-5 w-5 text-primary" />
-                        ) : (
-                          <BellOff className="h-5 w-5 text-muted-foreground" />
-                        )}
+                        {bloodProfile.reminderEnabled ? <Bell className="h-5 w-5 text-primary" /> : <BellOff className="h-5 w-5 text-muted-foreground" />}
                         <div>
                           <p className="font-medium">{tx.enableReminders}</p>
                           <p className="text-sm text-muted-foreground">{tx.reminderInfo}</p>
                         </div>
                       </div>
-                      <Switch
-                        checked={bloodProfile.reminderEnabled}
-                        onCheckedChange={(checked) => setBloodProfile({ ...bloodProfile, reminderEnabled: checked })}
-                      />
+                      <Switch checked={bloodProfile.reminderEnabled} onCheckedChange={(checked) => setBloodProfile({ ...bloodProfile, reminderEnabled: checked })} />
                     </div>
-                    
-                    <Button onClick={saveBloodProfile} className="w-full">
-                      {tx.saveProfile}
-                    </Button>
+                    <Button onClick={saveBloodProfile} className="w-full rounded-xl">{tx.saveProfile}</Button>
                   </>
                 )}
               </CardContent>
@@ -763,74 +693,90 @@ export default function BloodDonationPage() {
           {/* Tab 3: Info */}
           <TabsContent value="info" className="space-y-6">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card className="glass-card">
+              <Card className="border-2 shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Droplet className="h-5 w-5 text-destructive" />
+                    <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center">
+                      <Droplet className="h-5 w-5 text-destructive" />
+                    </div>
                     {language === 'ar' ? 'فصائل الدم' : 'Groupes Sanguins'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
                     {BLOOD_TYPES.map((type) => (
-                      <Badge key={type} variant="outline" className="text-lg py-2 px-4">
-                        {type}
-                      </Badge>
+                      <Badge key={type} variant="outline" className="text-base py-2 px-4 rounded-lg border-2">{type}</Badge>
                     ))}
                   </div>
                   <p className="mt-4 text-sm text-muted-foreground">
-                    {language === 'ar' 
-                      ? 'O- هو المتبرع العام، AB+ هو المتلقي العام'
-                      : 'O- est le donneur universel, AB+ est le receveur universel'
-                    }
+                    {language === 'ar' ? 'O- هو المتبرع العام، AB+ هو المتلقي العام' : 'O- est le donneur universel, AB+ est le receveur universel'}
                   </p>
                 </CardContent>
               </Card>
               
-              <Card className="glass-card">
+              <Card className="border-2 shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Hospital className="h-5 w-5 text-primary" />
+                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Hospital className="h-5 w-5 text-primary" />
+                    </div>
                     {language === 'ar' ? 'أين تتبرع؟' : 'Où donner ?'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <p className="text-muted-foreground">
-                    {language === 'ar'
-                      ? 'يمكنك التبرع في المستشفيات ومراكز التبرع بالدم المعتمدة.'
-                      : 'Vous pouvez donner dans les hôpitaux et centres de don agréés.'
-                    }
+                    {language === 'ar' ? 'يمكنك التبرع في المستشفيات ومراكز التبرع بالدم المعتمدة.' : 'Vous pouvez donner dans les hôpitaux et centres de don agréés.'}
                   </p>
-                  <Button className="w-full" variant="outline" asChild>
-                    <Link to="/map/blood">
-                      <Map className="h-4 w-4 mr-2" />
-                      {tx.viewMap}
-                    </Link>
+                  <Button className="w-full rounded-xl" variant="outline" asChild>
+                    <Link to="/map/blood"><Map className="h-4 w-4 mr-2" />{tx.viewMap}</Link>
                   </Button>
                 </CardContent>
               </Card>
               
-              <Card className="glass-card">
+              <Card className="border-2 shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Phone className="h-5 w-5 text-primary" />
+                    <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center">
+                      <Phone className="h-5 w-5 text-destructive" />
+                    </div>
                     {language === 'ar' ? 'أرقام الطوارئ' : 'Numéros d\'urgence'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-destructive/10 rounded-lg">
-                    <span className="font-medium">SAMU</span>
-                    <a href="tel:15" className="text-destructive font-bold text-lg">15</a>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                    <span className="font-medium">{language === 'ar' ? 'الحماية المدنية' : 'Protection Civile'}</span>
-                    <a href="tel:14" className="font-bold text-lg">14</a>
-                  </div>
+                  <a href="tel:15" className="flex items-center justify-between p-4 bg-destructive/10 rounded-xl border border-destructive/20 hover:bg-destructive/15 transition-colors">
+                    <span className="font-semibold">SAMU</span>
+                    <span className="text-destructive font-bold text-xl">15</span>
+                  </a>
+                  <a href="tel:14" className="flex items-center justify-between p-4 bg-muted rounded-xl border hover:bg-muted/80 transition-colors">
+                    <span className="font-semibold">{language === 'ar' ? 'الحماية المدنية' : 'Protection Civile'}</span>
+                    <span className="font-bold text-xl">14</span>
+                  </a>
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* ===== CTA FINAL SECTION ===== */}
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-destructive/90 to-rose-600/90 p-10 md:p-16 text-center">
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/10 blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 w-48 h-48 rounded-full bg-white/10 blur-3xl" />
+          </div>
+          <div className="relative z-10">
+            <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-6">
+              <Heart className="h-7 w-7 text-white fill-white/30" />
+            </div>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">{tx.ctaFinal}</h2>
+            <p className="text-white/80 max-w-xl mx-auto mb-8 text-lg">{tx.ctaFinalSub}</p>
+            <Button size="lg" asChild className="rounded-full bg-white text-destructive hover:bg-white/90 shadow-xl font-semibold px-10 hover:scale-105 transition-transform">
+              <Link to="/map/blood">
+                <Droplet className="h-5 w-5 mr-2" />
+                {tx.ctaFinalBtn}
+              </Link>
+            </Button>
+          </div>
+        </section>
       </main>
     </div>
   );
