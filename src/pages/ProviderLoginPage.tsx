@@ -4,13 +4,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Stethoscope, ArrowLeft, Mail, Lock, Eye, EyeOff, ShieldCheck, BarChart3, Users, CheckCircle2 } from 'lucide-react';
+import { Loader2, Stethoscope, ArrowLeft, Mail, Lock, Eye, EyeOff, ShieldCheck, BarChart3, Users } from 'lucide-react';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 const features = [
   { icon: ShieldCheck, title: 'Profil vérifié', desc: 'Badge de vérification pour gagner la confiance des patients' },
