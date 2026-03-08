@@ -67,11 +67,10 @@ const BloodMapChild = () => {
     flyTo(provider.lat, provider.lng, 16);
   }, [setSelectedProvider, flyTo]);
   
-  // Optimized marker management - only update icons, don't recreate
+  // Optimized marker management
   useEffect(() => {
     if (!isReady || !mapRef.current) return;
     
-    // Create marker group once
     if (!markerGroupRef.current) {
       markerGroupRef.current = L.markerClusterGroup({ 
         chunkedLoading: true, 
@@ -82,9 +81,8 @@ const BloodMapChild = () => {
     
     const markerGroup = markerGroupRef.current;
     const existingMarkers = markersMapRef.current;
-    const currentProviderIds = new Set(providers.map(p => p.id));
+    const currentProviderIds = new Set(filteredProviders.map(p => p.id));
     
-    // Remove markers for providers no longer in list
     existingMarkers.forEach((marker, id) => {
       if (!currentProviderIds.has(id)) {
         markerGroup.removeLayer(marker);
@@ -92,16 +90,13 @@ const BloodMapChild = () => {
       }
     });
     
-    // Add/update markers
-    providers.forEach(provider => {
+    filteredProviders.forEach(provider => {
       const isSelected = selectedProvider?.id === provider.id;
       
       if (existingMarkers.has(provider.id)) {
-        // Update existing marker icon
         const marker = existingMarkers.get(provider.id)!;
         marker.setIcon(createMarkerIcon(provider.type, isSelected, false));
       } else {
-        // Create new marker
         const marker = L.marker([provider.lat, provider.lng], {
           icon: createMarkerIcon(provider.type, isSelected, false)
         });
@@ -110,7 +105,7 @@ const BloodMapChild = () => {
         existingMarkers.set(provider.id, marker);
       }
     });
-  }, [isReady, mapRef, providers, selectedProvider?.id, registerMarkerLayer, handleProviderClick]);
+  }, [isReady, mapRef, filteredProviders, selectedProvider?.id, registerMarkerLayer, handleProviderClick]);
   
   // Cleanup on unmount
   useEffect(() => {

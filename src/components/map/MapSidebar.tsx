@@ -570,7 +570,7 @@ const MobileBottomSheet = ({
         </div>
       </div>
 
-      {/* Type pills */}
+      {/* Type pills + Open Now (only in providers mode - passed via props) */}
       <div className="px-3 pb-1.5">
         <TypeFilters />
       </div>
