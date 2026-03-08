@@ -69,10 +69,10 @@ const responseExample = `{
 }`;
 
 const stats = [
-  { value: '99.9%', label: 'Uptime' },
-  { value: '<200ms', label: 'Response' },
-  { value: '10K+', label: 'Requests/day' },
-  { value: '24/7', label: 'Support' },
+  { value: '48', label: 'Wilayas couvertes' },
+  { value: '1 200+', label: 'Prestataires référencés' },
+  { value: '6', label: 'Endpoints REST' },
+  { value: 'Open', label: 'Tier gratuit' },
 ];
 
 export default function DeveloperLandingPage() {
