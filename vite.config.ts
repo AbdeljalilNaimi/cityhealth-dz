@@ -29,6 +29,7 @@ export default defineConfig(({ mode }) => ({
     mode === 'development' && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: null,
       includeAssets: ['favicon.ico', 'og-image.png', 'icons/*.png'],
       manifest: {
         name: 'CityHealth',
