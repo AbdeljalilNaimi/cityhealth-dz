@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   Search,
   X,
+  Clock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,12 +27,16 @@ import { cn } from '@/lib/utils';
 import { isProviderVerified } from '@/utils/verificationUtils';
 import { VerifiedBadge } from '@/components/trust/VerifiedBadge';
 import { ProviderAvatar } from '@/components/ui/ProviderAvatar';
+import { Switch } from '@/components/ui/switch';
+
+export type MapSidebarMode = 'providers' | 'emergency' | 'blood';
 
 interface MapSidebarProps {
   providers: CityHealthProvider[];
   distances: Map<string, number>;
   loading: boolean;
   label?: string;
+  mode?: MapSidebarMode;
 }
 
 export const MapSidebar = ({
@@ -39,6 +44,7 @@ export const MapSidebar = ({
   distances,
   loading,
   label,
+  mode = 'providers',
 }: MapSidebarProps) => {
   const { selectedProvider, setSelectedProvider, calculateRoute, isRouting, isRTL, flyTo, sidebarOpen, setSidebarOpen } = useMapContext();
   const { language } = useLanguage();
@@ -75,10 +81,14 @@ export const MapSidebar = ({
   // Read current filters from URL
   const searchQuery = searchParams.get('q') || '';
   const typesParam = searchParams.get('types');
+  const openOnly = searchParams.get('open') === '1';
   const activeTypes = useMemo(() => {
     if (!typesParam) return new Set<ProviderType>();
     return new Set(typesParam.split(',') as ProviderType[]);
   }, [typesParam]);
+
+  const showTypeFilters = mode === 'providers';
+  const showOpenToggle = mode === 'providers';
 
   // Update URL params
   const updateParam = useCallback((key: string, value: string | null) => {
@@ -105,21 +115,21 @@ export const MapSidebar = ({
       noResults: 'Aucun prestataire trouvé', noResultsSub: 'Essayez de modifier vos filtres',
       route: 'Itinéraire', close: 'Masquer', open: 'Voir la liste',
       emergency247: '24/7', searchPlaceholder: 'Rechercher un prestataire...',
-      showMore: 'Voir plus', allTypes: 'Tous',
+      showMore: 'Voir plus', allTypes: 'Tous', openNow: 'Ouvert',
     },
     ar: {
       providers: 'مقدمين', provider: 'مقدم', km: 'كم',
       noResults: 'لم يتم العثور على مقدمين', noResultsSub: 'حاول تعديل الفلاتر',
       route: 'الاتجاهات', close: 'إخفاء', open: 'عرض القائمة',
       emergency247: '24/7', searchPlaceholder: 'البحث عن مقدم خدمة...',
-      showMore: 'عرض المزيد', allTypes: 'الكل',
+      showMore: 'عرض المزيد', allTypes: 'الكل', openNow: 'مفتوح',
     },
     en: {
       providers: 'providers', provider: 'provider', km: 'km',
       noResults: 'No providers found', noResultsSub: 'Try adjusting your filters',
       route: 'Directions', close: 'Hide', open: 'Show list',
       emergency247: '24/7', searchPlaceholder: 'Search providers...',
-      showMore: 'Show more', allTypes: 'All',
+      showMore: 'Show more', allTypes: 'All', openNow: 'Open now',
     },
   }), []);
 
@@ -455,10 +465,26 @@ export const MapSidebar = ({
           </div>
         </div>
 
-        {/* Type Filters */}
-        <div className="px-2.5 py-1.5 border-b border-border/40">
-          <TypeFilters />
-        </div>
+        {/* Type Filters + Open Now toggle */}
+        {(showTypeFilters || showOpenToggle) && (
+          <div className="px-2.5 py-1.5 border-b border-border/40 space-y-1.5">
+            {showTypeFilters && <TypeFilters />}
+            {showOpenToggle && (
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="open-now-filter"
+                  checked={openOnly}
+                  onCheckedChange={(checked) => updateParam('open', checked ? '1' : null)}
+                  className="h-4 w-8 [&>span]:h-3 [&>span]:w-3 data-[state=checked]:[&>span]:translate-x-4"
+                />
+                <label htmlFor="open-now-filter" className="text-[10px] font-medium text-muted-foreground flex items-center gap-1 cursor-pointer">
+                  <Clock className="h-3 w-3" />
+                  {tx.openNow}
+                </label>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* List */}
         <ListContent maxH="flex-1" />
@@ -544,7 +570,7 @@ const MobileBottomSheet = ({
         </div>
       </div>
 
-      {/* Type pills */}
+      {/* Type pills + Open Now (only in providers mode - passed via props) */}
       <div className="px-3 pb-1.5">
         <TypeFilters />
       </div>

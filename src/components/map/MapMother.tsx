@@ -402,6 +402,7 @@ const MapMotherInner = () => {
             distances={sidebarDistances}
             loading={sidebarLoading}
             label={sidebarLabel}
+            mode={mode}
           />
         </div>
       </main>

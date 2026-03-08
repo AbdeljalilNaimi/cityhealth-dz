@@ -1,51 +1,50 @@
 
 
-## Map Filters Verification — Analysis
+## Analysis
 
-### Architecture Review
+After reviewing the codebase, here's the current state:
 
-The filtering system uses a **URL search params pattern**:
-1. **MapSidebar** writes filters to URL (`?types=doctor,clinic&q=search&open=1`)
-2. **ProvidersMapChild** reads those params and filters providers accordingly
-3. Filtered providers feed back to sidebar via `setSidebarProviders`
+### 1. Developer Email Verification (Already Supabase-based)
+The developer portal uses **Supabase Auth** (not Firebase), as established in a previous migration. The current flow:
+- `DeveloperRegisterPage.tsx` calls `supabase.auth.signUp()` with `emailRedirectTo: /developers/login`
+- `DeveloperLoginPage.tsx` already handles the email confirmation callback (lines 20-41), detects `access_token` in the URL hash, and redirects to `/developers/dashboard`
+- `DeveloperDashboardPage.tsx` uses `supabase.auth.getSession()` to gate access
 
-### Current Filter Capabilities
+**Issue**: The user mentions Firebase's `createUserWithEmailAndPassword` and Firestore `developers` collection, but the developer portal was intentionally migrated to Supabase to avoid Firebase domain authorization errors on preview environments. The current Supabase flow is correct and functional.
 
-| Filter | Sidebar UI | ProvidersMapChild Logic | Status |
-|--------|-----------|------------------------|--------|
-| **Type pills** (doctor, clinic, etc.) | ✅ `toggleType` → `?types=` | ✅ `selectedTypes.has(p.type)` | Working |
-| **Search text** | ✅ `?q=` via Input | ✅ name/specialty/address/type match | Working |
-| **"All" reset** | ✅ clears `?types` | ✅ `selectedTypes.size === 0` → no filter | Working |
-| **Open now** | ❌ No UI toggle in sidebar | ✅ Logic exists (`openOnly && !p.isOpen`) | **Missing UI** |
+**What actually needs fixing**: The redirect URL should point to `/developers/dashboard` directly (not `/developers/login`) so that after email confirmation, the user lands on the dashboard automatically. The login page callback handler works but adds an unnecessary intermediary step.
 
-### Identified Issues
+### 2. Firebase Cron Sync Script
+Create `scripts/firebase-cron-sync.js` containing a Firebase Scheduled Cloud Function using `functions.pubsub.schedule('every 24 hours')` that:
+- Queries Firestore for verified providers
+- Maps to public fields
+- POSTs to the `sync-provider` edge function
 
-1. **No "Open Now" filter UI** — The `ProvidersMapChild` supports `?open=1` but the sidebar has no toggle button for it. Users can't activate this filter.
+### 3. Dev-Tools "Force Sync" Label
+Update the sync card in `DevToolsPage.tsx` to clearly indicate it's a manual "Force Sync" distinct from the automated 24h cycle.
 
-2. **Emergency/Blood map children don't support sidebar filters** — `EmergencyMapChild` and `BloodMapChild` don't read `?types` or `?q` from URL. The sidebar still shows search and type pills on those routes, but they have no effect because those children feed their own unfiltered lists to the sidebar.
+## Plan
 
-3. **No filter state on Emergency/Blood** — The sidebar renders the same `TypeFilters` and search input on all map modes, creating a misleading UX where filters appear interactive but do nothing on `/map/emergency` and `/map/blood`.
+### Task 1: Fix Developer Email Redirect
+**File**: `src/pages/developers/DeveloperRegisterPage.tsx`
+- Change `emailRedirectTo` from `/developers/login` to `/developers/dashboard`
+- Same change in the resend handler
+- This way, after clicking the confirmation link, the user lands directly on their dashboard
 
-### Plan
+**File**: `src/pages/developers/DeveloperDashboardPage.tsx`
+- Add URL hash detection (same pattern as login page) to handle the email confirmation token exchange when users land directly on the dashboard from the email link
 
-#### 1. Add "Open Now" toggle to MapSidebar
-- Add a switch/button next to the type filters that sets `?open=1` in URL params
-- Style consistently with existing filter pills
+### Task 2: Create Firebase Cron Sync Script
+**New file**: `scripts/firebase-cron-sync.js`
+- Complete Node.js Firebase Cloud Function using `functions.pubsub.schedule('every 24 hours')`
+- Fetches verified providers from Firestore
+- Maps to safe public fields matching the `providers_public` schema
+- POSTs batch to `/functions/v1/sync-provider` with `x-sync-secret`
+- Includes deployment instructions as comments
 
-#### 2. Add search filtering to Emergency & Blood map children
-- Read `?q` from search params in both `EmergencyMapChild` and `BloodMapChild`
-- Apply the same debounced text search (name/specialty/address) before feeding providers to sidebar
-- This makes the search input functional on all map modes
-
-#### 3. Hide type filter pills on Emergency/Blood modes
-- Pass the current `mode` to `MapSidebar` (derive from URL path)
-- Only render `TypeFilters` on `providers` mode since emergency/blood already filter by type
-- Keep search input visible on all modes (since we're adding search support)
-
-### Files to Modify
-
-- `src/components/map/MapSidebar.tsx` — Add "Open Now" toggle, conditionally hide type pills by mode
-- `src/components/map/children/EmergencyMapChild.tsx` — Add search param filtering
-- `src/components/map/children/BloodMapChild.tsx` — Add search param filtering
-- `src/components/map/MapMother.tsx` — Pass mode info to sidebar (or sidebar derives from URL)
+### Task 3: Update Dev-Tools Sync Button
+**File**: `src/pages/DevToolsPage.tsx`
+- Rename the card title to "Force Sync — API Publique"
+- Update description to explain this is for immediate updates outside the 24h automated cycle
+- Add a small info note about the automated cron schedule
 

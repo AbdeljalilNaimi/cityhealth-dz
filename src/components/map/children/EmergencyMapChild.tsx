@@ -1,4 +1,5 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet.markercluster';
 import { AlertTriangle } from 'lucide-react';
@@ -10,8 +11,10 @@ import { createMarkerIcon } from '../MapMarkers';
 import { CityHealthProvider } from '@/data/providers';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useProviderDistances } from '@/hooks/useProviderDistances';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 
 const EmergencyMapChild = () => {
+  const [searchParams] = useSearchParams();
   const {
     mapRef, isReady, registerMarkerLayer, removeMarkerLayer,
     selectedProvider, setSelectedProvider, flyTo, geolocation,
@@ -20,7 +23,6 @@ const EmergencyMapChild = () => {
   const { language } = useLanguage();
   const { data: providers = [], isLoading } = useEmergencyProviders();
   
-  // Marker refs for optimization - prevent recreation on selection change
   const markerGroupRef = useRef<L.MarkerClusterGroup | null>(null);
   const markersMapRef = useRef<Map<string, L.Marker>>(new Map());
   
@@ -29,10 +31,25 @@ const EmergencyMapChild = () => {
     ar: 'للحالات الطارئة، اتصل فوراً بـ 15 (سامو) أو 14.',
     en: 'For life-threatening emergencies, immediately call 15 (SAMU) or 14.'
   };
+
+  // Search filtering
+  const searchQuery = searchParams.get('q') || '';
+  const debouncedSearch = useDebouncedValue(searchQuery, 300);
+
+  const filteredProviders = useMemo(() => {
+    if (!debouncedSearch) return providers;
+    const q = debouncedSearch.toLowerCase();
+    return providers.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      (p.specialty || '').toLowerCase().includes(q) ||
+      p.address.toLowerCase().includes(q) ||
+      p.type.toLowerCase().includes(q)
+    );
+  }, [providers, debouncedSearch]);
   
   // Use shared distance hook
   const { distances, sortedProviders } = useProviderDistances(
-    providers,
+    filteredProviders,
     geolocation.latitude,
     geolocation.longitude
   );
@@ -50,11 +67,10 @@ const EmergencyMapChild = () => {
     flyTo(provider.lat, provider.lng, 16);
   }, [setSelectedProvider, flyTo]);
   
-  // Optimized marker management - only update icons, don't recreate
+  // Optimized marker management
   useEffect(() => {
     if (!isReady || !mapRef.current) return;
     
-    // Create marker group once
     if (!markerGroupRef.current) {
       markerGroupRef.current = L.markerClusterGroup({ 
         chunkedLoading: true, 
@@ -65,9 +81,8 @@ const EmergencyMapChild = () => {
     
     const markerGroup = markerGroupRef.current;
     const existingMarkers = markersMapRef.current;
-    const currentProviderIds = new Set(providers.map(p => p.id));
+    const currentProviderIds = new Set(filteredProviders.map(p => p.id));
     
-    // Remove markers for providers no longer in list
     existingMarkers.forEach((marker, id) => {
       if (!currentProviderIds.has(id)) {
         markerGroup.removeLayer(marker);
@@ -75,16 +90,13 @@ const EmergencyMapChild = () => {
       }
     });
     
-    // Add/update markers
-    providers.forEach(provider => {
+    filteredProviders.forEach(provider => {
       const isSelected = selectedProvider?.id === provider.id;
       
       if (existingMarkers.has(provider.id)) {
-        // Update existing marker icon
         const marker = existingMarkers.get(provider.id)!;
         marker.setIcon(createMarkerIcon(provider.type, isSelected, true));
       } else {
-        // Create new marker
         const marker = L.marker([provider.lat, provider.lng], {
           icon: createMarkerIcon(provider.type, isSelected, true)
         });
@@ -93,7 +105,7 @@ const EmergencyMapChild = () => {
         existingMarkers.set(provider.id, marker);
       }
     });
-  }, [isReady, mapRef, providers, selectedProvider?.id, registerMarkerLayer, handleProviderClick]);
+  }, [isReady, mapRef, filteredProviders, selectedProvider?.id, registerMarkerLayer, handleProviderClick]);
   
   // Cleanup on unmount
   useEffect(() => {
