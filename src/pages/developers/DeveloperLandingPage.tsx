@@ -409,6 +409,119 @@ export default function DeveloperLandingPage() {
         </div>
       </section>
 
+      {/* Testimonials & Logos */}
+      <section className="py-20 px-4 bg-muted/20">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-14"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              {language === 'en' ? 'Trusted by Developers' : language === 'ar' ? 'موثوق من قبل المطورين' : 'Adopté par les développeurs'}
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              {language === 'en' ? 'Teams and developers building with CityHealth API' : language === 'ar' ? 'فرق ومطورون يبنون باستخدام CityHealth API' : 'Des équipes et développeurs construisent avec CityHealth API'}
+            </p>
+          </motion.div>
+
+          {/* Partner Logos */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="flex flex-wrap items-center justify-center gap-8 md:gap-12 mb-16 py-8 px-4 rounded-2xl border border-border/30 bg-card/30 backdrop-blur-sm"
+          >
+            {[
+              { name: 'SBA MedTech', icon: '🏥' },
+              { name: 'PharmaDZ', icon: '💊' },
+              { name: 'HealthMap Pro', icon: '🗺️' },
+              { name: 'DZ Emergency', icon: '🚑' },
+              { name: 'MedConnect', icon: '🔗' },
+              { name: 'Tabib.dz', icon: '👨‍⚕️' },
+            ].map((partner, i) => (
+              <motion.div
+                key={partner.name}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+                className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <span className="text-2xl">{partner.icon}</span>
+                <span className="font-semibold text-sm md:text-base">{partner.name}</span>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Testimonial Cards */}
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                name: 'Amine K.',
+                role: language === 'en' ? 'Founder, SBA MedTech' : language === 'ar' ? 'مؤسس SBA MedTech' : 'Fondateur, SBA MedTech',
+                quote: language === 'en'
+                  ? 'CityHealth API saved us months. We integrated pharmacy locator in our app in just 2 days.'
+                  : language === 'ar'
+                  ? 'وفّرت لنا CityHealth API أشهرًا من العمل. دمجنا محدد الصيدليات في يومين فقط.'
+                  : "CityHealth API nous a fait gagner des mois. On a intégré le localisateur de pharmacies en 2 jours.",
+                avatar: '👨‍💻',
+              },
+              {
+                name: 'Sara B.',
+                role: language === 'en' ? 'CTO, PharmaDZ' : language === 'ar' ? 'المدير التقني، PharmaDZ' : 'CTO, PharmaDZ',
+                quote: language === 'en'
+                  ? 'The on-duty pharmacy endpoint is a game-changer. Reliable data, fast responses, great docs.'
+                  : language === 'ar'
+                  ? 'نقطة وصول صيدليات المناوبة غيّرت قواعد اللعبة. بيانات موثوقة واستجابة سريعة.'
+                  : "L'endpoint pharmacies de garde est révolutionnaire. Données fiables, réponses rapides, docs claires.",
+                avatar: '👩‍💻',
+              },
+              {
+                name: 'Youcef M.',
+                role: language === 'en' ? 'Lead Dev, DZ Emergency' : language === 'ar' ? 'مطور رئيسي، DZ Emergency' : 'Lead Dev, DZ Emergency',
+                quote: language === 'en'
+                  ? '99.9% uptime is real. Our emergency app relies on it 24/7 and it never lets us down.'
+                  : language === 'ar'
+                  ? 'التوفر بنسبة 99.9% حقيقي. تطبيق الطوارئ لدينا يعتمد عليه على مدار الساعة.'
+                  : "Le 99.9% d'uptime est réel. Notre app d'urgence en dépend 24/7 sans jamais nous décevoir.",
+                avatar: '🧑‍💻',
+              },
+            ].map((testimonial, i) => (
+              <motion.div
+                key={testimonial.name}
+                custom={i}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={fadeUp}
+              >
+                <Card className="h-full border-border/50 bg-card/50 backdrop-blur-sm hover:border-primary/20 transition-all duration-300">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-1 mb-4">
+                      {[...Array(5)].map((_, s) => (
+                        <span key={s} className="text-amber-400 text-sm">★</span>
+                      ))}
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-6 italic">
+                      "{testimonial.quote}"
+                    </p>
+                    <div className="flex items-center gap-3 pt-4 border-t border-border/30">
+                      <span className="text-2xl">{testimonial.avatar}</span>
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{testimonial.name}</p>
+                        <p className="text-xs text-muted-foreground">{testimonial.role}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-24 px-4 relative overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5" />
