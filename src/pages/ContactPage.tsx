@@ -82,8 +82,13 @@ const ContactPage = () => {
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      const { data, error } = await supabase.functions.invoke('contact-form', {
+        body: formData,
+      });
+
+      if (error) throw error;
+
       setIsSuccess(true);
       addToast({
         type: 'success',
@@ -91,8 +96,17 @@ const ContactPage = () => {
         message: t('contact', 'messageSentDesc'),
       });
       setFormData({ name: '', email: '', subject: '', message: '', type: '' });
-      setTimeout(() => setIsSuccess(false), 4000);
-    }, 2000);
+      setTimeout(() => setIsSuccess(false), 5000);
+    } catch (err) {
+      console.error('Contact form error:', err);
+      addToast({
+        type: 'error',
+        title: 'Erreur',
+        message: 'Une erreur est survenue. Veuillez réessayer.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
