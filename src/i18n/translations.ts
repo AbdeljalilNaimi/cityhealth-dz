@@ -1509,6 +1509,10 @@ export const translations: Record<Language, Translations> = {
       coFounderCTO: 'Co-Fondateur et Directeur Technique',
       descNaimi: 'Co-fondateur de CityHealth, dédié à la création de solutions de santé numérique accessibles pour l\'Algérie.',
       descAbdelilah: 'Co-fondateur et architecte technique de CityHealth, spécialisé dans les infrastructures scalables pour le secteur médical.',
+      support247: 'Support 24/7',
+      errorTitle: 'Erreur',
+      errorDesc: 'Une erreur est survenue. Veuillez réessayer.',
+      emailPlaceholder: 'votre@email.com',
     },
     notFound: {
       title: '404',
