@@ -68,12 +68,7 @@ const responseExample = `{
   "meta": { "total": 42, "page": 1 }
 }`;
 
-const stats = [
-  { value: '48', label: 'Wilayas couvertes' },
-  { value: '1 200+', label: 'Prestataires référencés' },
-  { value: '6', label: 'Endpoints REST' },
-  { value: 'Open', label: 'Tier gratuit' },
-];
+// Stats are now fetched dynamically inside the component
 
 export default function DeveloperLandingPage() {
   const navigate = useNavigate();
