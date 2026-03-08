@@ -236,7 +236,7 @@ export const AntigravityHero = () => {
             transition={{ duration: 0.5, delay: 0.4 }}
             className="text-base md:text-lg lg:text-xl text-muted-foreground max-w-3xl mx-auto mb-10"
           >
-            {t('homepage', 'heroSubtitle')}
+            {t('homepage', 'heroSubtitleFull')}
           </motion.p>
 
           {/* Search Bar */}
