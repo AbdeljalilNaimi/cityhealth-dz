@@ -68,15 +68,6 @@ const ProviderLoginPage = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setIsLoading(true);
-    try {
-      await loginWithGoogle('provider');
-    } catch {
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   if (authLoading) {
     return (
