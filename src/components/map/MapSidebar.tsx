@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   ChevronLeft,
@@ -46,6 +46,31 @@ export const MapSidebar = ({
   const [routingId, setRoutingId] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(10);
   const [mobileExpanded, setMobileExpanded] = useState(false);
+  const providerRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const listContainerRef = useRef<HTMLDivElement>(null);
+  const mobileListContainerRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to selected provider when it changes (triggered by map marker click)
+  useEffect(() => {
+    if (!selectedProvider) return;
+    
+    const scrollToProvider = () => {
+      const element = providerRefs.current.get(selectedProvider.id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    };
+
+    // Ensure the provider is visible in the list (expand visibleCount if needed)
+    const providerIndex = providers.findIndex(p => p.id === selectedProvider.id);
+    if (providerIndex >= visibleCount) {
+      setVisibleCount(providerIndex + 5);
+      // Wait for DOM update then scroll
+      setTimeout(scrollToProvider, 100);
+    } else {
+      scrollToProvider();
+    }
+  }, [selectedProvider?.id, providers, visibleCount]);
 
   // Read current filters from URL
   const searchQuery = searchParams.get('q') || '';
@@ -129,6 +154,10 @@ export const MapSidebar = ({
 
     return (
       <div
+        ref={(el) => {
+          if (el) providerRefs.current.set(provider.id, el);
+          else providerRefs.current.delete(provider.id);
+        }}
         className={cn(
           'w-full flex gap-2.5 p-2.5 rounded-xl text-left transition-all duration-150 cursor-pointer',
           'hover:bg-accent/50',
