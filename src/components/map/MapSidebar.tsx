@@ -561,7 +561,7 @@ const MobileBottomSheet = ({
     {/* Expandable content */}
     <div className={cn(
       "overflow-hidden transition-all duration-300",
-      mobileExpanded ? "opacity-100" : "opacity-0"
+      mobileExpanded ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
     )}>
       {/* Search */}
       <div className="px-3 pb-1.5">
