@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,7 +18,7 @@ import { AdminDocUpload } from '@/components/admin/AdminDocUpload';
 import { ReportsModerationPanel } from '@/components/admin/ReportsModerationPanel';
 import { ApiManagementPanel } from '@/components/admin/ApiManagementPanel';
 import { notificationService } from '@/services/notificationService';
-import { getUnreadCount } from '@/services/adminNotificationService';
+
 import { useAllProviders, useUpdateVerification } from '@/hooks/useProviders';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -63,16 +63,11 @@ export default function AdminDashboard() {
   const { user } = useAuth();
   const [currentTab, setCurrentTab] = useState('overview');
   const [searchQuery, setSearchQuery] = useState('');
-  const [adminNotifCount, setAdminNotifCount] = useState(0);
   const [selectedProvider, setSelectedProvider] = useState<CityHealthProvider | null>(null);
   const [statusFilter, setStatusFilter] = useState<ProviderStatusFilter>('all');
 
   const { data: allProviders = [], isLoading: loadingAll, isError: errorAll } = useAllProviders();
   const updateVerification = useUpdateVerification();
-
-  useEffect(() => {
-    getUnreadCount().then(setAdminNotifCount).catch(() => setAdminNotifCount(0));
-  }, []);
 
   const handleApprove = async (id: string) => {
     const provider = allProviders.find(p => p.id === id);
@@ -319,7 +314,6 @@ export default function AdminDashboard() {
       <div className="flex-1 flex flex-col min-w-0">
         <AdminHeader 
           title={TAB_TITLES[currentTab] || 'Tableau de bord'} 
-          notificationCount={adminNotifCount}
         />
         <main className="flex-1 p-6 overflow-auto">
           {dataWarningBanner}
