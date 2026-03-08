@@ -357,7 +357,7 @@ export default function BloodDonationPage() {
                 {tx.viewMap}
               </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild className="rounded-full border-white/40 text-white hover:bg-white/15 backdrop-blur-sm gap-2 px-8">
+            <Button size="lg" variant="outline" asChild className="rounded-full border-white/70 text-white hover:bg-white/20 backdrop-blur-sm gap-2 px-8 font-semibold shadow-lg">
               <Link to="/map/emergency">
                 <AlertTriangle className="h-5 w-5" />
                 {tx.emergencyFinder}
