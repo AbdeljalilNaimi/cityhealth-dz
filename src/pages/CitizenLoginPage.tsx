@@ -307,8 +307,6 @@ const CitizenLoginPage = () => {
                   </Link>
                 </div>
               </motion.div>
-            )}
-          </AnimatePresence>
         </motion.div>
       </div>
     </div>
