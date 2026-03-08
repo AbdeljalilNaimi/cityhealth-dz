@@ -45,10 +45,10 @@ const ContactPage = () => {
   ];
 
   const contactInfo = [
-    { icon: Phone, title: t('contact', 'phone'), details: t('contact', 'phoneNumber'), description: t('contact', 'phoneHours'), color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
-    { icon: Mail, title: t('contact', 'emailLabel'), details: t('contact', 'emailAddress'), description: t('contact', 'emailResponse'), color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400' },
-    { icon: MapPin, title: t('contact', 'address'), details: t('contact', 'addressDetails'), description: t('contact', 'addressCity'), color: 'bg-rose-500/10 text-rose-600 dark:text-rose-400' },
-    { icon: Clock, title: t('contact', 'hours'), details: t('contact', 'workingHours'), description: t('contact', 'saturdayHours'), color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
+    { icon: Phone, title: t('contact', 'phone'), details: t('contact', 'phoneNumber'), description: t('contact', 'phoneHours'), iconBg: 'bg-primary/10', iconColor: 'text-primary' },
+    { icon: Mail, title: t('contact', 'emailLabel'), details: t('contact', 'emailAddress'), description: t('contact', 'emailResponse'), iconBg: 'bg-secondary/10', iconColor: 'text-secondary' },
+    { icon: MapPin, title: t('contact', 'address'), details: t('contact', 'addressDetails'), description: t('contact', 'addressCity'), iconBg: 'bg-destructive/10', iconColor: 'text-destructive' },
+    { icon: Clock, title: t('contact', 'hours'), details: t('contact', 'workingHours'), description: t('contact', 'saturdayHours'), iconBg: 'bg-accent', iconColor: 'text-accent-foreground' },
   ];
 
   const faqItems = [
