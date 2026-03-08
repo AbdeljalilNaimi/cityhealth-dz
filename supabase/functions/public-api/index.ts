@@ -159,7 +159,7 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  if (req.method !== "GET") {
+  if (req.method !== "GET" && req.method !== "POST") {
     return error(405, "Method not allowed.");
   }
 
@@ -167,7 +167,7 @@ Deno.serve(async (req) => {
   const { segments, searchParams } = parsePath(req.url);
 
   // Route: /v1/categories — no API key required
-  if (segments[0] === "v1" && segments[1] === "categories" && segments.length === 2) {
+  if (req.method === "GET" && segments[0] === "v1" && segments[1] === "categories" && segments.length === 2) {
     return success(CATEGORIES, { total: CATEGORIES.length });
   }
 
@@ -192,8 +192,97 @@ Deno.serve(async (req) => {
   let responseMeta: Record<string, unknown> = {};
 
   try {
+    // ===== POST ROUTES =====
+    if (req.method === "POST") {
+      // POST /v1/providers/:id/reviews
+      if (segments[0] === "v1" && segments[1] === "providers" && segments.length === 4 && segments[3] === "reviews") {
+        const providerId = segments[2];
+
+        // Verify provider exists
+        const { data: provider, error: provErr } = await supabase
+          .from("providers_public")
+          .select("id, name")
+          .eq("id", providerId)
+          .single();
+        if (provErr || !provider) {
+          responseStatus = 404;
+          throw new Error("Provider not found.");
+        }
+
+        // Parse & validate body
+        let body: Record<string, unknown>;
+        try {
+          body = await req.json();
+        } catch {
+          responseStatus = 400;
+          throw new Error("Invalid JSON body.");
+        }
+
+        const patientName = typeof body.patient_name === "string" ? body.patient_name.trim() : "";
+        const rating = typeof body.rating === "number" ? body.rating : NaN;
+        const comment = typeof body.comment === "string" ? body.comment.trim() : null;
+
+        if (!patientName || patientName.length < 2 || patientName.length > 100) {
+          responseStatus = 400;
+          throw new Error("patient_name is required (2-100 characters).");
+        }
+        if (isNaN(rating) || rating < 1 || rating > 5 || !Number.isInteger(rating)) {
+          responseStatus = 400;
+          throw new Error("rating is required (integer 1-5).");
+        }
+        if (comment && comment.length > 1000) {
+          responseStatus = 400;
+          throw new Error("comment must be 1000 characters or fewer.");
+        }
+
+        // Use the developer_id from the API key as patient_id
+        const { data: review, error: insertErr } = await supabase
+          .from("provider_reviews")
+          .insert({
+            provider_id: providerId,
+            patient_id: `api:${keyRow!.developer_id}`,
+            patient_name: patientName,
+            rating,
+            comment: comment || null,
+          })
+          .select()
+          .single();
+
+        if (insertErr) throw insertErr;
+
+        responseStatus = 201;
+        responseData = {
+          id: review.id,
+          provider_id: review.provider_id,
+          patient_name: review.patient_name,
+          rating: review.rating,
+          comment: review.comment,
+          created_at: review.created_at,
+        };
+        responseMeta = { remaining_requests: validation.remaining! - 1 };
+      }
+      // Unknown POST route
+      else {
+        responseStatus = 404;
+        throw new Error(`Unknown endpoint: POST /${segments.join("/")}`);
+      }
+    }
+    // ===== GET ROUTES =====
+    // GET /v1/providers/:id/reviews
+    else if (segments[0] === "v1" && segments[1] === "providers" && segments.length === 4 && segments[3] === "reviews") {
+      const providerId = segments[2];
+      const { data, count, error: qErr } = await supabase
+        .from("provider_reviews")
+        .select("id, patient_name, rating, comment, created_at", { count: "exact" })
+        .eq("provider_id", providerId)
+        .order("created_at", { ascending: false })
+        .range(offset, offset + clampedLimit - 1);
+      if (qErr) throw qErr;
+      responseData = data;
+      responseMeta = { total: count || 0, limit: clampedLimit, offset, remaining_requests: validation.remaining! - 1 };
+    }
     // GET /v1/providers
-    if (segments[0] === "v1" && segments[1] === "providers" && segments.length === 2) {
+    else if (segments[0] === "v1" && segments[1] === "providers" && segments.length === 2) {
       let query = supabase.from("providers_public").select(PUBLIC_FIELDS, { count: "exact" });
 
       const q = searchParams.get("q");
@@ -276,17 +365,17 @@ Deno.serve(async (req) => {
     }
   } catch (e) {
     const elapsed = Date.now() - startTime;
-    await logRequest(keyRow!.id, `/${segments.join("/")}`, "GET", responseStatus >= 400 ? responseStatus : 500, elapsed);
+    await logRequest(keyRow!.id, `/${segments.join("/")}`, req.method, responseStatus >= 400 ? responseStatus : 500, elapsed);
     return error(responseStatus >= 400 ? responseStatus : 500, (e as Error).message, rateLimitHeaders);
   }
 
   const elapsed = Date.now() - startTime;
-  await logRequest(keyRow!.id, `/${segments.join("/")}`, "GET", 200, elapsed);
+  await logRequest(keyRow!.id, `/${segments.join("/")}`, req.method, responseStatus, elapsed);
 
   return new Response(
     JSON.stringify({ success: true, data: responseData, meta: responseMeta }),
     {
-      status: 200,
+      status: responseStatus,
       headers: {
         ...corsHeaders,
         "Content-Type": "application/json",
