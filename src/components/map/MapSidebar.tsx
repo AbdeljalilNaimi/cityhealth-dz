@@ -311,19 +311,18 @@ export const MapSidebar = ({
             const label = PROVIDER_TYPE_LABELS[type];
             const isActive = activeTypes.has(type);
             return (
-              <button
+                <button
                 type="button"
                 key={type}
                 onClick={() => toggleType(type)}
                 className={cn(
-                  "inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition-all border whitespace-nowrap flex-shrink-0",
+                  "inline-flex items-center px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all border whitespace-nowrap flex-shrink-0",
                   isActive
                     ? "bg-primary text-primary-foreground border-primary shadow-sm"
                     : "bg-muted/40 text-muted-foreground border-border/40 hover:bg-accent"
                 )}
               >
-                <span>{label?.icon}</span>
-                <span>{language === 'ar' ? label?.ar : language === 'en' ? label?.en : label?.fr}</span>
+                {language === 'ar' ? label?.ar : language === 'en' ? label?.en : label?.fr}
               </button>
             );
           })}
