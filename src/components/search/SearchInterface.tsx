@@ -168,7 +168,7 @@ export const SearchInterface = ({
 
           {/* Search Suggestions */}
           {showSuggestions && (
-            <Card className="absolute top-full left-0 right-0 mt-1 p-4 shadow-lg z-50 bg-popover border-2">
+            <Card className="absolute top-full left-0 right-0 mt-1 p-4 shadow-lg z-[45] bg-popover border-2">
               {recentSearches.length > 0 && (
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-2">
