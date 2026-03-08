@@ -138,15 +138,31 @@ export function AdminSidebar({ currentTab, onTabChange }: AdminSidebarProps) {
                       key={item.tabValue}
                       onClick={() => onTabChange(item.tabValue)}
                       className={cn(
-                        'w-full flex items-center gap-2.5 rounded-md transition-colors text-left',
+                        'w-full flex items-center gap-2.5 rounded-md transition-colors text-left relative',
                         collapsed ? 'justify-center px-0 py-2' : 'px-2.5 py-[7px]',
                         isActive
                           ? 'bg-primary/10 text-primary font-medium'
                           : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                       )}
                     >
-                      <Icon className={cn('flex-shrink-0', collapsed ? 'h-4.5 w-4.5' : 'h-4 w-4')} />
-                      {!collapsed && <span className="text-[13px]">{item.title}</span>}
+                      <div className="relative flex-shrink-0">
+                        <Icon className={cn(collapsed ? 'h-4.5 w-4.5' : 'h-4 w-4')} />
+                        {item.tabValue === 'contact' && unreadCount > 0 && collapsed && (
+                          <span className="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-0.5 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
+                            {unreadCount > 99 ? '99+' : unreadCount}
+                          </span>
+                        )}
+                      </div>
+                      {!collapsed && (
+                        <>
+                          <span className="text-[13px] flex-1">{item.title}</span>
+                          {item.tabValue === 'contact' && unreadCount > 0 && (
+                            <span className="h-5 min-w-5 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
+                              {unreadCount > 99 ? '99+' : unreadCount}
+                            </span>
+                          )}
+                        </>
+                      )}
                     </button>
                   );
 
