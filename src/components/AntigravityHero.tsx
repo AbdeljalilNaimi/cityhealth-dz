@@ -161,7 +161,7 @@ export const AntigravityHero = () => {
           </defs>
           <rect width="100%" height="100%" fill="url(#hero-grid)" />
         </svg>
-        <svg className="absolute inset-0 w-full h-full opacity-20">
+        <svg className="absolute inset-0 w-full h-full opacity-20" aria-hidden="true">
           {[...Array(5)].map((_, i) => (
             <motion.line
               key={i}
@@ -177,8 +177,6 @@ export const AntigravityHero = () => {
               transition={{ 
                 duration: 3, 
                 delay: i * 0.5, 
-                repeat: Infinity, 
-                repeatType: 'reverse',
                 ease: 'easeInOut'
               }}
             />
