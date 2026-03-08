@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import {
-  Settings,
   Save,
   RotateCcw,
   Mail,
@@ -12,7 +11,6 @@ import {
   AlertTriangle,
   Loader2,
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -39,45 +37,39 @@ import {
   type PlatformSettings,
 } from '@/services/platformSettingsService';
 
-interface SettingsSectionProps {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}
-
-function SettingsSection({ title, description, icon, children }: SettingsSectionProps) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          {icon}
-          {title}
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">{children}</CardContent>
-    </Card>
-  );
-}
-
-interface ToggleSettingProps {
+function ToggleSetting({ label, description, checked, onCheckedChange }: {
   label: string;
   description?: string;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
-}
-
-function ToggleSetting({ label, description, checked, onCheckedChange }: ToggleSettingProps) {
+}) {
   return (
-    <div className="flex items-center justify-between">
-      <div className="space-y-0.5">
-        <Label className="text-base">{label}</Label>
-        {description && (
-          <p className="text-sm text-muted-foreground">{description}</p>
-        )}
+    <div className="flex items-center justify-between py-2.5">
+      <div className="space-y-0.5 pr-4">
+        <p className="text-sm font-medium text-foreground">{label}</p>
+        {description && <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>}
       </div>
       <Switch checked={checked} onCheckedChange={onCheckedChange} />
+    </div>
+  );
+}
+
+function SectionBlock({ title, description, icon, children }: {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-card">
+      <div className="px-5 py-3.5 border-b border-border">
+        <div className="flex items-center gap-2">
+          {icon}
+          <p className="text-sm font-semibold text-foreground">{title}</p>
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-0.5 ml-6">{description}</p>
+      </div>
+      <div className="px-5 py-3">{children}</div>
     </div>
   );
 }
@@ -99,22 +91,14 @@ export function SettingsPanel() {
     try {
       const data = await getSettings();
       setSettings(data);
-    } catch (error) {
-      console.error('Failed to load settings:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de charger les paramètres',
-        variant: 'destructive',
-      });
+    } catch {
+      toast({ title: 'Erreur', description: 'Impossible de charger les paramètres', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpdateSetting = <K extends keyof PlatformSettings>(
-    key: K,
-    value: PlatformSettings[K]
-  ) => {
+  const handleUpdateSetting = <K extends keyof PlatformSettings>(key: K, value: PlatformSettings[K]) => {
     if (!settings) return;
     setSettings({ ...settings, [key]: value });
     setHasChanges(true);
@@ -122,21 +106,13 @@ export function SettingsPanel() {
 
   const handleSave = async () => {
     if (!settings || !user) return;
-    
     setSaving(true);
     try {
       await updateSettings(settings, user.uid, user.email || '');
       setHasChanges(false);
-      toast({
-        title: 'Paramètres sauvegardés',
-        description: 'Les modifications ont été enregistrées',
-      });
-    } catch (error) {
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de sauvegarder les paramètres',
-        variant: 'destructive',
-      });
+      toast({ title: 'Paramètres sauvegardés' });
+    } catch {
+      toast({ title: 'Erreur', description: 'Impossible de sauvegarder', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -144,293 +120,228 @@ export function SettingsPanel() {
 
   const handleReset = async () => {
     if (!user) return;
-    
     try {
       await resetToDefaults(user.uid, user.email || '');
       await loadSettings();
       setHasChanges(false);
-      toast({
-        title: 'Paramètres réinitialisés',
-        description: 'Les valeurs par défaut ont été restaurées',
-      });
-    } catch (error) {
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de réinitialiser les paramètres',
-        variant: 'destructive',
-      });
+      toast({ title: 'Paramètres réinitialisés' });
+    } catch {
+      toast({ title: 'Erreur', variant: 'destructive' });
     }
   };
 
   if (loading || !settings) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <Card key={i}>
-            <CardHeader>
-              <Skeleton className="h-6 w-48" />
-              <Skeleton className="h-4 w-72" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </CardContent>
-          </Card>
+          <div key={i} className="rounded-lg border border-border p-5">
+            <Skeleton className="h-4 w-36 mb-3" />
+            <Skeleton className="h-9 w-full mb-2" />
+            <Skeleton className="h-9 w-full" />
+          </div>
         ))}
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Save Bar */}
+    <div className="space-y-4 max-w-3xl">
+      {/* Unsaved changes bar */}
       {hasChanges && (
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border rounded-lg p-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-amber-600">
-            <AlertTriangle className="h-5 w-5" />
-            <span className="font-medium">Vous avez des modifications non sauvegardées</span>
+        <div className="sticky top-0 z-10 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800/30 px-4 py-2.5 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+            <span className="text-xs font-medium text-amber-700 dark:text-amber-400">Modifications non sauvegardées</span>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={loadSettings}>
+            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={loadSettings}>
               Annuler
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4 mr-2" />
-              )}
+            <Button size="sm" className="h-7 text-xs" onClick={handleSave} disabled={saving}>
+              {saving ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Save className="h-3 w-3 mr-1" />}
               Sauvegarder
             </Button>
           </div>
         </div>
       )}
 
-      {/* General Settings */}
-      <SettingsSection
-        title="Paramètres Généraux"
+      {/* General */}
+      <SectionBlock
+        title="Général"
         description="Informations de base de la plateforme"
-        icon={<Globe className="h-5 w-5 text-primary" />}
+        icon={<Globe className="h-4 w-4 text-muted-foreground" />}
       >
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="platformName">Nom de la plateforme</Label>
+        <div className="grid gap-4 sm:grid-cols-2 py-1">
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Nom de la plateforme</Label>
             <Input
-              id="platformName"
               value={settings.platformName}
               onChange={(e) => handleUpdateSetting('platformName', e.target.value)}
+              className="h-9 text-sm"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="supportEmail">Email de support</Label>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Email de support</Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Mail className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
               <Input
-                id="supportEmail"
                 type="email"
-                className="pl-10"
+                className="h-9 text-sm pl-8"
                 value={settings.supportEmail}
                 onChange={(e) => handleUpdateSetting('supportEmail', e.target.value)}
               />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="emergencyNumber">Numéro d'urgence</Label>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Numéro d'urgence</Label>
             <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Phone className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50" />
               <Input
-                id="emergencyNumber"
-                className="pl-10"
+                className="h-9 text-sm pl-8"
                 value={settings.emergencyNumber}
                 onChange={(e) => handleUpdateSetting('emergencyNumber', e.target.value)}
               />
             </div>
           </div>
         </div>
-      </SettingsSection>
+      </SectionBlock>
 
-      {/* Registration Settings */}
-      <SettingsSection
+      {/* Inscription & Vérification */}
+      <SectionBlock
         title="Inscription & Vérification"
         description="Paramètres pour l'inscription des prestataires"
-        icon={<Shield className="h-5 w-5 text-primary" />}
+        icon={<Shield className="h-4 w-4 text-muted-foreground" />}
       >
         <ToggleSetting
           label="Vérification documentaire obligatoire"
-          description="Les prestataires doivent soumettre des documents pour vérification"
+          description="Les prestataires doivent soumettre des documents"
           checked={settings.requireDocumentVerification}
           onCheckedChange={(v) => handleUpdateSetting('requireDocumentVerification', v)}
         />
         <Separator />
         <ToggleSetting
           label="Approbation automatique"
-          description="Approuver automatiquement les nouveaux prestataires (non recommandé)"
+          description="Approuver automatiquement les nouveaux prestataires"
           checked={settings.autoApproveNewProviders}
           onCheckedChange={(v) => handleUpdateSetting('autoApproveNewProviders', v)}
         />
         <Separator />
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="maxDocSize">Taille max. des documents (MB)</Label>
+        <div className="grid gap-4 sm:grid-cols-2 py-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Taille max. documents (MB)</Label>
             <Input
-              id="maxDocSize"
               type="number"
               min={1}
               max={50}
               value={settings.maxDocumentSizeMb}
               onChange={(e) => handleUpdateSetting('maxDocumentSizeMb', parseInt(e.target.value))}
+              className="h-9 text-sm w-24"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="maxPhotos">Nombre max. de photos par prestataire</Label>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Max. photos par prestataire</Label>
             <Input
-              id="maxPhotos"
               type="number"
               min={1}
               max={20}
               value={settings.maxPhotosPerProvider}
               onChange={(e) => handleUpdateSetting('maxPhotosPerProvider', parseInt(e.target.value))}
+              className="h-9 text-sm w-24"
             />
           </div>
         </div>
-      </SettingsSection>
+      </SectionBlock>
 
-      {/* Feature Toggles */}
-      <SettingsSection
+      {/* Fonctionnalités */}
+      <SectionBlock
         title="Fonctionnalités"
-        description="Activer ou désactiver les modules de la plateforme"
-        icon={<Sparkles className="h-5 w-5 text-primary" />}
+        description="Activer ou désactiver les modules"
+        icon={<Sparkles className="h-4 w-4 text-muted-foreground" />}
       >
-        <ToggleSetting
-          label="Assistant IA"
-          description="Chatbot d'assistance santé pour les utilisateurs"
-          checked={settings.enableAIChat}
-          onCheckedChange={(v) => handleUpdateSetting('enableAIChat', v)}
-        />
-        <Separator />
-        <ToggleSetting
-          label="Annonces médicales"
-          description="Permettre aux prestataires de publier des annonces"
-          checked={settings.enableMedicalAds}
-          onCheckedChange={(v) => handleUpdateSetting('enableMedicalAds', v)}
-        />
-        <Separator />
-        <ToggleSetting
-          label="Don de sang"
-          description="Module de recherche de donneurs de sang"
-          checked={settings.enableBloodDonation}
-          onCheckedChange={(v) => handleUpdateSetting('enableBloodDonation', v)}
-        />
-        <Separator />
-        <ToggleSetting
-          label="Module Urgences"
-          description="Page des numéros et services d'urgence"
-          checked={settings.enableEmergencyModule}
-          onCheckedChange={(v) => handleUpdateSetting('enableEmergencyModule', v)}
-        />
-        <Separator />
-        <ToggleSetting
-          label="Système d'avis"
-          description="Permettre aux utilisateurs de laisser des avis"
-          checked={settings.enableReviewSystem}
-          onCheckedChange={(v) => handleUpdateSetting('enableReviewSystem', v)}
-        />
-        <Separator />
-        <ToggleSetting
-          label="Modération des avis"
-          description="Les avis doivent être approuvés avant publication"
-          checked={settings.reviewModerationEnabled}
-          onCheckedChange={(v) => handleUpdateSetting('reviewModerationEnabled', v)}
-        />
-      </SettingsSection>
+        {[
+          { key: 'enableAIChat' as const, label: 'Assistant IA', desc: 'Chatbot d\'assistance santé' },
+          { key: 'enableMedicalAds' as const, label: 'Annonces médicales', desc: 'Publication d\'annonces par les prestataires' },
+          { key: 'enableBloodDonation' as const, label: 'Don de sang', desc: 'Module de recherche de donneurs' },
+          { key: 'enableEmergencyModule' as const, label: 'Module Urgences', desc: 'Services d\'urgence' },
+          { key: 'enableReviewSystem' as const, label: 'Système d\'avis', desc: 'Avis des utilisateurs' },
+          { key: 'reviewModerationEnabled' as const, label: 'Modération des avis', desc: 'Approbation avant publication' },
+        ].map((item, i, arr) => (
+          <div key={item.key}>
+            <ToggleSetting
+              label={item.label}
+              description={item.desc}
+              checked={settings[item.key] as boolean}
+              onCheckedChange={(v) => handleUpdateSetting(item.key, v)}
+            />
+            {i < arr.length - 1 && <Separator />}
+          </div>
+        ))}
+      </SectionBlock>
 
-      {/* Notification Settings */}
-      <SettingsSection
+      {/* Notifications */}
+      <SectionBlock
         title="Notifications"
-        description="Configuration des notifications email et alertes"
-        icon={<Bell className="h-5 w-5 text-primary" />}
+        description="Configuration des emails et alertes"
+        icon={<Bell className="h-4 w-4 text-muted-foreground" />}
       >
-        <ToggleSetting
-          label="Email à l'inscription"
-          description="Envoyer un email de confirmation aux nouveaux inscrits"
-          checked={settings.sendEmailOnRegistration}
-          onCheckedChange={(v) => handleUpdateSetting('sendEmailOnRegistration', v)}
-        />
-        <Separator />
-        <ToggleSetting
-          label="Email à l'approbation"
-          description="Notifier les prestataires de leur approbation"
-          checked={settings.sendEmailOnApproval}
-          onCheckedChange={(v) => handleUpdateSetting('sendEmailOnApproval', v)}
-        />
-        <Separator />
-        <ToggleSetting
-          label="Email au rejet"
-          description="Notifier les prestataires en cas de rejet"
-          checked={settings.sendEmailOnRejection}
-          onCheckedChange={(v) => handleUpdateSetting('sendEmailOnRejection', v)}
-        />
-        <Separator />
-        <ToggleSetting
-          label="Alerte admin - Nouvelle inscription"
-          description="Notifier les admins des nouvelles inscriptions"
-          checked={settings.adminNotifyOnNewRegistration}
-          onCheckedChange={(v) => handleUpdateSetting('adminNotifyOnNewRegistration', v)}
-        />
-        <Separator />
-        <ToggleSetting
-          label="Alerte admin - Demande de vérification"
-          description="Notifier les admins des demandes de vérification"
-          checked={settings.adminNotifyOnVerificationRequest}
-          onCheckedChange={(v) => handleUpdateSetting('adminNotifyOnVerificationRequest', v)}
-        />
-      </SettingsSection>
+        {[
+          { key: 'sendEmailOnRegistration' as const, label: 'Email à l\'inscription', desc: 'Confirmation aux nouveaux inscrits' },
+          { key: 'sendEmailOnApproval' as const, label: 'Email à l\'approbation', desc: 'Notifier les prestataires approuvés' },
+          { key: 'sendEmailOnRejection' as const, label: 'Email au rejet', desc: 'Notifier en cas de rejet' },
+          { key: 'adminNotifyOnNewRegistration' as const, label: 'Alerte inscription', desc: 'Notifier les admins' },
+          { key: 'adminNotifyOnVerificationRequest' as const, label: 'Alerte vérification', desc: 'Notifier les admins des demandes' },
+        ].map((item, i, arr) => (
+          <div key={item.key}>
+            <ToggleSetting
+              label={item.label}
+              description={item.desc}
+              checked={settings[item.key] as boolean}
+              onCheckedChange={(v) => handleUpdateSetting(item.key, v)}
+            />
+            {i < arr.length - 1 && <Separator />}
+          </div>
+        ))}
+      </SectionBlock>
 
       {/* Danger Zone */}
-      <Card className="border-destructive/50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg text-destructive">
-            <AlertTriangle className="h-5 w-5" />
-            Zone Dangereuse
-          </CardTitle>
-          <CardDescription>
-            Actions irréversibles - procédez avec précaution
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 border rounded-lg">
+      <div className="rounded-lg border border-destructive/20 bg-card">
+        <div className="px-5 py-3.5 border-b border-destructive/10">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-destructive/60" />
+            <p className="text-sm font-semibold text-destructive/80">Zone dangereuse</p>
+          </div>
+        </div>
+        <div className="px-5 py-4">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Réinitialiser les paramètres</p>
-              <p className="text-sm text-muted-foreground">
-                Restaurer tous les paramètres à leurs valeurs par défaut
-              </p>
+              <p className="text-sm font-medium text-foreground">Réinitialiser les paramètres</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Restaurer les valeurs par défaut</p>
             </div>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive">
-                  <RotateCcw className="h-4 w-4 mr-2" />
+                <Button variant="outline" size="sm" className="text-xs text-destructive border-destructive/20 hover:bg-destructive/5">
+                  <RotateCcw className="h-3 w-3 mr-1.5" />
                   Réinitialiser
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Réinitialiser les paramètres ?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Cette action va restaurer tous les paramètres à leurs valeurs par défaut.
-                    Cette action est irréversible.
+                  <AlertDialogTitle className="text-base">Réinitialiser les paramètres ?</AlertDialogTitle>
+                  <AlertDialogDescription className="text-sm">
+                    Tous les paramètres seront restaurés à leurs valeurs par défaut. Cette action est irréversible.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Annuler</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleReset} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  <AlertDialogCancel className="text-xs h-8">Annuler</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleReset} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-xs h-8">
                     Réinitialiser
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
