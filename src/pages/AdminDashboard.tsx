@@ -66,6 +66,9 @@ export default function AdminDashboard() {
   const [selectedProvider, setSelectedProvider] = useState<CityHealthProvider | null>(null);
   const [statusFilter, setStatusFilter] = useState<ProviderStatusFilter>('all');
 
+  const { data: allProviders = [], isLoading: loadingAll, isError: errorAll } = useAllProviders();
+  const updateVerification = useUpdateVerification();
+
   const handleApprove = async (id: string) => {
     const provider = allProviders.find(p => p.id === id);
     try {
