@@ -69,23 +69,11 @@ const ProviderLoginPage = () => {
     }
   };
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!forgotEmail) {
-      toast.error(t('loginPage', 'invalidEmail'));
-      return;
-    }
+  const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      await sendPasswordResetEmail(auth, forgotEmail);
-      setForgotEmailSent(true);
-      toast.success(t('loginPage', 'resetSent'));
-    } catch (error: any) {
-      if (error.code === 'auth/user-not-found') {
-        toast.error(t('loginPage', 'noAccountForEmail'));
-      } else {
-        toast.error(t('loginPage', 'sendError'));
-      }
+      await loginWithGoogle('provider');
+    } catch {
     } finally {
       setIsLoading(false);
     }
