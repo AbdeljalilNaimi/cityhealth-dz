@@ -1,16 +1,50 @@
 
 
-## Already Implemented
+## Analysis
 
-The feature you're requesting is **already in place**. Here's what currently happens when you click a provider in the sidebar:
+After reviewing the codebase, here's the current state:
 
-1. **`handleProviderClick`** in `MapSidebar.tsx` calls:
-   - `setSelectedProvider(provider)` — highlights the provider and shows its card on the map
-   - `flyTo(provider.lat, provider.lng, 16)` — smoothly animates the map to center on the provider at zoom level 16
+### 1. Developer Email Verification (Already Supabase-based)
+The developer portal uses **Supabase Auth** (not Firebase), as established in a previous migration. The current flow:
+- `DeveloperRegisterPage.tsx` calls `supabase.auth.signUp()` with `emailRedirectTo: /developers/login`
+- `DeveloperLoginPage.tsx` already handles the email confirmation callback (lines 20-41), detects `access_token` in the URL hash, and redirects to `/developers/dashboard`
+- `DeveloperDashboardPage.tsx` uses `supabase.auth.getSession()` to gate access
 
-2. **`flyTo`** in `MapContext.tsx` uses Leaflet's `map.flyTo()` with a 0.5s animation duration.
+**Issue**: The user mentions Firebase's `createUserWithEmailAndPassword` and Firestore `developers` collection, but the developer portal was intentionally migrated to Supabase to avoid Firebase domain authorization errors on preview environments. The current Supabase flow is correct and functional.
 
-3. The selected marker also gets a **pulse/glow highlight** animation (added previously in `MapMarkers.tsx`).
+**What actually needs fixing**: The redirect URL should point to `/developers/dashboard` directly (not `/developers/login`) so that after email confirmation, the user lands on the dashboard automatically. The login page callback handler works but adds an unnecessary intermediary step.
 
-No changes are needed — the map already scrolls to the corresponding provider when clicked in the sidebar. If you're experiencing an issue where this isn't working, it could be due to missing `lat`/`lng` data on certain providers. I can investigate further if you confirm a specific provider that isn't working.
+### 2. Firebase Cron Sync Script
+Create `scripts/firebase-cron-sync.js` containing a Firebase Scheduled Cloud Function using `functions.pubsub.schedule('every 24 hours')` that:
+- Queries Firestore for verified providers
+- Maps to public fields
+- POSTs to the `sync-provider` edge function
+
+### 3. Dev-Tools "Force Sync" Label
+Update the sync card in `DevToolsPage.tsx` to clearly indicate it's a manual "Force Sync" distinct from the automated 24h cycle.
+
+## Plan
+
+### Task 1: Fix Developer Email Redirect
+**File**: `src/pages/developers/DeveloperRegisterPage.tsx`
+- Change `emailRedirectTo` from `/developers/login` to `/developers/dashboard`
+- Same change in the resend handler
+- This way, after clicking the confirmation link, the user lands directly on their dashboard
+
+**File**: `src/pages/developers/DeveloperDashboardPage.tsx`
+- Add URL hash detection (same pattern as login page) to handle the email confirmation token exchange when users land directly on the dashboard from the email link
+
+### Task 2: Create Firebase Cron Sync Script
+**New file**: `scripts/firebase-cron-sync.js`
+- Complete Node.js Firebase Cloud Function using `functions.pubsub.schedule('every 24 hours')`
+- Fetches verified providers from Firestore
+- Maps to safe public fields matching the `providers_public` schema
+- POSTs batch to `/functions/v1/sync-provider` with `x-sync-secret`
+- Includes deployment instructions as comments
+
+### Task 3: Update Dev-Tools Sync Button
+**File**: `src/pages/DevToolsPage.tsx`
+- Rename the card title to "Force Sync — API Publique"
+- Update description to explain this is for immediate updates outside the 24h automated cycle
+- Add a small info note about the automated cron schedule
 

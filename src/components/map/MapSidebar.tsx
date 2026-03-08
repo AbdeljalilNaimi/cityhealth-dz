@@ -233,41 +233,105 @@ export const MapSidebar = ({
     );
   };
 
-  // ─── Type Filter Pills ───
-  const TypeFilters = () => (
-    <div className="flex overflow-x-auto gap-1 scrollbar-none pb-0.5">
-      <button
-        onClick={() => updateParam('types', null)}
-        className={cn(
-          "inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all border whitespace-nowrap flex-shrink-0",
-          activeTypes.size === 0
-            ? "bg-primary text-primary-foreground border-primary shadow-sm"
-            : "bg-muted/40 text-muted-foreground border-border/40 hover:bg-accent"
-        )}
-      >
-        {tx.allTypes}
-      </button>
-      {PROVIDER_TYPES.map(type => {
-        const label = PROVIDER_TYPE_LABELS[type];
-        const isActive = activeTypes.has(type);
-        return (
+  // ─── Type Filter Pills with Arrow Navigation ───
+  const TypeFilters = () => {
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(false);
+
+    const checkScroll = useCallback(() => {
+      const el = scrollRef.current;
+      if (!el) return;
+      setCanScrollLeft(el.scrollLeft > 2);
+      setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 2);
+    }, []);
+
+    useEffect(() => {
+      const el = scrollRef.current;
+      if (!el) return;
+      checkScroll();
+      el.addEventListener('scroll', checkScroll, { passive: true });
+      const ro = new ResizeObserver(checkScroll);
+      ro.observe(el);
+      return () => { el.removeEventListener('scroll', checkScroll); ro.disconnect(); };
+    }, [checkScroll]);
+
+    const scroll = (dir: 'left' | 'right') => {
+      scrollRef.current?.scrollBy({ left: dir === 'left' ? -120 : 120, behavior: 'smooth' });
+    };
+
+    return (
+      <div className="relative group">
+        {/* Left arrow */}
+        {canScrollLeft && (
           <button
-            key={type}
-            onClick={() => toggleType(type)}
+            onClick={() => scroll('left')}
             className={cn(
-              "inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition-all border whitespace-nowrap flex-shrink-0",
-              isActive
+              "absolute top-1/2 -translate-y-1/2 z-10 h-6 w-6 rounded-full bg-card/90 border border-border/50 shadow-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-all",
+              isRTL ? "right-0" : "left-0"
+            )}
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className={cn("h-3.5 w-3.5", isRTL && "rotate-180")} />
+          </button>
+        )}
+
+        <div
+          ref={scrollRef}
+          className={cn(
+            "flex overflow-x-auto gap-1 scrollbar-none pb-0.5",
+            canScrollLeft && (isRTL ? "pr-5" : "pl-5"),
+            canScrollRight && (isRTL ? "pl-5" : "pr-5")
+          )}
+        >
+          <button
+            onClick={() => updateParam('types', null)}
+            className={cn(
+              "inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all border whitespace-nowrap flex-shrink-0",
+              activeTypes.size === 0
                 ? "bg-primary text-primary-foreground border-primary shadow-sm"
                 : "bg-muted/40 text-muted-foreground border-border/40 hover:bg-accent"
             )}
           >
-            <span>{label?.icon}</span>
-            <span>{language === 'ar' ? label?.ar : language === 'en' ? label?.en : label?.fr}</span>
+            {tx.allTypes}
           </button>
-        );
-      })}
-    </div>
-  );
+          {PROVIDER_TYPES.map(type => {
+            const label = PROVIDER_TYPE_LABELS[type];
+            const isActive = activeTypes.has(type);
+            return (
+              <button
+                key={type}
+                onClick={() => toggleType(type)}
+                className={cn(
+                  "inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition-all border whitespace-nowrap flex-shrink-0",
+                  isActive
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-muted/40 text-muted-foreground border-border/40 hover:bg-accent"
+                )}
+              >
+                <span>{label?.icon}</span>
+                <span>{language === 'ar' ? label?.ar : language === 'en' ? label?.en : label?.fr}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right arrow */}
+        {canScrollRight && (
+          <button
+            onClick={() => scroll('right')}
+            className={cn(
+              "absolute top-1/2 -translate-y-1/2 z-10 h-6 w-6 rounded-full bg-card/90 border border-border/50 shadow-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-all",
+              isRTL ? "left-0" : "right-0"
+            )}
+            aria-label="Scroll right"
+          >
+            <ChevronRight className={cn("h-3.5 w-3.5", isRTL && "rotate-180")} />
+          </button>
+        )}
+      </div>
+    );
+  };
 
   // ─── Provider List Content ───
   const ListContent = ({ maxH }: { maxH: string }) => (
