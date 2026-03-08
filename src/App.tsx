@@ -63,6 +63,7 @@ const DocsPage = lazy(() => import("./pages/DocsPage"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
+const TarifsPage = lazy(() => import("./pages/TarifsPage"));
 const CommunityPage = lazy(() => import("./pages/CommunityPage"));
 const EmergencyCardPublicPage = lazy(() => import("./pages/EmergencyCardPublicPage"));
 const CitizenAppointmentsPage = lazy(() => import("./pages/citizen/appointments/CitizenAppointmentsPage"));
@@ -500,6 +501,14 @@ const AppRoutes = () => {
           element={
             <PageTransition>
               <FAQPage />
+            </PageTransition>
+          } 
+        />
+        <Route 
+          path="/tarifs" 
+          element={
+            <PageTransition>
+              <TarifsPage />
             </PageTransition>
           } 
         />
