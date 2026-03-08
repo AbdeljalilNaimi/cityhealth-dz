@@ -114,8 +114,8 @@ const ContactPage = () => {
       console.error('Contact form error:', err);
       addToast({
         type: 'error',
-        title: 'Erreur',
-        message: 'Une erreur est survenue. Veuillez réessayer.',
+        title: t('contact', 'errorTitle'),
+        message: t('contact', 'errorDesc'),
       });
     } finally {
       setIsSubmitting(false);
