@@ -164,6 +164,8 @@ const AppRoutes = () => {
         <Route path="/citizen/login" element={<PageTransition><CitizenLoginPage /></PageTransition>} />
         <Route path="/citizen/register" element={<PageTransition><CitizenRegisterPage /></PageTransition>} />
         <Route path="/email-verified" element={<PageTransition><EmailVerifiedPage /></PageTransition>} />
+        <Route path="/forgot-password" element={<PageTransition><ForgotPasswordPage /></PageTransition>} />
+        <Route path="/reset-password" element={<PageTransition><ResetPasswordPage /></PageTransition>} />
         <Route element={<MainLayout />}>
           <Route 
             path="/citizen/dashboard" 
