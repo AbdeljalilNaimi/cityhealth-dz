@@ -95,8 +95,12 @@ const AntigravityIndex = () => {
         </div>
       </SafeSection>
 
-      <Footer />
-      <FloatingProviderBanner />
+      <ErrorBoundary fallback={null}>
+        <Footer />
+      </ErrorBoundary>
+      <ErrorBoundary fallback={null}>
+        <FloatingProviderBanner />
+      </ErrorBoundary>
     </div>
   );
 };
