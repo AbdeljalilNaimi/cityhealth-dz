@@ -23,7 +23,18 @@ createRoot(document.getElementById("root")!).render(
 
 // Register service worker asynchronously to avoid render-blocking
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+      // Proactively check for updates (helps after fresh publishes)
+      reg.update().catch(() => {});
+
+      // When a new service worker takes control, reload to ensure fresh chunks/assets
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload();
+      });
+    } catch {
+      // ignore
+    }
   });
 }
