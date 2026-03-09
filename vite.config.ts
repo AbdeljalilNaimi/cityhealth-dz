@@ -53,6 +53,18 @@ export default defineConfig(({ mode }) => ({
         comments: false,
       },
     },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Split React into its own chunk - loaded early and cached
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          // Split Supabase client - heavy dependency
+          'supabase': ['@supabase/supabase-js'],
+          // Split UI libraries
+          'ui-vendor': ['framer-motion', 'sonner', 'class-variance-authority', 'clsx', 'tailwind-merge'],
+        },
+      },
+    },
   },
   plugins: [
     deferCssPlugin(),
