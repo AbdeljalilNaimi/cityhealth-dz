@@ -110,6 +110,50 @@ export type Database = {
           },
         ]
       }
+      admin_provider_notes: {
+        Row: {
+          admin_id: string
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          provider_id: string
+          report_id: string | null
+          severity: string
+          title: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          provider_id: string
+          report_id?: string | null
+          severity?: string
+          title: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          provider_id?: string
+          report_id?: string | null
+          severity?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_provider_notes_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "provider_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ads: {
         Row: {
           created_at: string

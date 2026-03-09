@@ -132,7 +132,7 @@ export const SubscriptionCard = ({ planType = 'basic', onUpgrade }: Subscription
           </ul>
 
           <Badge variant="outline" className="w-fit border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-400 text-xs mb-3">
-            Gratuit la 1ère année — 0 DA / mois
+            Gratuit la 1ère année — puis 4 900 DA / mois
           </Badge>
 
           <Button

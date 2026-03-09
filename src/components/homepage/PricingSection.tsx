@@ -74,8 +74,8 @@ const plans = [
   {
     name: 'Standard',
     icon: Star,
-    monthlyPrice: { fr: '0 DA', ar: '0 د.ج', en: '0 DA' },
-    annualPrice: { fr: '0 DA', ar: '0 د.ج', en: '0 DA' },
+    monthlyPrice: { fr: '2 500 DA', ar: '2,500 د.ج', en: '2,500 DA' },
+    annualPrice: { fr: '24 000 DA', ar: '24,000 د.ج', en: '24,000 DA' },
     period: { monthly: { fr: '/ mois', ar: '/ شهر', en: '/ month' }, annual: { fr: '/ an', ar: '/ سنة', en: '/ year' } },
     subtitle: { fr: 'Idéal pour développer votre activité', ar: 'مثالي لتطوير نشاطك', en: 'Ideal for growing your business' },
     features: {
@@ -90,8 +90,8 @@ const plans = [
   {
     name: 'Premium',
     icon: Crown,
-    monthlyPrice: { fr: '0 DA', ar: '0 د.ج', en: '0 DA' },
-    annualPrice: { fr: '0 DA', ar: '0 د.ج', en: '0 DA' },
+    monthlyPrice: { fr: '4 900 DA', ar: '4,900 د.ج', en: '4,900 DA' },
+    annualPrice: { fr: '47 000 DA', ar: '47,000 د.ج', en: '47,000 DA' },
     period: { monthly: { fr: '/ mois', ar: '/ شهر', en: '/ month' }, annual: { fr: '/ an', ar: '/ سنة', en: '/ year' } },
     subtitle: { fr: 'Visibilité maximale & outils avancés', ar: 'أقصى ظهور وأدوات متقدمة', en: 'Maximum visibility & advanced tools' },
     features: {
