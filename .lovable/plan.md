@@ -1,50 +1,42 @@
 
 
-## Analysis
+## Fix: Supabase client crash due to missing environment variables
 
-After reviewing the codebase, here's the current state:
+### Confirmed Root Cause
+Browser console shows: **`Error: supabaseUrl is required.`** at `client.ts:7:25`.  
+The `.env` file that should contain `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` does not exist in the project. The auto-generated `client.ts` calls `createClient(undefined, undefined)`, which throws synchronously and kills the entire app.
 
-### 1. Developer Email Verification (Already Supabase-based)
-The developer portal uses **Supabase Auth** (not Firebase), as established in a previous migration. The current flow:
-- `DeveloperRegisterPage.tsx` calls `supabase.auth.signUp()` with `emailRedirectTo: /developers/login`
-- `DeveloperLoginPage.tsx` already handles the email confirmation callback (lines 20-41), detects `access_token` in the URL hash, and redirects to `/developers/dashboard`
-- `DeveloperDashboardPage.tsx` uses `supabase.auth.getSession()` to gate access
+### Constraint
+`src/integrations/supabase/client.ts` is auto-generated and **cannot be edited**. The `.env` file is also supposed to be auto-managed.
 
-**Issue**: The user mentions Firebase's `createUserWithEmailAndPassword` and Firestore `developers` collection, but the developer portal was intentionally migrated to Supabase to avoid Firebase domain authorization errors on preview environments. The current Supabase flow is correct and functional.
+### Fix Strategy
+Use Vite's `define` option in `vite.config.ts` to inject the Supabase credentials as compile-time constants. This ensures `import.meta.env.VITE_SUPABASE_URL` and `import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY` are always defined, even when the `.env` file is missing. These are **publishable keys** (anon key), safe to embed in client-side code.
 
-**What actually needs fixing**: The redirect URL should point to `/developers/dashboard` directly (not `/developers/login`) so that after email confirmation, the user lands on the dashboard automatically. The login page callback handler works but adds an unnecessary intermediary step.
+### Changes
 
-### 2. Firebase Cron Sync Script
-Create `scripts/firebase-cron-sync.js` containing a Firebase Scheduled Cloud Function using `functions.pubsub.schedule('every 24 hours')` that:
-- Queries Firestore for verified providers
-- Maps to public fields
-- POSTs to the `sync-provider` edge function
+**1. `vite.config.ts`** — Add `define` block with fallback env values
 
-### 3. Dev-Tools "Force Sync" Label
-Update the sync card in `DevToolsPage.tsx` to clearly indicate it's a manual "Force Sync" distinct from the automated 24h cycle.
+Add inside the config object:
+```ts
+define: {
+  'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(
+    process.env.VITE_SUPABASE_URL || 'https://qedotqjxndtmskcgrajt.supabase.co'
+  ),
+  'import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY': JSON.stringify(
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFlZG90cWp4bmR0bXNrY2dyYWp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTYwOTksImV4cCI6MjA4Nzg3MjA5OX0.PlCld0g_4ccvxIUWqAO8FebK0myYGK2EZZySHUUMBGQ'
+  ),
+  'import.meta.env.VITE_SUPABASE_PROJECT_ID': JSON.stringify(
+    process.env.VITE_SUPABASE_PROJECT_ID || 'qedotqjxndtmskcgrajt'
+  ),
+},
+```
 
-## Plan
+This acts as a safety net: if the `.env` file is restored later, it will take precedence (Vite loads `.env` before applying `define` only for non-`import.meta.env` keys — but for `import.meta.env.*`, `define` takes priority, so this guarantees the values are always present).
 
-### Task 1: Fix Developer Email Redirect
-**File**: `src/pages/developers/DeveloperRegisterPage.tsx`
-- Change `emailRedirectTo` from `/developers/login` to `/developers/dashboard`
-- Same change in the resend handler
-- This way, after clicking the confirmation link, the user lands directly on their dashboard
+These are the same public/anon credentials already visible in the project configuration.
 
-**File**: `src/pages/developers/DeveloperDashboardPage.tsx`
-- Add URL hash detection (same pattern as login page) to handle the email confirmation token exchange when users land directly on the dashboard from the email link
-
-### Task 2: Create Firebase Cron Sync Script
-**New file**: `scripts/firebase-cron-sync.js`
-- Complete Node.js Firebase Cloud Function using `functions.pubsub.schedule('every 24 hours')`
-- Fetches verified providers from Firestore
-- Maps to safe public fields matching the `providers_public` schema
-- POSTs batch to `/functions/v1/sync-provider` with `x-sync-secret`
-- Includes deployment instructions as comments
-
-### Task 3: Update Dev-Tools Sync Button
-**File**: `src/pages/DevToolsPage.tsx`
-- Rename the card title to "Force Sync — API Publique"
-- Update description to explain this is for immediate updates outside the 24h automated cycle
-- Add a small info note about the automated cron schedule
+### What this fixes
+- Homepage crash on both preview and published versions
+- All pages that import the Supabase client (34 files)
+- No changes needed to any component code
 
