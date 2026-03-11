@@ -17,7 +17,6 @@ import {
   BookOpen,
   Code,
   MessageSquare,
-  Star,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -46,7 +45,6 @@ const navItems: NavItem[] = [
   { title: 'Journal d\'audit', icon: FileText, tabValue: 'audit', section: 'insights' },
   { title: 'Signalements', icon: Flag, tabValue: 'reports', section: 'insights' },
   { title: 'Messages contact', icon: MessageSquare, tabValue: 'contact', section: 'main' },
-  { title: 'Avis', icon: Star, tabValue: 'reviews', section: 'main' },
   { title: 'Documentation IA', icon: BookOpen, tabValue: 'documentation', section: 'system' },
   { title: 'Gestion API', icon: Code, tabValue: 'api', section: 'system' },
   { title: 'Configuration', icon: Settings, tabValue: 'settings', section: 'system' },
