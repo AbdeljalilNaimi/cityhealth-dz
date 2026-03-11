@@ -708,6 +708,7 @@ export default function ProviderDashboard() {
   if (isGivingEligible && !isBloodCabin) tabCount++; // giving
   if (isBloodCabin) tabCount++; // blood-emergency
   tabCount++; // analytics
+  tabCount++; // reviews
 
   return (
     <div className="min-h-screen bg-background">
