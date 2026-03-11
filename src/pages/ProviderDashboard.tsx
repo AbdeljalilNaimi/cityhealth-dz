@@ -1119,6 +1119,11 @@ export default function ProviderDashboard() {
               <span className="hidden sm:inline">Stats</span>
               {isPending && <Lock className="h-3 w-3 ml-1" />}
             </TabsTrigger>
+            <TabsTrigger value="reviews-panel" disabled={isPending}>
+              <Star className="h-4 w-4 mr-1.5" />
+              <span className="hidden sm:inline">Avis</span>
+              {isPending && <Lock className="h-3 w-3 ml-1" />}
+            </TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
