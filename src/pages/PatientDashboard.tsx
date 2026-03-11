@@ -24,6 +24,7 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { useMyOffers } from '@/hooks/useProvide';
 import { PostAppointmentReviewWidget } from '@/components/appointments/PostAppointmentReviewWidget';
 import { DashboardEmptyState } from '@/components/citizen/DashboardEmptyState';
+import { PatientReviewsManager } from '@/components/patient/PatientReviewsManager';
 import { Appointment } from '@/types/appointments';
 import { PROVIDE_STATUS_KEYS } from '@/types/provide';
 import { toast } from 'sonner';
@@ -512,50 +513,7 @@ const PatientDashboard = () => {
 
             {/* ── Tab: My Reviews ── */}
             <TabsContent value="reviews" className="space-y-3">
-              {reviews.length === 0 ? (
-                <DashboardEmptyState
-                  icon={Star}
-                  title={d('emptyReviews')}
-                  hint={d('emptyReviewsHint')}
-                  ctaLabel={d('findDoctor')}
-                  ctaHref="/search"
-                />
-              ) : (
-              reviews.map((review) => (
-                  <Card key={review.id} className="hover:shadow-sm transition-all">
-                    <CardContent className="p-4 sm:p-5">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex gap-3 min-w-0 flex-1">
-                          <div className="shrink-0 h-10 w-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
-                            <Star className="h-5 w-5" />
-                          </div>
-                          <div className="min-w-0">
-                            <Link
-                              to={`/provider/${review.provider_id}`}
-                              className="font-semibold text-sm hover:text-primary transition-colors inline-flex items-center gap-1.5"
-                            >
-                              {t('appointments', 'reviewFor')} {review.provider_id.replace(/_/g, ' ')}
-                              <ExternalLink className="h-3 w-3 shrink-0" />
-                            </Link>
-                            <div className="flex items-center gap-1 mt-1">
-                              {Array.from({ length: 5 }).map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={cn("h-3.5 w-3.5", i < review.rating ? "text-amber-500 fill-amber-500" : "text-muted-foreground/30")}
-                                />
-                              ))}
-                              <span className="text-xs text-muted-foreground ml-2">
-                                {format(new Date(review.created_at), 'PP', { locale: locales[language] })}
-                              </span>
-                            </div>
-                            {review.comment && <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">{review.comment}</p>}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
+              <PatientReviewsManager reviews={reviews} userId={user?.uid || ''} />
             </TabsContent>
 
             {/* ── Tab: Favorites ── */}

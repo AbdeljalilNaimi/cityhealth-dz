@@ -18,6 +18,7 @@ import { AdminDocUpload } from '@/components/admin/AdminDocUpload';
 import { ReportsModerationPanel } from '@/components/admin/ReportsModerationPanel';
 import { ApiManagementPanel } from '@/components/admin/ApiManagementPanel';
 import { ContactMessagesPanel } from '@/components/admin/ContactMessagesPanel';
+import { AdminReviewsPanel } from '@/components/admin/AdminReviewsPanel';
 import { notificationService } from '@/services/notificationService';
 
 import { useAllProviders, useUpdateVerification } from '@/hooks/useProviders';
@@ -46,6 +47,7 @@ const TAB_TITLES: Record<string, string> = {
   ads: 'Annonces',
   users: 'Utilisateurs',
   contact: 'Messages de contact',
+  reviews: 'Gestion des avis',
   analytics: 'Analytiques',
   audit: 'Journal d\'audit',
   reports: 'Signalements',
@@ -289,6 +291,9 @@ export default function AdminDashboard() {
       
       case 'contact':
         return <ContactMessagesPanel />;
+      
+      case 'reviews':
+        return <AdminReviewsPanel />;
       
       case 'analytics':
         return <AdminAnalyticsCharts />;
