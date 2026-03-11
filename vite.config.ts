@@ -36,17 +36,6 @@ body{background:hsl(var(--background));color:hsl(var(--foreground));-webkit-font
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  define: {
-    'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(
-      process.env.VITE_SUPABASE_URL || 'https://qedotqjxndtmskcgrajt.supabase.co'
-    ),
-    'import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY': JSON.stringify(
-      process.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFlZG90cWp4bmR0bXNrY2dyYWp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyOTYwOTksImV4cCI6MjA4Nzg3MjA5OX0.PlCld0g_4ccvxIUWqAO8FebK0myYGK2EZZySHUUMBGQ'
-    ),
-    'import.meta.env.VITE_SUPABASE_PROJECT_ID': JSON.stringify(
-      process.env.VITE_SUPABASE_PROJECT_ID || 'qedotqjxndtmskcgrajt'
-    ),
-  },
   server: {
     host: "::",
     port: 8080,
