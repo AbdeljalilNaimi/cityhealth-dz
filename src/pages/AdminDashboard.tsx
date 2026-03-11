@@ -18,6 +18,7 @@ import { AdminDocUpload } from '@/components/admin/AdminDocUpload';
 import { ReportsModerationPanel } from '@/components/admin/ReportsModerationPanel';
 import { ApiManagementPanel } from '@/components/admin/ApiManagementPanel';
 import { ContactMessagesPanel } from '@/components/admin/ContactMessagesPanel';
+import { AdminReviewsPanel } from '@/components/admin/AdminReviewsPanel';
 import { notificationService } from '@/services/notificationService';
 
 import { useAllProviders, useUpdateVerification } from '@/hooks/useProviders';
