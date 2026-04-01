@@ -79,6 +79,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const isSigningUpRef = useRef(false);
 
+  // Expose signup guard for external services (e.g., provider registration)
+  const setSigningUp = (value: boolean) => {
+    isSigningUpRef.current = value;
+  };
+
   // Fetch user profile and roles from Firestore
   const fetchUserProfile = async (userId: string, userEmail: string) => {
     try {
