@@ -185,7 +185,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Set up Firebase auth state listener
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       // Skip auth state changes during signup to prevent premature navigation
-      if (isSigningUpRef.current) {
+      if (checkIsSigningUp()) {
         setIsLoading(false);
         return;
       }
