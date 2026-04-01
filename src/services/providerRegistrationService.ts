@@ -146,6 +146,9 @@ export async function createProviderFromRegistration(
     // Create provider document with cloud URLs
     await createProviderDocument(providerId, userId, { ...formData, logoPreview: logoUrl || '', galleryPreviews: galleryUrls });
 
+    // Release signup guard after all Firestore writes complete
+    setSigningUp(false);
+
     return {
       success: true,
       providerId,
