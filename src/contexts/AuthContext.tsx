@@ -187,6 +187,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (firebaseUser) {
+        // Reload to get fresh emailVerified status (Firebase caches tokens)
+        try {
+          await firebaseUser.reload();
+        } catch (reloadError) {
+          // User may have been deleted or disabled — sign out gracefully
+          console.warn('Failed to reload user:', reloadError);
+          await firebaseSignOut(auth);
+          setUser(null);
+          setProfile(null);
+          setIsLoading(false);
+          return;
+        }
+
         // Block unverified citizen users - they must confirm email first
         if (!firebaseUser.emailVerified) {
           // Sign them out and don't set profile
