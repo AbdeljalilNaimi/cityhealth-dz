@@ -1,50 +1,79 @@
 
 
-## Analysis
+## Authentication Fixes + Build Error Fixes
 
-After reviewing the codebase, here's the current state:
+### Bugs Identified
 
-### 1. Developer Email Verification (Already Supabase-based)
-The developer portal uses **Supabase Auth** (not Firebase), as established in a previous migration. The current flow:
-- `DeveloperRegisterPage.tsx` calls `supabase.auth.signUp()` with `emailRedirectTo: /developers/login`
-- `DeveloperLoginPage.tsx` already handles the email confirmation callback (lines 20-41), detects `access_token` in the URL hash, and redirects to `/developers/dashboard`
-- `DeveloperDashboardPage.tsx` uses `supabase.auth.getSession()` to gate access
+**Bug 1: Citizen email verification — `emailVerified` stays false after confirmation**
 
-**Issue**: The user mentions Firebase's `createUserWithEmailAndPassword` and Firestore `developers` collection, but the developer portal was intentionally migrated to Supabase to avoid Firebase domain authorization errors on preview environments. The current Supabase flow is correct and functional.
+**Root cause**: In `AuthContext.tsx` line 186-193, the `onAuthStateChanged` listener checks `firebaseUser.emailVerified` and signs out the user if false. However, Firebase caches the user token — after email verification in another tab/browser, the cached token still has `emailVerified = false`. The fix in `loginAsCitizen` (line 259-266) calls `signInWithEmailAndPassword` but does NOT call `reload()` on the returned user before checking `emailVerified`. The freshly signed-in user object may still have a stale `emailVerified` value.
 
-**What actually needs fixing**: The redirect URL should point to `/developers/dashboard` directly (not `/developers/login`) so that after email confirmation, the user lands on the dashboard automatically. The login page callback handler works but adds an unnecessary intermediary step.
+**Fix**: Call `await loggedInUser.reload()` before checking `emailVerified` in `loginAsCitizen`. Also update the `onAuthStateChanged` listener to `reload()` before blocking unverified users.
 
-### 2. Firebase Cron Sync Script
-Create `scripts/firebase-cron-sync.js` containing a Firebase Scheduled Cloud Function using `functions.pubsub.schedule('every 24 hours')` that:
-- Queries Firestore for verified providers
-- Maps to public fields
-- POSTs to the `sync-provider` edge function
+**Bug 2: Provider registration — "Missing or insufficient permissions"**
 
-### 3. Dev-Tools "Force Sync" Label
-Update the sync card in `DevToolsPage.tsx` to clearly indicate it's a manual "Force Sync" distinct from the automated 24h cycle.
+**Root cause**: The `createProviderFromRegistration` function creates the Firebase Auth account (line 61), then immediately tries to write to Firestore collections (`profiles`, `user_roles`, `users`, `providers`). The Firestore rules for `profiles/{userId}` require `isOwner(userId)`, which checks `request.auth.uid == userId`. However, the newly created user's email is **not verified**, and the `onAuthStateChanged` listener (lines 186-193) signs them out when it detects `emailVerified = false`. This causes a race condition where:
+1. `createUserWithEmailAndPassword` triggers `onAuthStateChanged`
+2. The listener sees `emailVerified = false` and calls `firebaseSignOut`
+3. Subsequent Firestore writes fail with "Missing or insufficient permissions" because `auth.currentUser` is now null
 
-## Plan
+The `isSigningUpRef` guard in `signupAsCitizen` prevents this for citizens, but provider registration uses `providerRegistrationService.ts` which doesn't set this flag.
 
-### Task 1: Fix Developer Email Redirect
-**File**: `src/pages/developers/DeveloperRegisterPage.tsx`
-- Change `emailRedirectTo` from `/developers/login` to `/developers/dashboard`
-- Same change in the resend handler
-- This way, after clicking the confirmation link, the user lands directly on their dashboard
+**Fix**: Add a mechanism to prevent the `onAuthStateChanged` listener from signing out during provider registration. The simplest approach: make `isSigningUpRef` accessible or add a similar guard in the registration service flow.
 
-**File**: `src/pages/developers/DeveloperDashboardPage.tsx`
-- Add URL hash detection (same pattern as login page) to handle the email confirmation token exchange when users land directly on the dashboard from the email link
+**Bug 3: Build errors — `NodeJS.Timeout` and `process` not found**
 
-### Task 2: Create Firebase Cron Sync Script
-**New file**: `scripts/firebase-cron-sync.js`
-- Complete Node.js Firebase Cloud Function using `functions.pubsub.schedule('every 24 hours')`
-- Fetches verified providers from Firestore
-- Maps to safe public fields matching the `providers_public` schema
-- POSTs batch to `/functions/v1/sync-provider` with `x-sync-secret`
-- Includes deployment instructions as comments
+**Root cause**: TypeScript config doesn't include Node types. Multiple files use `NodeJS.Timeout` and `process.env`.
 
-### Task 3: Update Dev-Tools Sync Button
-**File**: `src/pages/DevToolsPage.tsx`
-- Rename the card title to "Force Sync — API Publique"
-- Update description to explain this is for immediate updates outside the 24h automated cycle
-- Add a small info note about the automated cron schedule
+**Fix**: Replace `NodeJS.Timeout` with `ReturnType<typeof setTimeout>` and replace `process.env.NODE_ENV` with `import.meta.env.DEV`.
+
+---
+
+### Changes
+
+**1. `src/contexts/AuthContext.tsx`** — Fix email verification + expose signup guard
+
+- In `loginAsCitizen`: add `await loggedInUser.reload()` before the `emailVerified` check (after line 259)
+- In `onAuthStateChanged` listener (line 186): add `await firebaseUser.reload()` before the `emailVerified` check
+- Export `isSigningUpRef` setter so provider registration can use it, or convert to a module-level variable with a setter function (`setSigningUp(true/false)`)
+
+**2. `src/services/providerRegistrationService.ts`** — Prevent auth listener interference
+
+- Import the signup guard setter from AuthContext
+- Set it to `true` before `createUserWithEmailAndPassword` and `false` after all Firestore writes complete
+- This prevents the `onAuthStateChanged` listener from signing out the user mid-registration
+
+**3. `src/components/AnimatedTransition.tsx`** — Fix `NodeJS.Timeout`
+
+- Change `let timer: NodeJS.Timeout` to `let timer: ReturnType<typeof setTimeout>`
+
+**4. `src/components/ErrorBoundary.tsx`** — Fix `process.env`
+
+- Replace `process.env.NODE_ENV === 'development'` with `import.meta.env.DEV`
+
+**5. `src/components/search/SearchMap.tsx`** — Fix `NodeJS.Timeout`
+
+- Replace `NodeJS.Timeout` with `ReturnType<typeof setTimeout>`
+
+**6. `src/components/search/SearchResults.tsx`** — Fix `NodeJS.Timeout`
+
+- Replace `NodeJS.Timeout` with `ReturnType<typeof setTimeout>`
+
+**7. `src/hooks/useRegistrationWizard.ts`** — Fix `NodeJS.Timeout`
+
+- Replace `NodeJS.Timeout` with `ReturnType<typeof setTimeout>`
+
+**8. `src/utils/providerValidation.ts`** — Fix `process` reference
+
+- Replace `process.env` usage with `import.meta.env` equivalent
+
+---
+
+### Summary
+
+| Issue | Root Cause | Fix |
+|-------|-----------|-----|
+| Email verification false | Missing `reload()` before `emailVerified` check | Add `reload()` in `loginAsCitizen` and `onAuthStateChanged` |
+| Provider "Missing permissions" | `onAuthStateChanged` signs out unverified user during registration | Guard registration with `isSigningUpRef` flag |
+| Build errors (6 files) | Missing Node types in browser project | Replace `NodeJS.Timeout` and `process.env` with browser equivalents |
 
