@@ -73,11 +73,20 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Module-level signup guard — accessible from external services
+let _isSigningUp = false;
+export function setSigningUp(value: boolean) {
+  _isSigningUp = value;
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const isSigningUpRef = useRef(false);
+
+  // Sync module-level guard with ref
+  const checkIsSigningUp = () => isSigningUpRef.current || _isSigningUp;
 
   // Fetch user profile and roles from Firestore
   const fetchUserProfile = async (userId: string, userEmail: string) => {
@@ -176,12 +185,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Set up Firebase auth state listener
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       // Skip auth state changes during signup to prevent premature navigation
-      if (isSigningUpRef.current) {
+      if (checkIsSigningUp()) {
         setIsLoading(false);
         return;
       }
 
       if (firebaseUser) {
+        // Reload to get fresh emailVerified status (Firebase caches tokens)
+        try {
+          await firebaseUser.reload();
+        } catch (reloadError) {
+          // User may have been deleted or disabled — sign out gracefully
+          console.warn('Failed to reload user:', reloadError);
+          await firebaseSignOut(auth);
+          setUser(null);
+          setProfile(null);
+          setIsLoading(false);
+          return;
+        }
+
         // Block unverified citizen users - they must confirm email first
         if (!firebaseUser.emailVerified) {
           // Sign them out and don't set profile
@@ -257,6 +279,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     try {
       const { user: loggedInUser } = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Reload to get fresh emailVerified status
+      await loggedInUser.reload();
       
       // Check email verification
       if (!loggedInUser.emailVerified) {

@@ -19,6 +19,7 @@ import {
 import { auth, db } from '@/lib/firebase';
 import { ProviderFormData, PROVIDER_TYPE_LABELS } from '@/components/provider/registration/types';
 import { logError } from '@/utils/errorHandling';
+import { setSigningUp } from '@/contexts/AuthContext';
 
 export interface RegistrationResult {
   success: boolean;
@@ -57,6 +58,8 @@ export async function createProviderFromRegistration(
       }
     } else {
       // Create new Firebase Auth account
+      // Set signup guard to prevent onAuthStateChanged from signing out unverified user
+      setSigningUp(true);
       try {
         const userCredential = await createUserWithEmailAndPassword(
           auth, 
@@ -70,6 +73,7 @@ export async function createProviderFromRegistration(
           displayName: formData.facilityNameFr || formData.contactPersonName
         });
       } catch (authError: any) {
+        setSigningUp(false);
         // Handle email-already-in-use specifically
         if (authError.code === 'auth/email-already-in-use') {
           return {
@@ -142,12 +146,16 @@ export async function createProviderFromRegistration(
     // Create provider document with cloud URLs
     await createProviderDocument(providerId, userId, { ...formData, logoPreview: logoUrl || '', galleryPreviews: galleryUrls });
 
+    // Release signup guard after all Firestore writes complete
+    setSigningUp(false);
+
     return {
       success: true,
       providerId,
       userId
     };
   } catch (error: any) {
+    setSigningUp(false);
     logError(error, 'createProviderFromRegistration');
     
     // Handle specific Firebase Auth errors

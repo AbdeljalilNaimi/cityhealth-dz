@@ -234,7 +234,7 @@ function isValidEmail(email: string): boolean {
  * Log validation warnings in development
  */
 export function logValidationWarnings(result: ValidationResult): void {
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.DEV) {
     result.warnings.forEach((warning) => {
       console.warn('[ProviderValidation]', warning);
     });

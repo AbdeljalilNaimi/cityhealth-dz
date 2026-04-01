@@ -96,7 +96,7 @@ export function useRegistrationWizard(): UseRegistrationWizardReturn {
   const [isSaving, setIsSaving] = useState(false);
   const [profileScore, setProfileScore] = useState<ProfileScore>(calculateProfileScore(getInitialFormData()));
   
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const storageKey = getStorageKey(user?.uid);
 
   // Restore from localStorage on mount or when user changes
