@@ -12,7 +12,7 @@ import { isProviderVerified } from '@/utils/verificationUtils';
 // Custom hook for detecting fast scrolling
 const useScrollingIndicator = (threshold = 150) => {
   const [isScrolling, setIsScrolling] = useState(false);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastScrollTimeRef = useRef<number>(0);
   const scrollVelocityRef = useRef<number>(0);
 

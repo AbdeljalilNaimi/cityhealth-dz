@@ -24,7 +24,7 @@ export const AnimatedTransition: React.FC<AnimatedTransitionProps> = ({
   React.useEffect(() => {
     if (show) setRender(true);
     
-    let timer: NodeJS.Timeout;
+    let timer: ReturnType<typeof setTimeout>;
     if (!show && render) {
       timer = setTimeout(() => {
         setRender(false);
