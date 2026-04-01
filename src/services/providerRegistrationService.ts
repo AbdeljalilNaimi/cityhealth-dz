@@ -155,6 +155,7 @@ export async function createProviderFromRegistration(
       userId
     };
   } catch (error: any) {
+    setSigningUp(false);
     logError(error, 'createProviderFromRegistration');
     
     // Handle specific Firebase Auth errors
