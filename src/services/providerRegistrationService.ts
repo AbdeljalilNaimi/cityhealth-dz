@@ -58,6 +58,8 @@ export async function createProviderFromRegistration(
       }
     } else {
       // Create new Firebase Auth account
+      // Set signup guard to prevent onAuthStateChanged from signing out unverified user
+      setSigningUp(true);
       try {
         const userCredential = await createUserWithEmailAndPassword(
           auth, 
@@ -71,6 +73,7 @@ export async function createProviderFromRegistration(
           displayName: formData.facilityNameFr || formData.contactPersonName
         });
       } catch (authError: any) {
+        setSigningUp(false);
         // Handle email-already-in-use specifically
         if (authError.code === 'auth/email-already-in-use') {
           return {
