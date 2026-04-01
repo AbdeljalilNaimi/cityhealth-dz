@@ -65,6 +65,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { ProviderArticlesManager } from '@/components/research/ProviderArticlesManager';
 import { SubscriptionCard } from '@/components/provider/SubscriptionCard';
+import { ProviderReviewsPanel } from '@/components/provider/ProviderReviewsPanel';
 
 const getWelcomeModalKey = (providerId: string) =>
   `provider_onboarding_welcome_seen_${providerId}`;
@@ -707,6 +708,7 @@ export default function ProviderDashboard() {
   if (isGivingEligible && !isBloodCabin) tabCount++; // giving
   if (isBloodCabin) tabCount++; // blood-emergency
   tabCount++; // analytics
+  tabCount++; // reviews
 
   return (
     <div className="min-h-screen bg-background">
@@ -1115,6 +1117,11 @@ export default function ProviderDashboard() {
             <TabsTrigger value="analytics" disabled={isPending}>
               <BarChart3 className="h-4 w-4 mr-1.5" />
               <span className="hidden sm:inline">Stats</span>
+              {isPending && <Lock className="h-3 w-3 ml-1" />}
+            </TabsTrigger>
+            <TabsTrigger value="reviews-panel" disabled={isPending}>
+              <Star className="h-4 w-4 mr-1.5" />
+              <span className="hidden sm:inline">Avis</span>
               {isPending && <Lock className="h-3 w-3 ml-1" />}
             </TabsTrigger>
           </TabsList>
@@ -2832,6 +2839,10 @@ export default function ProviderDashboard() {
 
           <TabsContent value="analytics">
             <AnalyticsCharts providerId={providerData?.id || ''} providerUserId={user?.uid || ''} />
+          </TabsContent>
+
+          <TabsContent value="reviews-panel">
+            <ProviderReviewsPanel providerId={providerData?.id || ''} reporterId={user?.uid || ''} />
           </TabsContent>
         </Tabs>
 
