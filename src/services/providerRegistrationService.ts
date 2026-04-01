@@ -19,6 +19,7 @@ import {
 import { auth, db } from '@/lib/firebase';
 import { ProviderFormData, PROVIDER_TYPE_LABELS } from '@/components/provider/registration/types';
 import { logError } from '@/utils/errorHandling';
+import { setSigningUp } from '@/contexts/AuthContext';
 
 export interface RegistrationResult {
   success: boolean;
