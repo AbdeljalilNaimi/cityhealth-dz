@@ -276,6 +276,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { user: loggedInUser } = await signInWithEmailAndPassword(auth, email, password);
       
+      // Reload to get fresh emailVerified status
+      await loggedInUser.reload();
+      
       // Check email verification
       if (!loggedInUser.emailVerified) {
         await firebaseSignOut(auth);
