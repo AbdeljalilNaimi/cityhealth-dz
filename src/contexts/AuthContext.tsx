@@ -73,16 +73,20 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Module-level signup guard — accessible from external services
+let _isSigningUp = false;
+export function setSigningUp(value: boolean) {
+  _isSigningUp = value;
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const isSigningUpRef = useRef(false);
 
-  // Expose signup guard for external services (e.g., provider registration)
-  const setSigningUp = (value: boolean) => {
-    isSigningUpRef.current = value;
-  };
+  // Sync module-level guard with ref
+  const checkIsSigningUp = () => isSigningUpRef.current || _isSigningUp;
 
   // Fetch user profile and roles from Firestore
   const fetchUserProfile = async (userId: string, userEmail: string) => {
