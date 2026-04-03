@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { lovable } from '@/integrations/lovable/index';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, User, ArrowLeft, Mail, Lock, Eye, EyeOff, Heart, MapPin, Shield } from 'lucide-react';
+import { Loader2, User, ArrowLeft, Mail, Lock, Eye, EyeOff, Heart, MapPin, Shield, Sparkles } from 'lucide-react';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -16,13 +17,17 @@ const features = [
   { icon: Shield, title: 'Données protégées', desc: 'Vos informations médicales sont sécurisées et confidentielles' },
 ];
 
+type LoginMode = 'password' | 'magic-link';
+
 const CitizenLoginPage = () => {
   const navigate = useNavigate();
-  const { loginAsCitizen, loginWithGoogle, isAuthenticated, profile, isLoading: authLoading } = useAuth();
+  const { loginAsCitizen, loginAsCitizenWithMagicLink, isAuthenticated, profile, isLoading: authLoading } = useAuth();
   const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
+  const [loginMode, setLoginMode] = useState<LoginMode>('password');
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -60,16 +65,38 @@ const CitizenLoginPage = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) { toast.error('Veuillez entrer votre email'); return; }
     setIsLoading(true);
     try {
-      await loginWithGoogle('citizen');
+      await loginAsCitizenWithMagicLink(email);
+      setMagicLinkSent(true);
     } catch {
+      // error handled in context
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth('google', {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        toast.error('Erreur de connexion Google');
+        return;
+      }
+      if (result.redirected) return;
+      toast.success('Connexion réussie!');
+    } catch {
+      toast.error('Erreur de connexion Google');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (authLoading) {
     return (
@@ -83,7 +110,6 @@ const CitizenLoginPage = () => {
     <div className="min-h-screen flex">
       {/* Left Panel - Branding */}
       <div className="hidden lg:flex lg:w-[45%] relative bg-gradient-to-br from-primary via-primary/90 to-primary/70 overflow-hidden">
-        {/* Decorative shapes */}
         <div className="absolute inset-0">
           <div className="absolute top-20 -left-10 w-72 h-72 bg-white/5 rounded-full blur-3xl" />
           <div className="absolute bottom-20 right-10 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
@@ -93,14 +119,8 @@ const CitizenLoginPage = () => {
             backgroundSize: '24px 24px'
           }} />
         </div>
-
         <div className="relative z-10 flex flex-col justify-between p-12 text-primary-foreground w-full">
-          {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <Link to="/" className="flex items-center gap-3 group">
               <div className="h-10 w-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:bg-white/30 transition-colors">
                 <Heart className="h-5 w-5" />
@@ -108,32 +128,18 @@ const CitizenLoginPage = () => {
               <span className="text-xl font-bold tracking-tight">CityHealth</span>
             </Link>
           </motion.div>
-
-          {/* Hero */}
           <div className="space-y-8">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-            >
+            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}>
               <h1 className="text-4xl font-bold leading-tight mb-4">
-                Votre santé,<br />
-                <span className="text-white/80">simplifiée.</span>
+                Votre santé,<br /><span className="text-white/80">simplifiée.</span>
               </h1>
               <p className="text-lg text-white/70 max-w-sm">
                 Accédez à tous les services de santé de Sidi Bel Abbès depuis un seul espace.
               </p>
             </motion.div>
-
             <div className="space-y-5">
               {features.map((feature, i) => (
-                <motion.div
-                  key={feature.title}
-                  initial={{ opacity: 0, x: -30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.4 + i * 0.15 }}
-                  className="flex items-start gap-4 group"
-                >
+                <motion.div key={feature.title} initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.4 + i * 0.15 }} className="flex items-start gap-4 group">
                   <div className="h-10 w-10 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center shrink-0 group-hover:bg-white/20 transition-colors">
                     <feature.icon className="h-5 w-5" />
                   </div>
@@ -145,19 +151,8 @@ const CitizenLoginPage = () => {
               ))}
             </div>
           </div>
-
-          {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.9 }}
-            className="flex gap-8"
-          >
-            {[
-              { value: '500+', label: 'Professionnels' },
-              { value: '10K+', label: 'Utilisateurs' },
-              { value: '4.8', label: 'Note moyenne' },
-            ].map((stat) => (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.9 }} className="flex gap-8">
+            {[{ value: '500+', label: 'Professionnels' }, { value: '10K+', label: 'Utilisateurs' }, { value: '4.8', label: 'Note moyenne' }].map((stat) => (
               <div key={stat.label} className="text-center">
                 <p className="text-2xl font-bold">{stat.value}</p>
                 <p className="text-xs text-white/50">{stat.label}</p>
@@ -169,12 +164,7 @@ const CitizenLoginPage = () => {
 
       {/* Right Panel - Form */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-10 bg-background">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md space-y-8"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-md space-y-8">
           {/* Mobile logo */}
           <div className="lg:hidden text-center">
             <Link to="/" className="inline-flex items-center gap-2 text-primary font-bold text-xl">
@@ -185,128 +175,115 @@ const CitizenLoginPage = () => {
             </Link>
           </div>
 
-          <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="space-y-6"
-              >
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-2">
+                <User className="h-3 w-3" />
+                Espace Citoyen
+              </div>
+              <h2 className="text-2xl font-bold tracking-tight">{t('loginPage', 'citizenSpace')}</h2>
+              <p className="text-muted-foreground">{t('loginPage', 'citizenDesc')}</p>
+            </div>
+
+            {/* Google Button */}
+            <Button type="button" variant="outline" className="w-full h-12 gap-3" onClick={handleGoogleLogin} disabled={isLoading}>
+              <svg className="h-5 w-5" viewBox="0 0 24 24">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+              </svg>
+              {t('loginPage', 'continueGoogle')}
+            </Button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">{t('loginPage', 'or')}</span>
+              </div>
+            </div>
+
+            {/* Mode toggle */}
+            <div className="flex gap-2">
+              <Button variant={loginMode === 'password' ? 'default' : 'ghost'} size="sm" className="flex-1 text-xs" onClick={() => { setLoginMode('password'); setMagicLinkSent(false); }}>
+                <Lock className="h-3 w-3 mr-1" /> Mot de passe
+              </Button>
+              <Button variant={loginMode === 'magic-link' ? 'default' : 'ghost'} size="sm" className="flex-1 text-xs" onClick={() => setLoginMode('magic-link')}>
+                <Sparkles className="h-3 w-3 mr-1" /> Lien magique
+              </Button>
+            </div>
+
+            {loginMode === 'password' ? (
+              <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-2">
-                    <User className="h-3 w-3" />
-                    Espace Citoyen
+                  <Label htmlFor="email">{t('auth', 'email')}</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input id="email" type="email" placeholder="votre@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 h-11" required />
                   </div>
-                  <h2 className="text-2xl font-bold tracking-tight">{t('loginPage', 'citizenSpace')}</h2>
-                  <p className="text-muted-foreground">{t('loginPage', 'citizenDesc')}</p>
+                  {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                 </div>
 
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="space-y-2"
-                  >
-                    <Label htmlFor="email" className="text-sm font-medium">{t('auth', 'email')}</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="votre@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10 h-11"
-                        required
-                      />
-                    </div>
-                    {errors.email && (
-                      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-destructive">{errors.email}</motion.p>
-                    )}
-                  </motion.div>
-
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.15 }}
-                    className="space-y-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="password" className="text-sm font-medium">{t('auth', 'password')}</Label>
-                      <Link
-                        to="/forgot-password"
-                        className="text-xs text-primary hover:underline font-medium"
-                      >
-                        {t('loginPage', 'forgotPassword')}
-                      </Link>
-                    </div>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="password"
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10 pr-10 h-11"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                    {errors.password && (
-                      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-destructive">{errors.password}</motion.p>
-                    )}
-                  </motion.div>
-
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="space-y-3 pt-1"
-                  >
-                    <Button type="submit" className="w-full h-12 text-sm font-semibold" disabled={isLoading}>
-                      {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                      {isLoading ? 'Connexion...' : t('loginPage', 'loginButton')}
-                    </Button>
-
-                    <div className="relative">
-                      <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-background px-2 text-muted-foreground">{t('loginPage', 'or')}</span>
-                      </div>
-                    </div>
-
-                    <Button type="button" variant="outline" className="w-full h-11" onClick={handleGoogleLogin} disabled={isLoading}>
-                      <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                      </svg>
-                      {t('loginPage', 'continueGoogle')}
-                    </Button>
-                  </motion.div>
-                </form>
-
-                <div className="text-center space-y-3 pt-2">
-                  <p className="text-sm text-muted-foreground">
-                    {t('loginPage', 'noAccount')}{' '}
-                    <Link to="/citizen/register" className="text-primary font-medium hover:underline">
-                      {t('loginPage', 'createAccount')}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">{t('auth', 'password')}</Label>
+                    <Link to="/forgot-password" className="text-xs text-primary hover:underline font-medium">
+                      {t('loginPage', 'forgotPassword')}
                     </Link>
-                  </p>
-                  <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    <ArrowLeft className="h-4 w-4" />
-                    {t('loginPage', 'backToHome')}
-                  </Link>
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input id="password" type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10 pr-10 h-11" required />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
                 </div>
-              </motion.div>
+
+                <Button type="submit" className="w-full h-12" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  {isLoading ? 'Connexion...' : t('loginPage', 'loginButton')}
+                </Button>
+              </form>
+            ) : magicLinkSent ? (
+              <div className="text-center space-y-4 py-4">
+                <div className="mx-auto h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Mail className="h-8 w-8 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Lien envoyé !</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Vérifiez votre boîte mail <strong>{email}</strong> et cliquez sur le lien pour vous connecter.</p>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setMagicLinkSent(false)}>Renvoyer</Button>
+              </div>
+            ) : (
+              <form onSubmit={handleMagicLink} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="magic-email">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input id="magic-email" type="email" placeholder="votre@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 h-11" required />
+                  </div>
+                </div>
+                <Button type="submit" className="w-full h-12" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                  Envoyer le lien magique
+                </Button>
+              </form>
+            )}
+
+            <div className="text-center space-y-3 pt-2">
+              <p className="text-sm text-muted-foreground">
+                {t('loginPage', 'noAccount')}{' '}
+                <Link to="/citizen/register" className="text-primary font-medium hover:underline">{t('loginPage', 'createAccount')}</Link>
+              </p>
+              <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <ArrowLeft className="h-4 w-4" />
+                {t('loginPage', 'backToHome')}
+              </Link>
+            </div>
+          </div>
         </motion.div>
       </div>
     </div>
