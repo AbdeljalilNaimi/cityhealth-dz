@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { getAuth, sendEmailVerification, signInWithEmailAndPassword as firebaseSignIn } from 'firebase/auth';
+import { lovable } from '@/integrations/lovable/index';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -42,10 +42,10 @@ const features = [
 
 const CitizenRegisterPage = () => {
   const navigate = useNavigate();
-  const { signupAsCitizen, loginWithGoogle, isAuthenticated, profile, isLoading: authLoading } = useAuth();
+  const { signupAsCitizen, isAuthenticated, profile, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -53,8 +53,6 @@ const CitizenRegisterPage = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [emailSent, setEmailSent] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
-  const [resending, setResending] = useState(false);
-  const [resendCooldown, setResendCooldown] = useState(0);
 
   useEffect(() => {
     if (isAuthenticated && profile?.userType === 'citizen') {
@@ -70,9 +68,6 @@ const CitizenRegisterPage = () => {
       setIsLoading(true);
       const fullPhone = validated.phone ? `+213${validated.phone.replace(/\s/g, '')}` : undefined;
       await signupAsCitizen(validated.email, validated.password, validated.fullName, fullPhone);
-      // Store credentials temporarily for auto-login after email verification
-      sessionStorage.setItem('cityhealth_pending_email', validated.email);
-      sessionStorage.setItem('cityhealth_pending_password', validated.password);
       setRegisteredEmail(validated.email);
       setEmailSent(true);
     } catch (error) {
@@ -88,18 +83,22 @@ const CitizenRegisterPage = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleSignup = async () => {
     setIsLoading(true);
     try {
-      await loginWithGoogle('citizen');
+      const result = await lovable.auth.signInWithOAuth('google', {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) { toast.error('Erreur Google'); return; }
+      if (result.redirected) return;
+      toast.success('Compte créé avec succès!');
     } catch {
-      // Error handled in context
+      toast.error('Erreur Google');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Password strength indicator
   const getPasswordStrength = () => {
     let score = 0;
     if (password.length >= 8) score++;
@@ -123,96 +122,23 @@ const CitizenRegisterPage = () => {
   if (emailSent) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-6">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md text-center space-y-6"
-        >
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
-            className="mx-auto h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center"
-          >
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }} className="w-full max-w-md text-center space-y-6">
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, delay: 0.2 }} className="mx-auto h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
             <MailCheck className="h-10 w-10 text-primary" />
           </motion.div>
-
           <div className="space-y-2">
             <h1 className="text-2xl font-bold tracking-tight">Confirmez votre email</h1>
             <p className="text-muted-foreground">
               Merci de vous être inscrit sur <span className="font-semibold text-foreground">CityHealth</span> !
             </p>
           </div>
-
           <div className="bg-muted/50 rounded-xl p-5 space-y-3 border">
-            <p className="text-sm text-muted-foreground">
-              Veuillez confirmer votre adresse email
-            </p>
+            <p className="text-sm text-muted-foreground">Veuillez confirmer votre adresse email</p>
             <p className="font-medium text-foreground">{registeredEmail}</p>
-            <p className="text-sm text-muted-foreground">
-              en cliquant sur le bouton dans l'email que nous venons de vous envoyer.
-            </p>
+            <p className="text-sm text-muted-foreground">en cliquant sur le bouton dans l'email que nous venons de vous envoyer.</p>
           </div>
-
           <div className="space-y-3 pt-2">
-            <p className="text-xs text-muted-foreground">
-              Vous n'avez pas reçu l'email ? Vérifiez votre dossier spam.
-            </p>
-            <Button
-              variant="secondary"
-              className="w-full h-11 gap-2"
-              disabled={resending || resendCooldown > 0}
-              onClick={async () => {
-                setResending(true);
-                try {
-                  const auth = getAuth();
-                  let user = auth.currentUser;
-                  let signedInTemporarily = false;
-
-                  if (!user) {
-                    const cred = await firebaseSignIn(auth, registeredEmail, password);
-                    user = cred.user;
-                    signedInTemporarily = true;
-                  }
-
-                  if (!user) throw new Error('Utilisateur introuvable pour renvoi email');
-
-                  await sendEmailVerification(user);
-
-                  if (signedInTemporarily) {
-                    await auth.signOut();
-                  }
-
-                  toast.success('Email de vérification renvoyé !');
-                  setResendCooldown(120);
-                  const interval = setInterval(() => {
-                    setResendCooldown(prev => {
-                      if (prev <= 1) { clearInterval(interval); return 0; }
-                      return prev - 1;
-                    });
-                  }, 1000);
-                } catch (err: any) {
-                  console.error('Resend error:', err);
-                  if (err?.code === 'auth/too-many-requests') {
-                    toast.error("Trop de tentatives. Réessayez dans quelques minutes.");
-                  } else {
-                    toast.error("Impossible de renvoyer l'email. Réessayez plus tard.");
-                  }
-                } finally {
-                  setResending(false);
-                }
-              }}
-            >
-              {resending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Mail className="h-4 w-4" />
-              )}
-              {resendCooldown > 0
-                ? `Renvoyer dans ${resendCooldown}s`
-                : "Renvoyer l'email de vérification"}
-            </Button>
+            <p className="text-xs text-muted-foreground">Vous n'avez pas reçu l'email ? Vérifiez votre dossier spam.</p>
             <Link to="/citizen/login">
               <Button variant="outline" className="w-full h-11 gap-2">
                 <ArrowLeft className="h-4 w-4" />
@@ -227,22 +153,15 @@ const CitizenRegisterPage = () => {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left Panel - Branding */}
+      {/* Left Panel */}
       <div className="hidden lg:flex lg:w-[45%] relative bg-gradient-to-br from-primary via-primary/90 to-primary/70 overflow-hidden">
-        {/* Decorative shapes */}
         <div className="absolute inset-0">
           <div className="absolute top-20 -left-10 w-72 h-72 bg-white/5 rounded-full blur-3xl" />
           <div className="absolute bottom-20 right-10 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
           <div className="absolute top-1/2 left-1/3 w-48 h-48 bg-white/5 rounded-full blur-2xl" />
         </div>
-
         <div className="relative z-10 flex flex-col justify-between p-12 text-primary-foreground w-full">
-          {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <Link to="/" className="flex items-center gap-3 group">
               <div className="h-10 w-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:bg-white/30 transition-colors">
                 <span className="text-lg font-bold">C</span>
@@ -250,32 +169,18 @@ const CitizenRegisterPage = () => {
               <span className="text-xl font-bold tracking-tight">CityHealth</span>
             </Link>
           </motion.div>
-
-          {/* Hero content */}
           <div className="space-y-8">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
-            >
+            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}>
               <h1 className="text-4xl font-bold leading-tight mb-4">
-                Votre santé,<br />
-                <span className="text-white/80">notre priorité.</span>
+                Votre santé,<br /><span className="text-white/80">notre priorité.</span>
               </h1>
               <p className="text-lg text-white/70 max-w-sm">
                 Rejoignez des milliers de citoyens qui font confiance à CityHealth pour leur parcours de santé.
               </p>
             </motion.div>
-
             <div className="space-y-5">
               {features.map((feature, i) => (
-                <motion.div
-                  key={feature.title}
-                  initial={{ opacity: 0, x: -30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.4 + i * 0.15 }}
-                  className="flex items-start gap-4 group"
-                >
+                <motion.div key={feature.title} initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.4 + i * 0.15 }} className="flex items-start gap-4 group">
                   <div className="h-10 w-10 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center shrink-0 group-hover:bg-white/20 transition-colors">
                     <feature.icon className="h-5 w-5" />
                   </div>
@@ -287,39 +192,17 @@ const CitizenRegisterPage = () => {
               ))}
             </div>
           </div>
-
-          {/* Bottom stats */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
-            className="flex gap-8 text-sm"
-          >
-            <div>
-              <p className="text-2xl font-bold">500+</p>
-              <p className="text-white/60">Professionnels</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold">10k+</p>
-              <p className="text-white/60">Citoyens</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold">4.8★</p>
-              <p className="text-white/60">Satisfaction</p>
-            </div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.8 }} className="flex gap-8 text-sm">
+            <div><p className="text-2xl font-bold">500+</p><p className="text-white/60">Professionnels</p></div>
+            <div><p className="text-2xl font-bold">10k+</p><p className="text-white/60">Citoyens</p></div>
+            <div><p className="text-2xl font-bold">4.8★</p><p className="text-white/60">Satisfaction</p></div>
           </motion.div>
         </div>
       </div>
 
-      {/* Right Panel - Form */}
+      {/* Right Panel */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-10 bg-background">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md space-y-8"
-        >
-          {/* Mobile logo */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-md space-y-8">
           <div className="lg:hidden text-center">
             <Link to="/" className="inline-flex items-center gap-2 text-primary font-bold text-xl">
               <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -331,19 +214,10 @@ const CitizenRegisterPage = () => {
 
           <div className="space-y-2">
             <h2 className="text-2xl font-bold tracking-tight">Créer un compte</h2>
-            <p className="text-muted-foreground">
-              Rejoignez CityHealth pour accéder aux services de santé
-            </p>
+            <p className="text-muted-foreground">Rejoignez CityHealth pour accéder aux services de santé</p>
           </div>
 
-          {/* Google Button */}
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full h-12 gap-3 text-sm font-medium hover:bg-muted/50 transition-all"
-            onClick={handleGoogleLogin}
-            disabled={isLoading}
-          >
+          <Button type="button" variant="outline" className="w-full h-12 gap-3 text-sm font-medium hover:bg-muted/50 transition-all" onClick={handleGoogleSignup} disabled={isLoading}>
             <svg className="h-5 w-5" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
               <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -354,177 +228,77 @@ const CitizenRegisterPage = () => {
           </Button>
 
           <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-3 text-muted-foreground">ou avec email</span>
-            </div>
+            <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+            <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-3 text-muted-foreground">ou avec email</span></div>
           </div>
 
           <form onSubmit={handleSignup} className="space-y-4">
-            {/* Full Name */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="space-y-2"
-            >
-              <Label htmlFor="fullName" className="text-sm font-medium">Nom complet</Label>
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Nom complet</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="Ahmed Benali"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="pl-10 h-11"
-                  required
-                />
+                <Input id="fullName" type="text" placeholder="Ahmed Benali" value={fullName} onChange={(e) => setFullName(e.target.value)} className="pl-10 h-11" required />
               </div>
-              {errors.fullName && (
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-destructive">{errors.fullName}</motion.p>
-              )}
-            </motion.div>
+              {errors.fullName && <p className="text-sm text-destructive">{errors.fullName}</p>}
+            </div>
 
-            {/* Email */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              className="space-y-2"
-            >
-              <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="votre@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 h-11"
-                  required
-                />
+                <Input id="email" type="email" placeholder="votre@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 h-11" required />
               </div>
-              {errors.email && (
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-destructive">{errors.email}</motion.p>
-              )}
-            </motion.div>
+              {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+            </div>
 
-            {/* Phone */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="space-y-2"
-            >
-              <Label htmlFor="phone" className="text-sm font-medium">
-                Téléphone <span className="text-muted-foreground font-normal">(optionnel)</span>
-              </Label>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Téléphone <span className="text-muted-foreground font-normal">(optionnel)</span></Label>
               <div className="flex">
-                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground text-sm font-mono">
-                  +213
-                </span>
-                <div className="relative flex-1">
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="XXX XX XX XX"
-                    value={phone}
-                    onChange={(e) => setPhone(formatPhoneInput(e.target.value))}
-                    className="rounded-l-none h-11"
-                    maxLength={12}
-                  />
-                </div>
+                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground text-sm font-mono">+213</span>
+                <Input id="phone" type="tel" placeholder="XXX XX XX XX" value={phone} onChange={(e) => setPhone(formatPhoneInput(e.target.value))} className="rounded-l-none h-11 flex-1" maxLength={12} />
               </div>
-              {errors.phone && (
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-destructive">{errors.phone}</motion.p>
-              )}
-            </motion.div>
+              {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
+            </div>
 
-            {/* Password */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
-              className="space-y-2"
-            >
-              <Label htmlFor="password" className="text-sm font-medium">Mot de passe</Label>
+            <div className="space-y-2">
+              <Label htmlFor="password">Mot de passe</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 pr-10 h-11"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                >
+                <Input id="password" type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10 pr-10 h-11" required />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              {errors.password && (
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-destructive">{errors.password}</motion.p>
-              )}
-              {/* Strength bar */}
+              {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
               {password.length > 0 && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-1.5">
                   <div className="flex gap-1">
                     {[0, 1, 2, 3].map((i) => (
-                      <div
-                        key={i}
-                        className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-                          i < strength ? strengthColors[strength - 1] : 'bg-muted'
-                        }`}
-                      />
+                      <div key={i} className={`h-1 flex-1 rounded-full transition-all duration-300 ${i < strength ? strengthColors[strength - 1] : 'bg-muted'}`} />
                     ))}
                   </div>
                   <div className="flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground">
-                      {strength > 0 && strengthLabels[strength - 1]}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{strength > 0 && strengthLabels[strength - 1]}</p>
                     <div className="flex gap-2 text-xs text-muted-foreground">
-                      <span className={password.length >= 8 ? 'text-emerald-600' : ''}>
-                        {password.length >= 8 ? <CheckCircle2 className="h-3 w-3 inline mr-0.5" /> : null}8+ car.
-                      </span>
-                      <span className={/[A-Z]/.test(password) ? 'text-emerald-600' : ''}>
-                        {/[A-Z]/.test(password) ? <CheckCircle2 className="h-3 w-3 inline mr-0.5" /> : null}MAJ
-                      </span>
-                      <span className={/[0-9]/.test(password) ? 'text-emerald-600' : ''}>
-                        {/[0-9]/.test(password) ? <CheckCircle2 className="h-3 w-3 inline mr-0.5" /> : null}123
-                      </span>
+                      <span className={password.length >= 8 ? 'text-emerald-600' : ''}>{password.length >= 8 ? <CheckCircle2 className="h-3 w-3 inline mr-0.5" /> : null}8+ car.</span>
+                      <span className={/[A-Z]/.test(password) ? 'text-emerald-600' : ''}>{/[A-Z]/.test(password) ? <CheckCircle2 className="h-3 w-3 inline mr-0.5" /> : null}MAJ</span>
+                      <span className={/[0-9]/.test(password) ? 'text-emerald-600' : ''}>{/[0-9]/.test(password) ? <CheckCircle2 className="h-3 w-3 inline mr-0.5" /> : null}123</span>
                     </div>
                   </div>
                 </motion.div>
               )}
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Button type="submit" className="w-full h-12 text-sm font-semibold mt-2" disabled={isLoading}>
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                {isLoading ? 'Création en cours...' : 'Créer mon compte'}
-              </Button>
-            </motion.div>
+            <Button type="submit" className="w-full h-12 text-sm font-semibold mt-2" disabled={isLoading}>
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {isLoading ? 'Création en cours...' : 'Créer mon compte'}
+            </Button>
           </form>
 
           <div className="text-center space-y-3 pt-2">
             <p className="text-sm text-muted-foreground">
               Déjà un compte?{' '}
-              <Link to="/citizen/login" className="text-primary font-medium hover:underline">
-                Se connecter
-              </Link>
+              <Link to="/citizen/login" className="text-primary font-medium hover:underline">Se connecter</Link>
             </p>
             <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="h-4 w-4" />

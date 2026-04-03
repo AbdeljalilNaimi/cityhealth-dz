@@ -543,6 +543,60 @@ export type Database = {
           },
         ]
       }
+      citizen_profiles: {
+        Row: {
+          address: string | null
+          avatar_url: string | null
+          blood_group: string | null
+          created_at: string
+          date_of_birth: string | null
+          email: string
+          emergency_opt_in: boolean | null
+          full_name: string | null
+          height: number | null
+          id: string
+          last_donation_date: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string
+          weight: number | null
+        }
+        Insert: {
+          address?: string | null
+          avatar_url?: string | null
+          blood_group?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email: string
+          emergency_opt_in?: boolean | null
+          full_name?: string | null
+          height?: number | null
+          id?: string
+          last_donation_date?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+          weight?: number | null
+        }
+        Update: {
+          address?: string | null
+          avatar_url?: string | null
+          blood_group?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string
+          emergency_opt_in?: boolean | null
+          full_name?: string | null
+          height?: number | null
+          id?: string
+          last_donation_date?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+          weight?: number | null
+        }
+        Relationships: []
+      }
       community_comments: {
         Row: {
           content: string

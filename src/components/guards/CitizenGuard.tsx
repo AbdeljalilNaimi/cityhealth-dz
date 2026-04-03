@@ -10,7 +10,7 @@ interface CitizenGuardProps {
 }
 
 export function CitizenGuard({ children }: CitizenGuardProps) {
-  const { user, profile, isAuthenticated, isLoading } = useAuth();
+  const { supabaseUser, profile, isAuthenticated, isLoading } = useAuth();
   const { t } = useLanguage();
 
   if (isLoading) {
@@ -22,7 +22,8 @@ export function CitizenGuard({ children }: CitizenGuardProps) {
     );
   }
 
-  if (!isAuthenticated || !user) {
+  // Citizens must be logged in via Supabase
+  if (!isAuthenticated || !supabaseUser) {
     return <Navigate to="/citizen/login" replace />;
   }
 
