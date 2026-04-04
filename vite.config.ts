@@ -1,7 +1,6 @@
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
 /**
@@ -48,8 +47,9 @@ export default defineConfig(({ mode }) => ({
     ),
   },
   server: {
-    host: "::",
-    port: 8080,
+    host: "0.0.0.0",
+    port: 5000,
+    allowedHosts: true,
   },
   build: {
     minify: 'terser',
@@ -80,7 +80,6 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     deferCssPlugin(),
     react(),
-    mode === 'development' && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: null,
