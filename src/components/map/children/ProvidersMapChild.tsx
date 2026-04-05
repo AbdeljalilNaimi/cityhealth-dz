@@ -20,7 +20,7 @@ const ProvidersMapChild = () => {
     setSidebarLoading, setSidebarLabel,
   } = useMapContext();
 
-  const { data: providers = [], isLoading } = useVerifiedProviders();
+  const { data: providers = [], isLoading, isError } = useVerifiedProviders();
 
   // Read filters from URL (set by sidebar)
   const typesParam = searchParams.get('types');
@@ -137,6 +137,19 @@ const ProvidersMapChild = () => {
       }
     };
   }, [removeMarkerLayer]);
+
+  if (isError) {
+    return (
+      <div
+        role="alert"
+        aria-live="assertive"
+        className="absolute inset-x-4 top-4 z-30 flex items-center gap-3 rounded-2xl bg-destructive/10 border border-destructive/30 px-4 py-3 text-sm text-destructive shadow-lg backdrop-blur-sm"
+      >
+        <span className="font-semibold">Impossible de charger les prestataires.</span>
+        <span className="text-destructive/80">Vérifiez votre connexion et réessayez.</span>
+      </div>
+    );
+  }
 
   return (
     <>

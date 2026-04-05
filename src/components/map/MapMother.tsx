@@ -104,18 +104,18 @@ const MapMotherInner = () => {
     if (location.pathname.includes('/blood')) return 'blood';
     return 'providers';
   }, [location.pathname]);
-  
-  const titleMap: Record<MapMode, string> = {
+
+  const titleMap: Record<MapMode, string> = useMemo(() => ({
     providers: t('map', 'providersTitle'),
     emergency: t('map', 'emergencyTitle'),
     blood: t('map', 'bloodTitle'),
-  };
-  
-  const subtitleMap: Record<MapMode, string> = {
+  }), [t]);
+
+  const subtitleMap: Record<MapMode, string> = useMemo(() => ({
     providers: t('map', 'providersSubtitle'),
     emergency: t('map', 'emergencySubtitle'),
     blood: t('map', 'bloodSubtitle'),
-  };
+  }), [t]);
   
   useEffect(() => {
     if (initRef.current || !mapContainerRef.current || mapRef.current) return;
@@ -270,8 +270,10 @@ const MapMotherInner = () => {
               errorText={t('map', 'locationError')}
             />
             
-            <div 
-              ref={mapContainerRef} 
+            <div
+              ref={mapContainerRef}
+              role="application"
+              aria-label={titleMap[mode]}
               className="absolute inset-0 z-0"
               style={{ minHeight: isFullscreen ? '100vh' : 'calc(100vh - 200px)' }}
             />
