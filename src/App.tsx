@@ -270,7 +270,7 @@ const AppRoutes = () => {
           />
         </Route>
         {/* Legacy /dashboard redirects to citizen dashboard */}
-        <Route path="/dashboard" element={<Navigate to="/citizen/dashboard" replace />} />
+        <Route path="/dashboard" element={<Navigate to="/profile" replace />} />
         
         {/* ============================================ */}
         {/* PROVIDER ROUTES */}
