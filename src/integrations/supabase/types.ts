@@ -165,6 +165,7 @@ export type Database = {
           image_url: string
           is_featured: boolean
           is_verified_provider: boolean
+          keywords: string | null
           likes_count: number
           pdf_url: string | null
           provider_avatar: string | null
@@ -191,6 +192,7 @@ export type Database = {
           image_url?: string
           is_featured?: boolean
           is_verified_provider?: boolean
+          keywords?: string | null
           likes_count?: number
           pdf_url?: string | null
           provider_avatar?: string | null
@@ -217,6 +219,7 @@ export type Database = {
           image_url?: string
           is_featured?: boolean
           is_verified_provider?: boolean
+          keywords?: string | null
           likes_count?: number
           pdf_url?: string | null
           provider_avatar?: string | null

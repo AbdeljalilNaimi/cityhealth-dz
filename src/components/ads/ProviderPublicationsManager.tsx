@@ -18,7 +18,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   BookOpen, Plus, Trash2, Loader2, Clock, CheckCircle, XCircle,
   Image as ImageIcon, FileText, Link as LinkIcon, Tag, Eye, Heart,
-  Info,
+  Info, Hash,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -58,27 +58,63 @@ const CATEGORIES = [
   { value: 'autre', label: 'Autre' },
 ];
 
+/**
+ * Maps a provider specialty string to the closest CATEGORIES value.
+ * Returns empty string if no match found.
+ */
+function specialtyToCategory(specialty?: string): string {
+  if (!specialty) return '';
+  const s = specialty.toLowerCase();
+  if (s.includes('cardio')) return 'cardiologie';
+  if (s.includes('pédiat') || s.includes('pediatr')) return 'pédiatrie';
+  if (s.includes('chirur')) return 'chirurgie';
+  if (s.includes('gynéco') || s.includes('gyneco') || s.includes('obstét')) return 'gynécologie';
+  if (s.includes('neuro')) return 'neurologie';
+  if (s.includes('psychiat')) return 'psychiatrie';
+  if (s.includes('orthop')) return 'orthopédie';
+  if (s.includes('dermat')) return 'dermatologie';
+  if (s.includes('ophthal') || s.includes('ophtalm')) return 'ophtalmologie';
+  if (s.includes('orl') || s.includes('oto')) return 'ORL';
+  if (s.includes('endocrin')) return 'endocrinologie';
+  if (s.includes('rhumato')) return 'rhumatologie';
+  if (s.includes('pneumo')) return 'pneumologie';
+  if (s.includes('gastro')) return 'gastroentérologie';
+  if (s.includes('urolo')) return 'urologie';
+  if (s.includes('oncolo')) return 'oncologie';
+  if (s.includes('urgent') || s.includes('réanim')) return 'urgences';
+  if (s.includes('biolog') || s.includes('laborat')) return 'biologie';
+  if (s.includes('radio') || s.includes('imagerie')) return 'radiologie';
+  if (s.includes('pharmac')) return 'pharmacologie';
+  if (s.includes('général') || s.includes('general') || s.includes('médecin')) return 'médecine_générale';
+  if (s.includes('santé publique') || s.includes('épidémio')) return 'santé_publique';
+  return 'autre';
+}
+
 interface PublicationFormData {
   title: string;
   short_description: string;
   full_description: string;
   category: string;
+  keywords: string;
   doi: string;
   image_url: string;
   pdf_url: string;
   expires_at: string;
 }
 
-const EMPTY_FORM: PublicationFormData = {
-  title: '',
-  short_description: '',
-  full_description: '',
-  category: '',
-  doi: '',
-  image_url: '',
-  pdf_url: '',
-  expires_at: '',
-};
+function makeEmptyForm(providerSpecialty?: string): PublicationFormData {
+  return {
+    title: '',
+    short_description: '',
+    full_description: '',
+    category: specialtyToCategory(providerSpecialty),
+    keywords: '',
+    doi: '',
+    image_url: '',
+    pdf_url: '',
+    expires_at: '',
+  };
+}
 
 function getStatusConfig(status: string) {
   const map: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string; icon: typeof Clock }> = {
@@ -95,7 +131,7 @@ export function ProviderPublicationsManager() {
   const [publications, setPublications] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState<PublicationFormData>(EMPTY_FORM);
+  const [form, setForm] = useState<PublicationFormData>(() => makeEmptyForm(provider?.specialty));
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -117,6 +153,16 @@ export function ProviderPublicationsManager() {
     loadPublications();
   }, [provider?.id]);
 
+  const openForm = () => {
+    setForm(makeEmptyForm(provider?.specialty));
+    setShowForm(true);
+  };
+
+  const closeForm = () => {
+    setShowForm(false);
+    setForm(makeEmptyForm(provider?.specialty));
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !provider?.id) return;
@@ -126,7 +172,7 @@ export function ProviderPublicationsManager() {
       setForm(prev => ({ ...prev, image_url: url }));
       toast.success('Image téléchargée');
     } catch {
-      toast.error('Erreur lors du téléchargement de l\'image');
+      toast.error("Erreur lors du téléchargement de l'image");
     } finally {
       setUploadingImage(false);
     }
@@ -138,6 +184,11 @@ export function ProviderPublicationsManager() {
 
     if (!form.title.trim() || !form.short_description.trim() || !form.full_description.trim()) {
       toast.error('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
+    if (!form.category) {
+      toast.error('Veuillez choisir une catégorie');
       return;
     }
 
@@ -156,16 +207,19 @@ export function ProviderPublicationsManager() {
         image_url: form.image_url || undefined,
         pdf_url: form.pdf_url || undefined,
         doi: form.doi || undefined,
-        category: form.category || undefined,
+        category: form.category,
+        keywords: form.keywords.trim() || undefined,
         expires_at: form.expires_at || undefined,
       });
       toast.success('Publication soumise — elle sera visible après validation admin');
-      setForm(EMPTY_FORM);
-      setShowForm(false);
+      closeForm();
       loadPublications();
-    } catch (err: any) {
-      if (err.message === 'PROFANITY_DETECTED') {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '';
+      if (msg === 'PROFANITY_DETECTED') {
         toast.error('Contenu inapproprié détecté. Veuillez réviser votre texte.');
+      } else if (msg === 'CATEGORY_REQUIRED') {
+        toast.error('Veuillez choisir une catégorie.');
       } else {
         toast.error('Erreur lors de la soumission');
       }
@@ -204,16 +258,12 @@ export function ProviderPublicationsManager() {
                 Partagez vos publications médicales avec la communauté CityHealth — chaque soumission est validée par notre équipe.
               </CardDescription>
             </div>
-            <Button
-              onClick={() => setShowForm(true)}
-              data-testid="button-new-publication"
-            >
+            <Button onClick={openForm} data-testid="button-new-publication">
               <Plus className="h-4 w-4 mr-1.5" />
               Nouvelle publication
             </Button>
           </div>
 
-          {/* Quick stats */}
           {publications.length > 0 && (
             <div className="flex gap-3 pt-1 flex-wrap">
               {approvedCount > 0 && (
@@ -233,7 +283,6 @@ export function ProviderPublicationsManager() {
         </CardHeader>
 
         <CardContent>
-          {/* Moderation info banner */}
           <Alert className="mb-5 border-primary/20 bg-primary/5">
             <Info className="h-4 w-4 text-primary" />
             <AlertDescription className="text-sm text-muted-foreground">
@@ -250,11 +299,7 @@ export function ProviderPublicationsManager() {
               <BookOpen className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
               <p className="text-muted-foreground font-medium">Aucune publication</p>
               <p className="text-sm text-muted-foreground/70 mt-1">Soumettez votre première publication médicale</p>
-              <Button
-                className="mt-4"
-                onClick={() => setShowForm(true)}
-                data-testid="button-first-publication"
-              >
+              <Button className="mt-4" onClick={openForm} data-testid="button-first-publication">
                 <Plus className="h-4 w-4 mr-1.5" />
                 Créer une publication
               </Button>
@@ -270,7 +315,6 @@ export function ProviderPublicationsManager() {
                     className="flex gap-4 p-4 rounded-xl border bg-card hover:bg-muted/30 transition-colors"
                     data-testid={`publication-item-${pub.id}`}
                   >
-                    {/* Thumbnail */}
                     {pub.image_url ? (
                       <img
                         src={pub.image_url}
@@ -283,7 +327,6 @@ export function ProviderPublicationsManager() {
                       </div>
                     )}
 
-                    {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2 flex-wrap">
                         <h3 className="font-semibold text-sm leading-snug line-clamp-1">{pub.title}</h3>
@@ -300,6 +343,12 @@ export function ProviderPublicationsManager() {
                           <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                             <Tag className="h-3 w-3" />
                             {CATEGORIES.find(c => c.value === pub.category)?.label || pub.category}
+                          </span>
+                        )}
+                        {pub.keywords && (
+                          <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                            <Hash className="h-3 w-3" />
+                            {pub.keywords.split(',').slice(0, 3).map(k => k.trim()).filter(Boolean).join(', ')}
                           </span>
                         )}
                         {pub.doi && (
@@ -319,7 +368,6 @@ export function ProviderPublicationsManager() {
                         </span>
                       </div>
 
-                      {/* Engagement stats (only for approved) */}
                       {pub.status === 'approved' && (
                         <div className="flex items-center gap-3 mt-2 text-[11px] text-muted-foreground">
                           <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{pub.views_count} vues</span>
@@ -327,7 +375,6 @@ export function ProviderPublicationsManager() {
                         </div>
                       )}
 
-                      {/* Rejection reason */}
                       {pub.status === 'rejected' && pub.rejection_reason && (
                         <p className="text-xs text-destructive mt-1.5 flex items-center gap-1">
                           <XCircle className="h-3 w-3 shrink-0" />
@@ -336,7 +383,6 @@ export function ProviderPublicationsManager() {
                       )}
                     </div>
 
-                    {/* Actions */}
                     <div className="flex items-start">
                       <Button
                         variant="ghost"
@@ -362,7 +408,7 @@ export function ProviderPublicationsManager() {
       </Card>
 
       {/* New Publication Dialog */}
-      <Dialog open={showForm} onOpenChange={(open) => { if (!open) { setShowForm(false); setForm(EMPTY_FORM); } }}>
+      <Dialog open={showForm} onOpenChange={(open) => { if (!open) closeForm(); }}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogTitle className="flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-primary" />
@@ -421,14 +467,17 @@ export function ProviderPublicationsManager() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Category */}
+              {/* Category — required, pre-selected from specialty */}
               <div className="space-y-1.5">
-                <Label>Catégorie</Label>
+                <Label>
+                  Catégorie <span className="text-destructive">*</span>
+                </Label>
                 <Select
                   value={form.category}
                   onValueChange={v => setForm(prev => ({ ...prev, category: v }))}
+                  required
                 >
-                  <SelectTrigger data-testid="select-publication-category">
+                  <SelectTrigger data-testid="select-publication-category" className={cn(!form.category && 'border-destructive/50')}>
                     <SelectValue placeholder="Choisir une catégorie..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -437,6 +486,9 @@ export function ProviderPublicationsManager() {
                     ))}
                   </SelectContent>
                 </Select>
+                {!form.category && (
+                  <p className="text-xs text-muted-foreground">Champ obligatoire</p>
+                )}
               </div>
 
               {/* DOI */}
@@ -450,6 +502,22 @@ export function ProviderPublicationsManager() {
                   data-testid="input-publication-doi"
                 />
               </div>
+            </div>
+
+            {/* Keywords */}
+            <div className="space-y-1.5">
+              <Label htmlFor="pub-keywords">
+                Mots-clés (optionnel)
+              </Label>
+              <Input
+                id="pub-keywords"
+                placeholder="Ex : hypertension, prévention, cardiovasculaire (séparés par des virgules)"
+                value={form.keywords}
+                onChange={e => setForm(prev => ({ ...prev, keywords: e.target.value }))}
+                maxLength={300}
+                data-testid="input-publication-keywords"
+              />
+              <p className="text-xs text-muted-foreground">Séparez les mots-clés par des virgules pour améliorer la recherche</p>
             </div>
 
             {/* Image upload */}
@@ -533,15 +601,14 @@ export function ProviderPublicationsManager() {
 
             {/* Submit */}
             <div className="flex justify-end gap-2 pt-1">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => { setShowForm(false); setForm(EMPTY_FORM); }}
-                disabled={submitting}
-              >
+              <Button type="button" variant="outline" onClick={closeForm} disabled={submitting}>
                 Annuler
               </Button>
-              <Button type="submit" disabled={submitting || uploadingImage} data-testid="button-submit-publication">
+              <Button
+                type="submit"
+                disabled={submitting || uploadingImage || !form.category}
+                data-testid="button-submit-publication"
+              >
                 {submitting ? (
                   <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" />Soumission...</>
                 ) : (

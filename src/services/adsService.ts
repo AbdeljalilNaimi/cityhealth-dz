@@ -1,5 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 import { containsProfanity } from '@/utils/profanityFilter';
+
+type AdsInsert = Database['public']['Tables']['ads']['Insert'];
 
 export interface Ad {
   id: string;
@@ -27,6 +30,7 @@ export interface Ad {
   category: string | null;
   doi: string | null;
   pdf_url: string | null;
+  keywords: string | null;
 }
 
 export interface AdFilters {
@@ -64,7 +68,8 @@ export interface CreatePublicationInput {
   image_url?: string;
   pdf_url?: string;
   doi?: string;
-  category?: string;
+  category: string;
+  keywords?: string;
   is_verified_provider?: boolean;
   expires_at?: string;
 }
@@ -136,33 +141,37 @@ export async function createPublication(input: CreatePublicationInput): Promise<
     throw new Error('PROFANITY_DETECTED');
   }
 
-  const insertData: Record<string, unknown> = {
+  if (!input.category) {
+    throw new Error('CATEGORY_REQUIRED');
+  }
+
+  const insertData: AdsInsert = {
     provider_id: input.provider_id,
     provider_name: input.provider_name,
-    provider_avatar: input.provider_avatar || null,
-    provider_type: input.provider_type || null,
-    provider_city: input.provider_city || null,
+    provider_avatar: input.provider_avatar ?? null,
+    provider_type: input.provider_type ?? null,
+    provider_city: input.provider_city ?? null,
     is_verified_provider: input.is_verified_provider ?? false,
     title: input.title,
     short_description: input.short_description,
     full_description: input.full_description,
-    image_url: input.image_url || '',
+    image_url: input.image_url ?? '',
     type: 'publication',
     status: 'pending',
     is_featured: false,
     views_count: 0,
     likes_count: 0,
     saves_count: 0,
+    category: input.category,
+    doi: input.doi ?? null,
+    pdf_url: input.pdf_url ?? null,
+    keywords: input.keywords ?? null,
+    expires_at: input.expires_at ?? null,
   };
-
-  if (input.expires_at) insertData.expires_at = input.expires_at;
-  if (input.category) insertData.category = input.category;
-  if (input.doi) insertData.doi = input.doi;
-  if (input.pdf_url) insertData.pdf_url = input.pdf_url;
 
   const { data, error } = await supabase
     .from('ads')
-    .insert(insertData as any)
+    .insert(insertData)
     .select()
     .single();
 
