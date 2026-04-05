@@ -85,6 +85,8 @@ export function BookingSlidePanel({
           console.error('Booking submission error:', error);
           if (error?.code === 'auth/unauthenticated') {
             toast.error('Connexion requise pour prendre un rendez-vous.');
+          } else if (error?.message?.toLowerCase().includes('passé') || error?.message?.toLowerCase().includes('past')) {
+            toast.error(error.message);
           } else {
             toast.error('Une erreur est survenue, veuillez réessayer.');
           }

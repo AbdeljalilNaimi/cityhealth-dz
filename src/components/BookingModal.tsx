@@ -333,7 +333,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ open, onOpenChange, 
           providerAnalytics.trackAppointmentRequest(providerId, user?.uid, providerUserId);
           
           sendNotification({
-            userId: user?.uid || 'anonymous',
+            userId: user!.uid,
             type: 'appointment',
             title: t('provider.bookAppointment'),
             body: `${providerName} - ${format(appointmentDate, 'EEEE d MMMM à HH:mm', { locale })}`,
