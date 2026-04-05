@@ -249,20 +249,20 @@ export const AntigravityHeader = () => {
 
             {/* Auth Section */}
             <div className="hidden md:block">
-              {user ? (
+              {isAuthenticated ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="gap-2">
                       <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-xs font-medium text-primary">{user.email?.[0]?.toUpperCase()}</span>
+                        <span className="text-xs font-medium text-primary">{(profile?.email || supabaseUser?.email || user?.email)?.[0]?.toUpperCase()}</span>
                       </div>
                       <ChevronDown className="h-3 w-3" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-64 bg-popover/95 backdrop-blur-lg">
                     <div className="px-3 py-2.5 border-b border-border/50 mb-1">
-                      <p className="text-sm font-medium truncate">{profile?.full_name || user.email}</p>
-                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                      <p className="text-sm font-medium truncate">{profile?.full_name || profile?.email || supabaseUser?.email || user?.email}</p>
+                      <p className="text-xs text-muted-foreground truncate">{profile?.email || supabaseUser?.email || user?.email}</p>
                       <div className="flex flex-wrap gap-1.5 mt-2">
                         {isAdmin && (
                           <span className="inline-flex items-center gap-1 text-xs font-medium bg-destructive/10 text-destructive px-2 py-1 rounded-full">
