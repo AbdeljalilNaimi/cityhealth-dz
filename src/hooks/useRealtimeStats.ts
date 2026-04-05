@@ -45,7 +45,7 @@ async function fetchRealtimeStats(): Promise<RealtimeStats> {
   // Provider count (verified + public providers from Firebase)
   if (providersResult.status === 'fulfilled') {
     const count = providersResult.value.size;
-    if (count > 0) result.providerCount = count;
+    if (count >= 0) result.providerCount = count;
   }
 
   // Completed consultations from /platform/stats (publicly readable)

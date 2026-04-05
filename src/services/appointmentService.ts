@@ -177,10 +177,20 @@ export const confirmAppointment = async (id: string): Promise<void> => {
 };
 
 // Complete an appointment (provider action)
+// Idempotent: reads current status first and only increments the counter when
+// the appointment actually transitions from a non-completed state.
 export const completeAppointment = async (id: string): Promise<void> => {
-  await updateAppointmentStatus(id, 'completed');
-  // Increment the publicly-readable /platform/stats counter
-  // setDoc with merge:true creates the document if it doesn't exist
+  const docRef = doc(db, APPOINTMENTS_COLLECTION, id);
+  const snap = await getDoc(docRef);
+  if (!snap.exists()) throw new Error('Appointment not found');
+
+  const currentStatus = snap.data()?.status;
+  // Already completed — do nothing to avoid double-counting
+  if (currentStatus === 'completed') return;
+
+  await updateDoc(docRef, { status: 'completed', updatedAt: Timestamp.now() });
+
+  // Increment the publicly-readable /platform/stats counter (one-time, on real transition)
   try {
     const statsRef = doc(db, 'platform', 'stats');
     await setDoc(statsRef, { completedConsultations: increment(1) }, { merge: true });

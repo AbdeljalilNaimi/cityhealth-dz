@@ -235,8 +235,10 @@ service cloud.firestore {
     match /platform/{docId} {
       // Anyone (including anonymous visitors) can read the stats document
       allow read: if docId == 'stats';
-      // Only authenticated users (providers/admins) can update the counters
-      allow write: if isAuthenticated();
+      // Only providers and admins can update the stats counters (e.g. increment completedConsultations)
+      allow update: if docId == 'stats' && (isProvider() || isAdmin());
+      // Only admins can create or delete the stats document itself
+      allow create, delete: if isAdmin();
     }
 
     // ============================================
