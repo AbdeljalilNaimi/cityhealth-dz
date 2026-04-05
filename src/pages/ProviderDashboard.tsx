@@ -63,7 +63,7 @@ import {
   getEmergenciesByProvider, subscribeToResponses, BLOOD_TYPES 
 } from '@/services/bloodEmergencyService';
 import { supabase } from '@/integrations/supabase/client';
-import { ProviderArticlesManager } from '@/components/research/ProviderArticlesManager';
+import { ProviderPublicationsManager } from '@/components/ads/ProviderPublicationsManager';
 import { SubscriptionCard } from '@/components/provider/SubscriptionCard';
 import { ProviderReviewsPanel } from '@/components/provider/ProviderReviewsPanel';
 
@@ -2823,7 +2823,7 @@ export default function ProviderDashboard() {
 
           {/* Publications Tab */}
           <TabsContent value="publications">
-            <ProviderArticlesManager />
+            <ProviderPublicationsManager />
           </TabsContent>
 
           {/* Giving for Free Tab - hidden for blood banks */}

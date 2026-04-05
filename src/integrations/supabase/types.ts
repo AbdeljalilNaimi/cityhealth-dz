@@ -156,7 +156,9 @@ export type Database = {
       }
       ads: {
         Row: {
+          category: string | null
           created_at: string
+          doi: string | null
           expires_at: string | null
           full_description: string
           id: string
@@ -164,6 +166,7 @@ export type Database = {
           is_featured: boolean
           is_verified_provider: boolean
           likes_count: number
+          pdf_url: string | null
           provider_avatar: string | null
           provider_city: string | null
           provider_id: string
@@ -179,7 +182,9 @@ export type Database = {
           views_count: number
         }
         Insert: {
+          category?: string | null
           created_at?: string
+          doi?: string | null
           expires_at?: string | null
           full_description: string
           id?: string
@@ -187,6 +192,7 @@ export type Database = {
           is_featured?: boolean
           is_verified_provider?: boolean
           likes_count?: number
+          pdf_url?: string | null
           provider_avatar?: string | null
           provider_city?: string | null
           provider_id: string
@@ -202,7 +208,9 @@ export type Database = {
           views_count?: number
         }
         Update: {
+          category?: string | null
           created_at?: string
+          doi?: string | null
           expires_at?: string | null
           full_description?: string
           id?: string
@@ -210,6 +218,7 @@ export type Database = {
           is_featured?: boolean
           is_verified_provider?: boolean
           likes_count?: number
+          pdf_url?: string | null
           provider_avatar?: string | null
           provider_city?: string | null
           provider_id?: string

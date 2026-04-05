@@ -23,6 +23,10 @@ export interface Ad {
   expires_at: string | null;
   created_at: string;
   updated_at: string;
+  // Publication-specific fields
+  category: string | null;
+  doi: string | null;
+  pdf_url: string | null;
 }
 
 export interface AdFilters {
@@ -44,6 +48,23 @@ interface CreateAdInput {
   short_description: string;
   full_description: string;
   image_url?: string;
+  is_verified_provider?: boolean;
+  expires_at?: string;
+}
+
+export interface CreatePublicationInput {
+  provider_id: string;
+  provider_name: string;
+  provider_avatar?: string;
+  provider_type?: string;
+  provider_city?: string;
+  title: string;
+  short_description: string;
+  full_description: string;
+  image_url?: string;
+  pdf_url?: string;
+  doi?: string;
+  category?: string;
   is_verified_provider?: boolean;
   expires_at?: string;
 }
@@ -107,6 +128,58 @@ export async function updateAd(id: string, updates: Partial<CreateAdInput>): Pro
 export async function deleteAd(id: string): Promise<void> {
   const { error } = await supabase.from('ads').delete().eq('id', id);
   if (error) throw error;
+}
+
+export async function createPublication(input: CreatePublicationInput): Promise<Ad> {
+  const text = `${input.title} ${input.short_description} ${input.full_description}`;
+  if (containsProfanity(text)) {
+    throw new Error('PROFANITY_DETECTED');
+  }
+
+  const insertData: Record<string, unknown> = {
+    provider_id: input.provider_id,
+    provider_name: input.provider_name,
+    provider_avatar: input.provider_avatar || null,
+    provider_type: input.provider_type || null,
+    provider_city: input.provider_city || null,
+    is_verified_provider: input.is_verified_provider ?? false,
+    title: input.title,
+    short_description: input.short_description,
+    full_description: input.full_description,
+    image_url: input.image_url || '',
+    type: 'publication',
+    status: 'pending',
+    is_featured: false,
+    views_count: 0,
+    likes_count: 0,
+    saves_count: 0,
+  };
+
+  if (input.expires_at) insertData.expires_at = input.expires_at;
+  if (input.category) insertData.category = input.category;
+  if (input.doi) insertData.doi = input.doi;
+  if (input.pdf_url) insertData.pdf_url = input.pdf_url;
+
+  const { data, error } = await supabase
+    .from('ads')
+    .insert(insertData as any)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as Ad;
+}
+
+export async function getProviderPublications(providerId: string): Promise<Ad[]> {
+  const { data, error } = await supabase
+    .from('ads')
+    .select('*')
+    .eq('provider_id', providerId)
+    .eq('type', 'publication')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data || []) as Ad[];
 }
 
 // ====== QUERIES ======

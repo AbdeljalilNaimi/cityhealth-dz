@@ -31,8 +31,9 @@ export function AdsModeration() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [adsData, reportsData] = await Promise.all([getAllAds(), getAdReports()]);
-      setAds(adsData);
+      const [allAdsData, reportsData] = await Promise.all([getAllAds(), getAdReports()]);
+      // Admin moderation is only for publications (annonces are self-published, no approval needed)
+      setAds(allAdsData.filter(a => a.type === 'publication'));
       setReports(reportsData);
     } catch (error) {
       console.error('Failed to load ads:', error);
@@ -131,7 +132,7 @@ export function AdsModeration() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Modération des Annonces</CardTitle>
+              <CardTitle>Modération des Publications</CardTitle>
               <CardDescription>{pendingCount} en attente · {pendingReports} signalement{pendingReports !== 1 ? 's' : ''}</CardDescription>
             </div>
             <div className="relative">
@@ -221,7 +222,13 @@ export function AdsModeration() {
           <DialogHeader><DialogTitle>Aperçu de l'annonce</DialogTitle></DialogHeader>
           {selectedAd && (
             <div className="space-y-4">
-              <img src={selectedAd.image_url} alt={selectedAd.title} className="w-full h-48 object-cover rounded-lg" />
+              {selectedAd.image_url ? (
+                <img src={selectedAd.image_url} alt={selectedAd.title} className="w-full h-48 object-cover rounded-lg" />
+              ) : (
+                <div className="w-full h-24 rounded-lg bg-muted flex items-center justify-center">
+                  <ShieldX className="h-8 w-8 text-muted-foreground/30" />
+                </div>
+              )}
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <h3 className="font-semibold text-lg">{selectedAd.title}</h3>
@@ -305,7 +312,13 @@ function AdsTable({
           <TableRow key={ad.id}>
             <TableCell>
               <div className="flex items-center gap-3">
-                <img src={ad.image_url} alt="" className="w-12 h-8 object-cover rounded" />
+                {ad.image_url ? (
+                  <img src={ad.image_url} alt="" className="w-12 h-8 object-cover rounded shrink-0" />
+                ) : (
+                  <div className="w-12 h-8 rounded bg-muted flex items-center justify-center shrink-0">
+                    <Eye className="h-3.5 w-3.5 text-muted-foreground/40" />
+                  </div>
+                )}
                 <div>
                   <p className="font-medium text-sm truncate max-w-[200px]">{ad.title}</p>
                   <p className="text-xs text-muted-foreground">{ad.views_count} vues · {ad.likes_count} ❤</p>

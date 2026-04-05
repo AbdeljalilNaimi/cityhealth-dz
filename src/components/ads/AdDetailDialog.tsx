@@ -111,7 +111,8 @@ export function AdDetailDialog({
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto p-0">
         <DialogTitle className="sr-only">{ad.title}</DialogTitle>
 
-        {/* Full image */}
+        {/* Full image (optional for publications) */}
+        {ad.image_url && (
         <div className="relative aspect-video">
           <img src={ad.image_url} alt={ad.title} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
@@ -131,6 +132,7 @@ export function AdDetailDialog({
             {ad.views_count + 1} vues
           </div>
         </div>
+        )}
 
         <div className="p-6 space-y-5">
           {/* Provider */}
@@ -165,6 +167,34 @@ export function AdDetailDialog({
             <h2 className="text-xl font-bold mb-2">{ad.title}</h2>
             <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{ad.full_description}</p>
           </div>
+
+          {/* Publication-specific fields */}
+          {(ad.doi || ad.pdf_url) && (
+            <div className="flex flex-wrap gap-3">
+              {ad.doi && (
+                <a
+                  href={`https://doi.org/${ad.doi}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-sm text-primary hover:underline"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  DOI: {ad.doi}
+                </a>
+              )}
+              {ad.pdf_url && (
+                <a
+                  href={ad.pdf_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-sm text-primary hover:underline"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Lire l'article complet
+                </a>
+              )}
+            </div>
+          )}
 
           {/* Meta info */}
           <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
