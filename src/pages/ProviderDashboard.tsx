@@ -52,6 +52,7 @@ import { LabTestCatalogEditor } from '@/components/provider/editors/LabTestCatal
 import { RadiologyExamCatalogEditor } from '@/components/provider/editors/RadiologyExamCatalogEditor';
 import { EquipmentCatalogEditor } from '@/components/provider/editors/EquipmentCatalogEditor';
 import { DoctorRosterEditor } from '@/components/provider/editors/DoctorRosterEditor';
+import { MedicalTeamEditor } from '@/components/provider/editors/MedicalTeamEditor';
 import { DoctorEducationEditor } from '@/components/provider/editors/DoctorEducationEditor';
 import { HospitalSettingsEditor } from '@/components/provider/editors/HospitalSettingsEditor';
 import { MaternitySettingsEditor } from '@/components/provider/editors/MaternitySettingsEditor';
@@ -2726,62 +2727,13 @@ export default function ProviderDashboard() {
             </TabsContent>
           )}
 
-          {/* Team Management Tab - clinics/hospitals only */}
-          {isClinicOrHospital && (
+          {/* Team Management Tab - clinics/hospitals/maternity only */}
+          {isClinicOrHospital && providerData && (
             <TabsContent value="team">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <Users className="h-5 w-5" />
-                        Équipe Médicale
-                      </CardTitle>
-                      <CardDescription>Gestion des médecins et leurs gardes</CardDescription>
-                    </div>
-                    <Button disabled>
-                      <Users className="h-4 w-4 mr-2" />
-                      Ajouter un médecin
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <Alert className="mb-4 border-primary/20 bg-primary/5">
-                    <AlertDescription className="text-sm text-muted-foreground">
-                      👥 Ce module affiche des données de démonstration. La gestion réelle de l'équipe sera disponible prochainement.
-                    </AlertDescription>
-                  </Alert>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nom</TableHead>
-                        <TableHead>Spécialité</TableHead>
-                        <TableHead>Garde</TableHead>
-                        <TableHead>Statut</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {[
-                        { name: 'Dr. Benali K.', specialty: 'Cardiologie', shift: 'Matin (8h-14h)', status: 'Actif' },
-                        { name: 'Dr. Mehdaoui S.', specialty: 'Pédiatrie', shift: 'Après-midi (14h-20h)', status: 'Actif' },
-                        { name: 'Dr. Rahmani A.', specialty: 'Chirurgie', shift: 'Nuit (20h-8h)', status: 'En congé' },
-                        { name: 'Dr. Touati F.', specialty: 'Médecine générale', shift: 'Matin (8h-14h)', status: 'Actif' },
-                      ].map((doc, i) => (
-                        <TableRow key={i}>
-                          <TableCell className="font-medium">{doc.name}</TableCell>
-                          <TableCell className="text-muted-foreground">{doc.specialty}</TableCell>
-                          <TableCell className="text-muted-foreground">{doc.shift}</TableCell>
-                          <TableCell>
-                            <Badge variant={doc.status === 'Actif' ? 'secondary' : 'outline'} className={doc.status === 'Actif' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : ''}>
-                              {doc.status}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
+              <MedicalTeamEditor
+                provider={providerData}
+                onSave={async (updates) => { await updateProviderData(updates as any); }}
+              />
             </TabsContent>
           )}
 
