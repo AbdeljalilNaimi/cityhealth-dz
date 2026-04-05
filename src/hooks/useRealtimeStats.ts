@@ -77,6 +77,9 @@ export function useRealtimeStats() {
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,
     refetchOnWindowFocus: false,
+    // Actively re-poll every 5 minutes so a long-lived homepage always
+    // shows stats no older than 5 minutes (not just on first load).
+    refetchInterval: 5 * 60_000,
     retry: 1,
   });
 }

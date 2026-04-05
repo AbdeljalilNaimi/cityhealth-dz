@@ -235,10 +235,23 @@ service cloud.firestore {
     match /platform/{docId} {
       // Anyone (including anonymous visitors) can read the stats document
       allow read: if docId == 'stats';
-      // Only providers and admins can update the stats counters (e.g. increment completedConsultations)
-      allow update: if docId == 'stats' && (isProvider() || isAdmin());
-      // Only admins can create or delete the stats document itself
-      allow create, delete: if isAdmin();
+
+      // Providers and admins can create the stats document for the first time
+      // (needed to bootstrap the doc via transaction when it doesn't exist yet)
+      // Field restricted to only completedConsultations as a number.
+      allow create: if docId == 'stats' && (isProvider() || isAdmin()) &&
+        request.resource.data.keys().hasOnly(['completedConsultations']) &&
+        request.resource.data.completedConsultations is number;
+
+      // Providers and admins can increment the counter.
+      // Field-level diff ensures only completedConsultations can be changed —
+      // prevents tampering with other fields.
+      allow update: if docId == 'stats' && (isProvider() || isAdmin()) &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['completedConsultations']);
+
+      // Only admins can delete the document
+      allow delete: if isAdmin();
     }
 
     // ============================================

@@ -12,7 +12,8 @@ import {
   Timestamp,
   onSnapshot,
   arrayUnion,
-  increment
+  increment,
+  runTransaction
 } from 'firebase/firestore';
 import { z } from 'zod';
 import { db } from '@/lib/firebase';
@@ -177,26 +178,37 @@ export const confirmAppointment = async (id: string): Promise<void> => {
 };
 
 // Complete an appointment (provider action)
-// Idempotent: reads current status first and only increments the counter when
-// the appointment actually transitions from a non-completed state.
+// Uses a Firestore transaction to atomically update the appointment status and
+// increment the public /platform/stats counter in a single operation.
+// Idempotent: returns early without any writes if already completed.
 export const completeAppointment = async (id: string): Promise<void> => {
-  const docRef = doc(db, APPOINTMENTS_COLLECTION, id);
-  const snap = await getDoc(docRef);
-  if (!snap.exists()) throw new Error('Appointment not found');
+  const appointmentRef = doc(db, APPOINTMENTS_COLLECTION, id);
+  const statsRef = doc(db, 'platform', 'stats');
 
-  const currentStatus = snap.data()?.status;
-  // Already completed — do nothing to avoid double-counting
-  if (currentStatus === 'completed') return;
+  await runTransaction(db, async (transaction) => {
+    const [appointmentSnap, statsSnap] = await Promise.all([
+      transaction.get(appointmentRef),
+      transaction.get(statsRef),
+    ]);
 
-  await updateDoc(docRef, { status: 'completed', updatedAt: Timestamp.now() });
+    if (!appointmentSnap.exists()) throw new Error('Appointment not found');
 
-  // Increment the publicly-readable /platform/stats counter (one-time, on real transition)
-  try {
-    const statsRef = doc(db, 'platform', 'stats');
-    await setDoc(statsRef, { completedConsultations: increment(1) }, { merge: true });
-  } catch (e) {
-    console.warn('Could not update platform stats counter:', e);
-  }
+    // Idempotent guard — no writes if already completed
+    if (appointmentSnap.data()?.status === 'completed') return;
+
+    transaction.update(appointmentRef, {
+      status: 'completed',
+      updatedAt: Timestamp.now(),
+    });
+
+    // Increment or initialise the stats counter atomically with the appointment update
+    if (statsSnap.exists()) {
+      transaction.update(statsRef, { completedConsultations: increment(1) });
+    } else {
+      // First-time bootstrap: seed the document with an initial count of 1
+      transaction.set(statsRef, { completedConsultations: 1 });
+    }
+  });
 };
 
 // Reschedule an appointment (provider action)
