@@ -287,7 +287,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: `${window.location.origin}/citizen/dashboard` },
+        options: { emailRedirectTo: `${window.location.origin}/profile` },
       });
       if (error) throw error;
       toast.success('Lien magique envoyé ! Vérifiez votre email.');

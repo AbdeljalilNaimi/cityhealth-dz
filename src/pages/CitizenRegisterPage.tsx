@@ -56,7 +56,7 @@ const CitizenRegisterPage = () => {
 
   useEffect(() => {
     if (isAuthenticated && profile?.userType === 'citizen') {
-      navigate('/citizen/dashboard');
+      navigate('/profile');
     }
   }, [isAuthenticated, profile, navigate]);
 

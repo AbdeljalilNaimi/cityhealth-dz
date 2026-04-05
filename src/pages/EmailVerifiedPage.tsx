@@ -11,7 +11,7 @@ const EmailVerifiedPage = () => {
 
   useEffect(() => {
     if (isAuthenticated && profile?.userType === 'citizen') {
-      const timer = setTimeout(() => navigate('/citizen/dashboard', { replace: true }), 2000);
+      const timer = setTimeout(() => navigate('/profile', { replace: true }), 2000);
       return () => clearTimeout(timer);
     }
   }, [isAuthenticated, profile, navigate]);
