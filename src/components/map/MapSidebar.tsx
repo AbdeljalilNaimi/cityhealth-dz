@@ -1,4 +1,5 @@
 import { memo, useMemo, useState, useCallback, useEffect, useRef } from 'react';
+import { useRating } from '@/contexts/RatingContext';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   ChevronLeft,
@@ -89,12 +90,13 @@ interface ProviderItemProps {
   tx: Tx;
   onProviderClick: (provider: CityHealthProvider) => void;
   onRoute: (e: React.MouseEvent, provider: CityHealthProvider) => void;
+  onCall: (provider: CityHealthProvider) => void;
   setRef: (el: HTMLDivElement | null) => void;
 }
 
 const ProviderItem = memo(function ProviderItem({
   provider, distance, isSelected, language, isComputingRoute,
-  tx, onProviderClick, onRoute, setRef,
+  tx, onProviderClick, onRoute, onCall, setRef,
 }: ProviderItemProps) {
   const typeLabel = PROVIDER_TYPE_LABELS[provider.type]?.[language as 'fr' | 'ar' | 'en'] || provider.type;
 
@@ -178,7 +180,7 @@ const ProviderItem = memo(function ProviderItem({
               size="sm" variant="outline"
               className="h-6 w-6 p-0 flex-shrink-0 rounded-md"
               asChild
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); onCall(provider); }}
             >
               <a href={`tel:${provider.phone}`} aria-label={`Appeler ${provider.name}`} data-testid={`btn-call-${provider.id}`}>
                 <Phone className="h-2.5 w-2.5" aria-hidden="true" />
@@ -335,13 +337,14 @@ interface ProviderListContentProps {
   isRouting: boolean;
   onProviderClick: (provider: CityHealthProvider) => void;
   onRoute: (e: React.MouseEvent, provider: CityHealthProvider) => void;
+  onCall: (provider: CityHealthProvider) => void;
   setProviderRef: (id: string, el: HTMLDivElement | null) => void;
 }
 
 const ProviderListContent = memo(function ProviderListContent({
   loading, providers, visibleProviders, hasMore, onLoadMore,
   maxH, tx, distances, selectedProvider, language, routingId, isRouting,
-  onProviderClick, onRoute, setProviderRef,
+  onProviderClick, onRoute, onCall, setProviderRef,
 }: ProviderListContentProps) {
   return (
     <div className={cn(maxH, "overflow-y-auto")} role="list" aria-label="Liste des prestataires">
@@ -379,6 +382,7 @@ const ProviderListContent = memo(function ProviderListContent({
               tx={tx}
               onProviderClick={onProviderClick}
               onRoute={onRoute}
+              onCall={onCall}
               setRef={(el) => setProviderRef(provider.id, el)}
             />
           ))}
@@ -460,6 +464,7 @@ export const MapSidebar = ({
 }: MapSidebarProps) => {
   const { selectedProvider, setSelectedProvider, calculateRoute, isRouting, isRTL, flyTo, sidebarOpen, setSidebarOpen } = useMapContext();
   const { language } = useLanguage();
+  const { triggerRating } = useRating();
   const [searchParams, setSearchParams] = useSearchParams();
   const [routingId, setRoutingId] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(10);
@@ -533,9 +538,14 @@ export const MapSidebar = ({
     e.stopPropagation();
     setRoutingId(provider.id);
     calculateRoute(provider);
+    triggerRating('route', provider.id, provider.name);
     const id = setTimeout(() => setRoutingId(null), 3000);
     return () => clearTimeout(id);
-  }, [calculateRoute]);
+  }, [calculateRoute, triggerRating]);
+
+  const handleCall = useCallback((provider: CityHealthProvider) => {
+    triggerRating('call', provider.id, provider.name);
+  }, [triggerRating]);
 
   const setProviderRef = useCallback((id: string, el: HTMLDivElement | null) => {
     if (el) providerRefs.current.set(id, el);
@@ -591,6 +601,7 @@ export const MapSidebar = ({
       isRouting={isRouting}
       onProviderClick={handleProviderClick}
       onRoute={handleRoute}
+      onCall={handleCall}
       setProviderRef={setProviderRef}
     />
   );
@@ -612,6 +623,7 @@ export const MapSidebar = ({
       isRouting={isRouting}
       onProviderClick={handleProviderClick}
       onRoute={handleRoute}
+      onCall={handleCall}
       setProviderRef={setProviderRef}
     />
   );

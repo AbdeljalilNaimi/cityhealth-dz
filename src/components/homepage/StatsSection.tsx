@@ -5,6 +5,7 @@ import CounterAnimation from '@/components/CounterAnimation';
 import { SectionHeader } from './SectionHeader';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { usePlatformRatingStats } from '@/hooks/usePlatformRatings';
 
 // Import stat images
 import doctorsTeamImg from '@/assets/stats/doctors-team.jpg';
@@ -23,6 +24,11 @@ interface Stat {
 export const StatsSection = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { t } = useLanguage();
+  const { data: ratingStats } = usePlatformRatingStats();
+
+  const liveRating = ratingStats && ratingStats.totalRatings > 0
+    ? ratingStats.averageRating
+    : 4.7;
   
   const stats: Stat[] = [
     {
@@ -48,10 +54,12 @@ export const StatsSection = () => {
     },
     {
       image: ratingStarsImg,
-      value: 4.7,
+      value: liveRating,
       suffix: '/5',
       label: t('homepage', 'averageRatingLabel'),
-      description: t('homepage', 'averageRatingDesc'),
+      description: ratingStats && ratingStats.totalRatings > 0
+        ? `Basé sur ${ratingStats.totalRatings} évaluation${ratingStats.totalRatings > 1 ? 's' : ''}`
+        : t('homepage', 'averageRatingDesc'),
     },
   ];
 

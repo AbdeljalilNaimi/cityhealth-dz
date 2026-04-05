@@ -8,6 +8,8 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ProviderProvider } from "@/contexts/ProviderContext";
+import { RatingProvider } from "@/contexts/RatingContext";
+import { ContextRatingSheet } from "@/components/ContextRatingSheet";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ProviderRouteGuard } from "@/components/ProviderRouteGuard";
 import { AdminGuard } from "@/components/guards/AdminGuard";
@@ -591,18 +593,21 @@ const App = () => (
         <LanguageProvider>
           <AuthProvider>
             <ProviderProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                  
-                  <div className="min-h-screen bg-background text-foreground">
-                    <ConditionalHeader />
-                    <AppRoutes />
-                    <BackToTop />
-                  </div>
-                </BrowserRouter>
-              </TooltipProvider>
+              <RatingProvider>
+                <TooltipProvider>
+                  <Toaster />
+                  <Sonner />
+                  <BrowserRouter>
+                    
+                    <div className="min-h-screen bg-background text-foreground">
+                      <ConditionalHeader />
+                      <AppRoutes />
+                      <BackToTop />
+                      <ContextRatingSheet />
+                    </div>
+                  </BrowserRouter>
+                </TooltipProvider>
+              </RatingProvider>
             </ProviderProvider>
           </AuthProvider>
         </LanguageProvider>

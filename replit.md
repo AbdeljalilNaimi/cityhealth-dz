@@ -62,6 +62,32 @@ The `ads` table uses a `type` column to distinguish two separate content systems
 - `supabase/migrations/20260405142105_add_type_to_ads.sql` — Adds `type` column
 - `supabase/migrations/20260405200000_add_publication_fields_to_ads.sql` — Adds category/doi/pdf_url
 
+## Context-Based Rating System (April 2026)
+
+A non-intrusive, context-triggered rating system has been implemented.
+
+### How it works
+- **Triggers**: After a user books an appointment (BookingModal success), clicks "Itinéraire" (route) or "Appeler" (call) on the map sidebar
+- **Delay**: Appears 1–2 seconds after the triggering action
+- **Deduplication**: Uses `sessionStorage` to ensure each action type × provider shows the rating sheet at most once per browser session
+- **UI**: Animated bottom sheet with 5 stars; one-click = instant save. Optional feedback text field appears only for ratings ≤ 3 stars. Auto-dismisses after 9 seconds if ignored.
+
+### Database
+- **Table**: `platform_ratings` in Supabase — stores rating (1–5), feedback, action_type, provider_id, session_id
+- **Migration**: `supabase/migrations/20260405500000_add_platform_ratings.sql`
+- ⚠️ **Manual step required**: Apply the migration via the Supabase dashboard SQL editor if `supabase db push` fails
+
+### Homepage integration
+- `StatsSection.tsx` now fetches live average from `platform_ratings` via `usePlatformRatingStats` hook
+- Falls back to 4.7 if the table is empty or unavailable
+- Displays real total rating count alongside the average
+
+### Key files
+- `src/contexts/RatingContext.tsx` — global trigger/dismiss state
+- `src/components/ContextRatingSheet.tsx` — bottom sheet UI
+- `src/hooks/usePlatformRatings.ts` — fetch stats + submit mutation
+- Triggers wired in: `src/components/BookingModal.tsx`, `src/components/map/MapSidebar.tsx`
+
 ## Replit Migration Notes
 - Migrated from Lovable to Replit April 2026
 - Removed `lovable-tagger` Vite plugin (Lovable-only)

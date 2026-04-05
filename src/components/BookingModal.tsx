@@ -21,6 +21,7 @@ import { useProvider } from '@/hooks/useProviders';
 import { providerAnalytics } from '@/services/providerAnalyticsService';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { useRating } from '@/contexts/RatingContext';
 
 interface BookingModalProps {
   open: boolean;
@@ -240,6 +241,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ open, onOpenChange, 
   const { t, language } = useLanguage();
   const { sendNotification } = useNotifications();
   const createAppointmentMutation = useCreateAppointment();
+  const { triggerRating } = useRating();
 
   // Fetch provider data to get their schedule
   const { data: provider } = useProvider(providerId);
@@ -327,6 +329,8 @@ export const BookingModal: React.FC<BookingModalProps> = ({ open, onOpenChange, 
             body: `${providerName} - ${format(appointmentDate, 'EEEE d MMMM à HH:mm', { locale })}`,
             link: '/appointments',
           });
+
+          triggerRating('appointment', providerId, providerName);
 
           toast.success(
             <div className="flex items-center gap-2">
