@@ -109,10 +109,12 @@ export async function deleteAd(id: string): Promise<void> {
 // ====== QUERIES ======
 
 export async function getApprovedAds(filters: AdFilters = {}): Promise<Ad[]> {
+  const now = new Date().toISOString();
   let query = supabase
     .from('ads')
     .select('*')
-    .eq('status', 'approved');
+    .eq('status', 'approved')
+    .or(`expires_at.is.null,expires_at.gt.${now}`);
 
   if (filters.search) {
     query = query.or(`title.ilike.%${filters.search}%,short_description.ilike.%${filters.search}%,provider_name.ilike.%${filters.search}%`);

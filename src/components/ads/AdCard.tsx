@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, Bookmark, Share2, Flag, Eye, MapPin, Clock } from 'lucide-react';
+import { Heart, Bookmark, Share2, Flag, Eye, MapPin, Clock, Megaphone } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -85,13 +85,20 @@ export function AdCard({
       onClick={onClick}
     >
       {/* Cover Image */}
-      <div className="relative aspect-video overflow-hidden">
-        <img
-          src={ad.image_url}
-          alt={ad.title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          loading="lazy"
-        />
+      <div className="relative aspect-video overflow-hidden bg-muted">
+        {ad.image_url ? (
+          <img
+            src={ad.image_url}
+            alt={ad.title}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-primary/10 via-primary/5 to-muted gap-2">
+            <Megaphone className="h-10 w-10 text-primary/40" />
+            <span className="text-xs text-muted-foreground/60 font-medium px-4 text-center line-clamp-2">{ad.title}</span>
+          </div>
+        )}
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
