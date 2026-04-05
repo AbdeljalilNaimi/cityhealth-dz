@@ -361,59 +361,64 @@ export async function incrementViews(adId: string): Promise<void> {
   }
 }
 
-// ====== ADMIN — server-side enforced via Edge Function ======
+// ====== ADMIN ======
 
-/**
- * Call the `moderate-publication` Supabase Edge Function.
- * The function is SECURITY DEFINER (uses service role) and verifies
- * admin identity via Firebase ID token before performing any operation.
- * No privileged secret is exposed in the frontend.
- */
-async function callModerationEdgeFunction(
-  action: 'approve' | 'reject' | 'suspend' | 'delete',
+async function createAdNotification(
   adId: string,
-  firebaseIdToken: string,
-  reason?: string,
+  type: 'approved' | 'rejected' | 'suspended',
+  message: string,
 ): Promise<void> {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  const edgeFunctionUrl = `${supabaseUrl}/functions/v1/moderate-publication`;
-
-  const response = await fetch(edgeFunctionUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': anonKey,
-      'x-firebase-token': firebaseIdToken,
-    },
-    body: JSON.stringify({ action, ad_id: adId, reason: reason || null }),
+  const { data: ad } = await supabase
+    .from('ads')
+    .select('provider_id, title')
+    .eq('id', adId)
+    .single();
+  if (!ad) return;
+  await supabase.from('ad_notifications').insert({
+    provider_id: ad.provider_id,
+    ad_id: adId,
+    ad_title: ad.title,
+    type,
+    message,
   });
-
-  if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    const errMsg = (errData as { error?: string }).error || 'MODERATION_FAILED';
-    if (errMsg.includes('Unauthorized') || response.status === 403) throw new Error('UNAUTHORIZED');
-    throw new Error(errMsg);
-  }
-
-  const result = await response.json();
-  if (!result?.success) throw new Error('MODERATION_FAILED');
 }
 
-export async function adminApprove(adId: string, firebaseIdToken: string): Promise<void> {
-  await callModerationEdgeFunction('approve', adId, firebaseIdToken);
+export async function adminApprove(adId: string): Promise<void> {
+  const { error } = await supabase
+    .from('ads')
+    .update({ status: 'approved', rejection_reason: null })
+    .eq('id', adId);
+  if (error) throw error;
+  await createAdNotification(adId, 'approved',
+    'Votre publication a été approuvée et est maintenant visible sur la page /annonces.',
+  ).catch(() => {});
 }
 
-export async function adminReject(adId: string, reason: string, firebaseIdToken: string): Promise<void> {
-  await callModerationEdgeFunction('reject', adId, firebaseIdToken, reason);
+export async function adminReject(adId: string, reason: string): Promise<void> {
+  const { error } = await supabase
+    .from('ads')
+    .update({ status: 'rejected', rejection_reason: reason })
+    .eq('id', adId);
+  if (error) throw error;
+  await createAdNotification(adId, 'rejected',
+    reason || "Votre publication n'a pas été acceptée.",
+  ).catch(() => {});
 }
 
-export async function adminSuspend(adId: string, firebaseIdToken: string): Promise<void> {
-  await callModerationEdgeFunction('suspend', adId, firebaseIdToken);
+export async function adminSuspend(adId: string): Promise<void> {
+  const { error } = await supabase
+    .from('ads')
+    .update({ status: 'suspended' })
+    .eq('id', adId);
+  if (error) throw error;
+  await createAdNotification(adId, 'suspended',
+    'Votre publication a été suspendue.',
+  ).catch(() => {});
 }
 
-export async function deleteAd(adId: string, firebaseIdToken: string): Promise<void> {
-  await callModerationEdgeFunction('delete', adId, firebaseIdToken);
+export async function deleteAd(adId: string): Promise<void> {
+  const { error } = await supabase.from('ads').delete().eq('id', adId);
+  if (error) throw error;
 }
 
 export async function adminToggleFeatured(adId: string, featured: boolean): Promise<void> {

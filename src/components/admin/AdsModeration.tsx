@@ -44,16 +44,10 @@ export function AdsModeration() {
 
   useEffect(() => { loadData(); }, []);
 
-  const getIdToken = async (): Promise<string> => {
-    if (!user) throw new Error('Not authenticated');
-    return user.getIdToken();
-  };
-
   const handleApprove = async (ad: Ad) => {
     setProcessing(ad.id);
     try {
-      const token = await getIdToken();
-      await adminApprove(ad.id, token);
+      await adminApprove(ad.id);
       if (user) await logAdminAction(user.uid, user.email || '', 'ad_approved', ad.id, 'ad', { title: ad.title }).catch(() => {});
       toast.success(`"${ad.title}" approuvée`);
       loadData();
@@ -65,8 +59,7 @@ export function AdsModeration() {
   const handleReject = async (ad: Ad) => {
     setProcessing(ad.id);
     try {
-      const token = await getIdToken();
-      await adminReject(ad.id, 'Non conforme aux règles de la plateforme', token);
+      await adminReject(ad.id, 'Non conforme aux règles de la plateforme');
       if (user) await logAdminAction(user.uid, user.email || '', 'ad_rejected', ad.id, 'ad', { title: ad.title }).catch(() => {});
       toast.success(`"${ad.title}" rejetée`);
       loadData();
@@ -78,8 +71,7 @@ export function AdsModeration() {
   const handleSuspend = async (ad: Ad) => {
     setProcessing(ad.id);
     try {
-      const token = await getIdToken();
-      await adminSuspend(ad.id, token);
+      await adminSuspend(ad.id);
       toast.success(`"${ad.title}" suspendue`);
       loadData();
     } catch { toast.error('Erreur'); }
@@ -88,8 +80,7 @@ export function AdsModeration() {
 
   const handleDelete = async (adId: string) => {
     try {
-      const token = await getIdToken();
-      await deleteAd(adId, token);
+      await deleteAd(adId);
       toast.success('Annonce supprimée');
       loadData();
       setSelectedAd(null);
