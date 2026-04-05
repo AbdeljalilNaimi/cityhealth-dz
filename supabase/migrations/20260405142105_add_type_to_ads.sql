@@ -4,5 +4,12 @@
 ALTER TABLE public.ads
   ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT 'annonce';
 
--- Backfill existing rows as 'annonce'
-UPDATE public.ads SET type = 'annonce' WHERE type IS NULL OR type = '';
+-- Existing rows were part of the old public /annonces feed → treat as 'publication'
+-- so they remain visible on the public page until the new Publications system is in place.
+UPDATE public.ads SET type = 'publication' WHERE type = 'annonce';
+
+-- Add a check constraint to enforce valid values
+ALTER TABLE public.ads
+  DROP CONSTRAINT IF EXISTS ads_type_check;
+ALTER TABLE public.ads
+  ADD CONSTRAINT ads_type_check CHECK (type IN ('annonce', 'publication'));

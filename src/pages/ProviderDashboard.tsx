@@ -199,9 +199,28 @@ export default function ProviderDashboard() {
   const [offerCategory, setOfferCategory] = useState<ProvideCategory | undefined>();
   const [deletingOfferId, setDeletingOfferId] = useState<string | null>(null);
 
-  // Annonces stats for tab badge
+  // Annonces stats for tab badge — fetched directly so badge shows before tab is opened
   const [annoncesActiveCount, setAnnoncesActiveCount] = useState(0);
   const [annoncesExpiredCount, setAnnoncesExpiredCount] = useState(0);
+
+  useEffect(() => {
+    if (!providerData?.id) return;
+    const now = new Date().toISOString();
+    supabase
+      .from('ads')
+      .select('expires_at, status')
+      .eq('provider_id', providerData.id)
+      .eq('type', 'annonce')
+      .eq('status', 'approved')
+      .then(({ data }) => {
+        if (!data) return;
+        const active = data.filter(a => !a.expires_at || a.expires_at > now).length;
+        const expired = data.filter(a => a.expires_at && a.expires_at <= now).length;
+        setAnnoncesActiveCount(active);
+        setAnnoncesExpiredCount(expired);
+      });
+  }, [providerData?.id]);
+
   const handleAnnoncesStatsChange = (active: number, expired: number) => {
     setAnnoncesActiveCount(active);
     setAnnoncesExpiredCount(expired);
