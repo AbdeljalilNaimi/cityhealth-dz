@@ -42,7 +42,7 @@ interface CreateAdInput {
   title: string;
   short_description: string;
   full_description: string;
-  image_url: string;
+  image_url?: string;
   is_verified_provider?: boolean;
   expires_at?: string;
 }
@@ -71,7 +71,8 @@ export async function createAd(input: CreateAdInput): Promise<Ad> {
     .from('ads')
     .insert({
       ...input,
-      status: 'pending',
+      image_url: input.image_url || '',
+      status: 'approved',
       is_featured: false,
       views_count: 0,
       likes_count: 0,
@@ -145,6 +146,20 @@ export async function getProviderAds(providerId: string): Promise<Ad[]> {
     .from('ads')
     .select('*')
     .eq('provider_id', providerId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data || []) as Ad[];
+}
+
+export async function getActiveProviderAds(providerId: string): Promise<Ad[]> {
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
+    .from('ads')
+    .select('*')
+    .eq('provider_id', providerId)
+    .eq('status', 'approved')
+    .or(`expires_at.is.null,expires_at.gt.${now}`)
     .order('created_at', { ascending: false });
 
   if (error) throw error;

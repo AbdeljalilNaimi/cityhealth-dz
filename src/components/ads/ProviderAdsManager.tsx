@@ -6,16 +6,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import {
-  Plus, Image as ImageIcon, Calendar, Eye, Trash2, Clock, CheckCircle, XCircle,
-  Loader2, Heart, Megaphone, Edit2, AlertTriangle,
+  Plus, Calendar, Eye, Trash2, Clock, CheckCircle, XCircle,
+  Loader2, Heart, Megaphone, AlertTriangle, PartyPopper,
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, differenceInDays, isPast } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
 import {
-  Ad, createAd, deleteAd, getProviderAds, uploadAdImage, updateAd,
+  Ad, createAd, deleteAd, getProviderAds,
 } from '@/services/adsService';
 
 interface ProviderAdsManagerProps {
@@ -31,15 +32,14 @@ interface ProviderAdsManagerProps {
 const MAX_ADS = 5;
 
 export function ProviderAdsManager({
-  providerId, providerUserId, providerName, providerAvatar, providerType, providerCity, isVerified,
+  providerId, providerName, providerAvatar, providerType, providerCity, isVerified,
 }: ProviderAdsManagerProps) {
   const [ads, setAds] = useState<Ad[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [justPublishedId, setJustPublishedId] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     title: '',
@@ -48,40 +48,49 @@ export function ProviderAdsManager({
     expires_at: '',
   });
 
-  const activeCount = ads.filter(a => a.status === 'pending' || a.status === 'approved').length;
+  const activeCount = ads.filter(a => a.status === 'approved').length;
+
+  const expiringAds = ads.filter(ad => {
+    if (!ad.expires_at || ad.status !== 'approved') return false;
+    const daysLeft = differenceInDays(new Date(ad.expires_at), new Date());
+    return daysLeft >= 0 && daysLeft <= 7;
+  });
+
+  const expiredAds = ads.filter(ad => {
+    if (!ad.expires_at) return false;
+    return isPast(new Date(ad.expires_at)) && ad.status === 'approved';
+  });
 
   const loadAds = async () => {
     setIsLoading(true);
     try {
-      const data = await getProviderAds(providerUserId);
+      const data = await getProviderAds(providerId);
       setAds(data);
+
+      const expiring = data.filter(ad => {
+        if (!ad.expires_at || ad.status !== 'approved') return false;
+        const daysLeft = differenceInDays(new Date(ad.expires_at), new Date());
+        return daysLeft >= 0 && daysLeft <= 3;
+      });
+      if (expiring.length > 0) {
+        expiring.forEach(ad => {
+          const days = differenceInDays(new Date(ad.expires_at!), new Date());
+          toast.warning(
+            days === 0
+              ? `Votre annonce "${ad.title}" expire aujourd'hui !`
+              : `Votre annonce "${ad.title}" expire dans ${days} jour${days > 1 ? 's' : ''}.`,
+            { duration: 6000 }
+          );
+        });
+      }
     } catch { setAds([]); }
     finally { setIsLoading(false); }
   };
 
-  useEffect(() => { loadAds(); }, [providerUserId]);
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!validTypes.includes(file.type)) {
-      toast.error('Format accepté: JPG, PNG ou WebP');
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image trop volumineuse (max 5 Mo)');
-      return;
-    }
-
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-  };
+  useEffect(() => { loadAds(); }, [providerId]);
 
   const handleCreate = async () => {
-    if (!form.title || !form.short_description || !form.full_description) {
+    if (!form.title.trim() || !form.short_description.trim() || !form.full_description.trim()) {
       toast.error('Remplissez tous les champs obligatoires');
       return;
     }
@@ -89,42 +98,37 @@ export function ProviderAdsManager({
       toast.error('Description courte: max 200 caractères');
       return;
     }
-    if (!imageFile) {
-      toast.error('L\'image de couverture est obligatoire');
-      return;
-    }
 
     setIsSubmitting(true);
     try {
-      const imageUrl = await uploadAdImage(imageFile, providerUserId);
-
-      await createAd({
-        provider_id: providerUserId,
+      const created = await createAd({
+        provider_id: providerId,
         provider_name: providerName,
         provider_avatar: providerAvatar,
         provider_type: providerType,
         provider_city: providerCity,
-        title: form.title,
-        short_description: form.short_description,
-        full_description: form.full_description,
-        image_url: imageUrl,
+        title: form.title.trim(),
+        short_description: form.short_description.trim(),
+        full_description: form.full_description.trim(),
         is_verified_provider: isVerified,
         expires_at: form.expires_at || undefined,
       });
 
       setForm({ title: '', short_description: '', full_description: '', expires_at: '' });
-      setImageFile(null);
-      setImagePreview(null);
       setIsDialogOpen(false);
-      toast.success('Annonce créée ! En attente de modération.');
-      loadAds();
+      setJustPublishedId(created.id);
+      toast.success('Annonce publiée avec succès !', {
+        description: 'Elle est maintenant visible sur votre profil public.',
+        duration: 5000,
+      });
+      await loadAds();
     } catch (error: any) {
       if (error.message === 'PROFANITY_DETECTED') {
         toast.error('Contenu inapproprié détecté. Veuillez reformuler.');
       } else if (error.message === 'MAX_ADS_REACHED') {
         toast.error(`Limite atteinte (${MAX_ADS} annonces actives max)`);
       } else {
-        toast.error('Erreur lors de la création');
+        toast.error('Erreur lors de la publication');
       }
     } finally {
       setIsSubmitting(false);
@@ -135,6 +139,7 @@ export function ProviderAdsManager({
     setDeletingId(adId);
     try {
       await deleteAd(adId);
+      if (justPublishedId === adId) setJustPublishedId(null);
       toast.success('Annonce supprimée');
       loadAds();
     } catch { toast.error('Erreur de suppression'); }
@@ -143,7 +148,7 @@ export function ProviderAdsManager({
 
   const statusConfig: Record<string, { icon: typeof Clock; color: string; label: string }> = {
     pending: { icon: Clock, color: 'text-amber-500', label: 'En attente' },
-    approved: { icon: CheckCircle, color: 'text-emerald-500', label: 'Approuvée' },
+    approved: { icon: CheckCircle, color: 'text-emerald-500', label: 'Publiée' },
     rejected: { icon: XCircle, color: 'text-red-500', label: 'Rejetée' },
     suspended: { icon: AlertTriangle, color: 'text-orange-500', label: 'Suspendue' },
   };
@@ -152,7 +157,7 @@ export function ProviderAdsManager({
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Megaphone className="h-5 w-5" />Mes Publicités</CardTitle>
+          <CardTitle className="flex items-center gap-2"><Megaphone className="h-5 w-5" />Mes Annonces</CardTitle>
           <CardDescription>Promouvoir vos services auprès des patients</CardDescription>
         </CardHeader>
         <CardContent>
@@ -181,57 +186,55 @@ export function ProviderAdsManager({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2"><Megaphone className="h-5 w-5" />Mes Publicités</CardTitle>
-            <CardDescription>Gérez vos annonces promotionnelles</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <Megaphone className="h-5 w-5" />
+              Mes Annonces
+              {activeCount > 0 && (
+                <Badge variant="secondary" className="ml-1 bg-primary/10 text-primary">
+                  {activeCount} active{activeCount > 1 ? 's' : ''}
+                </Badge>
+              )}
+            </CardTitle>
+            <CardDescription>Gérez vos annonces publiées sur votre profil</CardDescription>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button disabled={activeCount >= MAX_ADS}>
+              <Button disabled={activeCount >= MAX_ADS} data-testid="button-new-annonce">
                 <Plus className="h-4 w-4 mr-2" />
                 Nouvelle annonce
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Créer une annonce</DialogTitle>
-                <DialogDescription>Votre annonce sera visible après modération.</DialogDescription>
+                <DialogTitle>Publier une annonce</DialogTitle>
+                <DialogDescription>
+                  Votre annonce sera immédiatement visible sur votre profil public.
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-2">
-                <div>
-                  <Label>Image de couverture *</Label>
-                  <div className="mt-2 border-2 border-dashed rounded-xl p-4 text-center hover:border-primary transition-colors cursor-pointer relative overflow-hidden">
-                    {imagePreview ? (
-                      <img src={imagePreview} alt="Preview" className="w-full h-40 object-cover rounded-lg" />
-                    ) : (
-                      <>
-                        <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">JPG, PNG ou WebP • Max 5 Mo</p>
-                      </>
-                    )}
-                    <Input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                      onChange={handleImageChange}
-                    />
-                  </div>
-                </div>
                 <div>
                   <Label>Titre *</Label>
                   <Input
                     placeholder="Ex: Consultation gratuite pour nouveaux patients"
                     value={form.title}
                     onChange={(e) => setForm({ ...form, title: e.target.value })}
+                    data-testid="input-annonce-title"
                   />
                 </div>
                 <div>
-                  <Label>Description courte * <span className="text-xs text-muted-foreground">({form.short_description.length}/200)</span></Label>
+                  <Label>
+                    Description courte *{' '}
+                    <span className="text-xs text-muted-foreground">
+                      ({form.short_description.length}/200)
+                    </span>
+                  </Label>
                   <Textarea
                     placeholder="Texte de prévisualisation (max 200 car.)"
                     rows={2}
                     maxLength={200}
                     value={form.short_description}
                     onChange={(e) => setForm({ ...form, short_description: e.target.value })}
+                    data-testid="input-annonce-short-desc"
                   />
                 </div>
                 <div>
@@ -241,6 +244,7 @@ export function ProviderAdsManager({
                     rows={4}
                     value={form.full_description}
                     onChange={(e) => setForm({ ...form, full_description: e.target.value })}
+                    data-testid="input-annonce-full-desc"
                   />
                 </div>
                 <div>
@@ -250,19 +254,27 @@ export function ProviderAdsManager({
                     value={form.expires_at}
                     onChange={(e) => setForm({ ...form, expires_at: e.target.value })}
                     min={new Date().toISOString().split('T')[0]}
+                    data-testid="input-annonce-expires"
                   />
                 </div>
-                <Button onClick={handleCreate} className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Création...</> : "Soumettre l'annonce"}
+                <Button
+                  onClick={handleCreate}
+                  className="w-full"
+                  disabled={isSubmitting}
+                  data-testid="button-publish-annonce"
+                >
+                  {isSubmitting
+                    ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Publication...</>
+                    : 'Publier l\'annonce'
+                  }
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
         </div>
 
-        {/* Active ads limit indicator */}
-        <div className="mt-3">
-          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+        <div className="mt-3 space-y-1">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>{activeCount}/{MAX_ADS} annonces actives</span>
             {activeCount >= MAX_ADS && <span className="text-amber-500">Limite atteinte</span>}
           </div>
@@ -270,7 +282,29 @@ export function ProviderAdsManager({
         </div>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="space-y-3">
+        {expiringAds.length > 0 && (
+          <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/20">
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <AlertDescription className="text-amber-700 dark:text-amber-400 text-sm">
+              {expiringAds.length === 1
+                ? `L'annonce "${expiringAds[0].title}" expire bientôt.`
+                : `${expiringAds.length} annonces expirent dans moins de 7 jours.`
+              }
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {expiredAds.length > 0 && (
+          <Alert className="border-red-200 bg-red-50 dark:bg-red-950/20">
+            <XCircle className="h-4 w-4 text-red-500" />
+            <AlertDescription className="text-red-700 dark:text-red-400 text-sm">
+              {expiredAds.length} annonce{expiredAds.length > 1 ? 's ont' : ' a'} expiré.
+              Supprimez-les pour libérer de la place.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {ads.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Megaphone className="h-12 w-12 mx-auto mb-4 opacity-30" />
@@ -282,12 +316,21 @@ export function ProviderAdsManager({
             {ads.map((ad) => {
               const config = statusConfig[ad.status] || statusConfig.pending;
               const StatusIcon = config.icon;
+              const isJustPublished = justPublishedId === ad.id;
+
               return (
-                <div key={ad.id} className="border rounded-xl p-4 hover:shadow-sm transition-shadow">
+                <div
+                  key={ad.id}
+                  className={`border rounded-xl p-4 hover:shadow-sm transition-shadow ${isJustPublished ? 'border-primary/40 bg-primary/5' : ''}`}
+                  data-testid={`card-annonce-${ad.id}`}
+                >
+                  {isJustPublished && (
+                    <div className="flex items-center gap-2 text-xs text-primary font-medium mb-3 pb-2 border-b border-primary/20">
+                      <PartyPopper className="h-3.5 w-3.5" />
+                      Annonce publiée avec succès !
+                    </div>
+                  )}
                   <div className="flex gap-4">
-                    {ad.image_url && (
-                      <img src={ad.image_url} alt={ad.title} className="w-20 h-14 object-cover rounded-lg shrink-0" />
-                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-medium truncate">{ad.title}</h4>
@@ -295,6 +338,18 @@ export function ProviderAdsManager({
                           <StatusIcon className="h-3 w-3 mr-1" />
                           {config.label}
                         </Badge>
+                        {ad.expires_at && (() => {
+                          const daysLeft = differenceInDays(new Date(ad.expires_at!), new Date());
+                          if (daysLeft < 0) return (
+                            <Badge variant="destructive" className="text-xs">Expirée</Badge>
+                          );
+                          if (daysLeft <= 7) return (
+                            <Badge variant="outline" className="text-xs text-amber-500 border-amber-300">
+                              {daysLeft === 0 ? 'Expire auj.' : `J-${daysLeft}`}
+                            </Badge>
+                          );
+                          return null;
+                        })()}
                       </div>
                       <p className="text-sm text-muted-foreground line-clamp-1">{ad.short_description}</p>
 
@@ -303,9 +358,18 @@ export function ProviderAdsManager({
                       )}
 
                       <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{format(new Date(ad.created_at), 'dd MMM yyyy', { locale: fr })}</span>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {format(new Date(ad.created_at), 'dd MMM yyyy', { locale: fr })}
+                        </span>
                         <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{ad.views_count}</span>
                         <span className="flex items-center gap-1"><Heart className="h-3 w-3" />{ad.likes_count}</span>
+                        {ad.expires_at && !isPast(new Date(ad.expires_at)) && (
+                          <span className="flex items-center gap-1 ml-auto">
+                            <Clock className="h-3 w-3" />
+                            Expire le {format(new Date(ad.expires_at), 'dd MMM', { locale: fr })}
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -315,8 +379,12 @@ export function ProviderAdsManager({
                       className="text-destructive hover:text-destructive shrink-0"
                       onClick={() => handleDelete(ad.id)}
                       disabled={deletingId === ad.id}
+                      data-testid={`button-delete-annonce-${ad.id}`}
                     >
-                      {deletingId === ad.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                      {deletingId === ad.id
+                        ? <Loader2 className="h-4 w-4 animate-spin" />
+                        : <Trash2 className="h-4 w-4" />
+                      }
                     </Button>
                   </div>
                 </div>

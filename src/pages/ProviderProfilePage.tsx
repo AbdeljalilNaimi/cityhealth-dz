@@ -38,6 +38,7 @@ import { PROVIDER_TYPES as PROVIDER_TYPES_ARRAY } from "@/types/provider";
 import type { ProviderType } from "@/types/provider";
 import { useProviderFieldConfig } from "@/hooks/useProviderFieldConfig";
 import { providerAnalytics } from "@/services/providerAnalyticsService";
+import { ProviderAnnoncesPublic } from "@/components/ads/ProviderAnnoncesPublic";
 
 // Mapping from Firestore display strings to enum values
 const TYPE_DISPLAY_TO_ENUM: Record<string, ProviderType> = {
@@ -2609,42 +2610,12 @@ const ProviderProfilePage = () => {
             {/* AI Chat Banner — only if PDF is uploaded */}
             {chatAvailable && <ClientAIChatBanner onOpenChat={() => setChatOpen(true)} />}
 
-            {/* Announcements Card — consistent glass-card style */}
-            <Card className="glass-card overflow-hidden animate-fade-in" style={{ animationDelay: '350ms' }}>
-              <div className={cn("h-1.5 bg-gradient-to-r", typeConfig.gradient)} />
-              <CardHeader className="py-4">
-                <CardTitle className="flex items-center gap-2">
-                  <Megaphone className={cn("h-5 w-5", typeConfig.color)} />
-                  {t('provider.announcements')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-start gap-2">
-                    <Sparkles className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-sm font-semibold">{t('provider.newService')}</p>
-                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {new Date().toLocaleDateString(language === 'ar' ? 'ar-DZ' : language === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-start gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-sm font-semibold">{t('provider.extendedHours')}</p>
-                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {new Date(Date.now() - 86400000).toLocaleDateString(language === 'ar' ? 'ar-DZ' : language === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Real Annonces from Supabase */}
+            <ProviderAnnoncesPublic
+              providerId={provider.id}
+              gradientClass={typeConfig.gradient}
+              iconColorClass={typeConfig.color}
+            />
           </div>
         </section>
       </div>
