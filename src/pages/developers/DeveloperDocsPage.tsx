@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { useLanguage } from '@/hooks/useLanguage';
 import Footer from '@/components/Footer';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://qedotqjxndtmskcgrajt.supabase.co';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://dhbegdhoyhnrwmoktomi.supabase.co';
 const API_BASE = `${SUPABASE_URL}/functions/v1/public-api`;
 
 function CopyButton({ text }: { text: string }) {
