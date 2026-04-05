@@ -22,7 +22,7 @@ import BackToTop from "./components/BackToTop";
 // Conditional header - hidden on pages with their own navigation
 const ConditionalHeader = () => {
   const location = useLocation();
-  const hiddenPrefixes = ['/admin/dashboard', '/provider/dashboard', '/docs', '/map/', '/admin/login', '/provider/login', '/citizen/login', '/citizen/register', '/provider/register', '/email-verified', '/developers/login', '/developers/register', '/developers/dashboard', '/developers/profile', '/forgot-password', '/reset-password'];
+  const hiddenPrefixes = ['/admin/dashboard', '/provider/dashboard', '/docs', '/map/', '/admin/login', '/provider/login', '/citizen/login', '/citizen/register', '/provider/register', '/email-verified', '/auth/callback', '/developers/login', '/developers/register', '/developers/dashboard', '/developers/profile', '/forgot-password', '/reset-password'];
   const shouldHide = hiddenPrefixes.some(p => location.pathname.startsWith(p));
   if (shouldHide) return null;
   return <AntigravityHeader />;
@@ -82,6 +82,7 @@ const AdsPage = lazy(() => import("./pages/AdsPage"));
 const ResearchHubPage = lazy(() => import("./pages/ResearchHubPage"));
 const ArticleDetailPage = lazy(() => import("./pages/ArticleDetailPage"));
 const EmailVerifiedPage = lazy(() => import("./pages/EmailVerifiedPage"));
+const AuthCallbackPage = lazy(() => import("./pages/AuthCallbackPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const DeveloperLandingPage = lazy(() => import("./pages/developers/DeveloperLandingPage"));
@@ -168,6 +169,7 @@ const AppRoutes = () => {
         <Route path="/citizen/login" element={<PageTransition><CitizenLoginPage /></PageTransition>} />
         <Route path="/citizen/register" element={<PageTransition><CitizenRegisterPage /></PageTransition>} />
         <Route path="/email-verified" element={<PageTransition><EmailVerifiedPage /></PageTransition>} />
+        <Route path="/auth/callback" element={<PageTransition><AuthCallbackPage /></PageTransition>} />
         <Route path="/forgot-password" element={<PageTransition><ForgotPasswordPage /></PageTransition>} />
         <Route path="/reset-password" element={<PageTransition><ResetPasswordPage /></PageTransition>} />
         <Route element={<MainLayout />}>

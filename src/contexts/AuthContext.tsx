@@ -260,24 +260,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signupAsCitizen = async (email: string, password: string, fullName: string, phone?: string) => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: { full_name: fullName },
-          emailRedirectTo: `${window.location.origin}/email-verified`,
+          // Store phone in metadata so the DB trigger can capture it
+          data: { full_name: fullName, phone: phone || null },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
       if (error) throw error;
-
-      // Update profile with phone if provided
-      if (data.user && phone) {
-        await supabase.from('citizen_profiles').update({ phone, full_name: fullName }).eq('user_id', data.user.id);
-      }
+      // Profile row is created automatically by the DB trigger (handle_new_citizen).
+      // Do NOT attempt to update citizen_profiles here — the user has no session yet
+      // and RLS would silently block the write.
     } catch (error: any) {
       logError(error, 'signupAsCitizen');
-      const msg = error?.message || 'Erreur lors de l\'inscription';
-      toast.error(msg);
+      if (error?.code === 'user_already_exists' || error?.message?.toLowerCase().includes('already registered')) {
+        toast.error('Un compte existe déjà avec cet email. Connectez-vous ou réinitialisez votre mot de passe.');
+      } else {
+        toast.error(error?.message || 'Erreur lors de l\'inscription');
+      }
       throw error;
     } finally {
       setIsLoading(false);
@@ -292,8 +294,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       toast.success('Bienvenue sur CityHealth!');
     } catch (error: any) {
       logError(error, 'loginAsCitizen');
-      if (error?.message?.includes('Email not confirmed')) {
-        toast.error('Veuillez confirmer votre email avant de vous connecter.');
+      // Supabase v2 returns 'email_not_confirmed' for unconfirmed emails on some versions,
+      // and 'invalid_credentials' on others (to prevent email enumeration).
+      if (
+        error?.code === 'email_not_confirmed' ||
+        error?.message?.toLowerCase().includes('email not confirmed')
+      ) {
+        toast.error('Veuillez confirmer votre email avant de vous connecter. Vérifiez votre boîte mail.');
+      } else if (error?.code === 'invalid_credentials' || error?.status === 400) {
+        toast.error(
+          'Email ou mot de passe incorrect. Si vous venez de vous inscrire, pensez à confirmer votre email d\'abord.'
+        );
       } else {
         toast.error(error?.message || 'Erreur de connexion');
       }
@@ -307,7 +318,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: `${window.location.origin}/profile` },
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
       });
       if (error) throw error;
       toast.success('Lien magique envoyé ! Vérifiez votre email.');
