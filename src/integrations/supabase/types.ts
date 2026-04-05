@@ -154,6 +154,39 @@ export type Database = {
           },
         ]
       }
+      ad_notifications: {
+        Row: {
+          id: string
+          provider_id: string
+          ad_id: string | null
+          ad_title: string
+          type: 'approved' | 'rejected' | 'suspended'
+          message: string | null
+          read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          provider_id: string
+          ad_id?: string | null
+          ad_title: string
+          type: 'approved' | 'rejected' | 'suspended'
+          message?: string | null
+          read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          provider_id?: string
+          ad_id?: string | null
+          ad_title?: string
+          type?: 'approved' | 'rejected' | 'suspended'
+          message?: string | null
+          read?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
       ads: {
         Row: {
           category: string | null

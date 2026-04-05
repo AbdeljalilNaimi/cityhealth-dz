@@ -363,12 +363,35 @@ export async function incrementViews(adId: string): Promise<void> {
 
 // ====== ADMIN ======
 
+async function createAdNotification(
+  adId: string,
+  type: 'approved' | 'rejected' | 'suspended',
+  message?: string,
+): Promise<void> {
+  // Fetch the ad to get provider_id and title
+  const { data: ad } = await supabase
+    .from('ads')
+    .select('provider_id, title')
+    .eq('id', adId)
+    .single();
+  if (!ad) return;
+
+  await supabase.from('ad_notifications').insert({
+    provider_id: ad.provider_id,
+    ad_id: adId,
+    ad_title: ad.title,
+    type,
+    message: message || null,
+  });
+}
+
 export async function adminApprove(adId: string): Promise<void> {
   const { error } = await supabase
     .from('ads')
     .update({ status: 'approved', rejection_reason: null })
     .eq('id', adId);
   if (error) throw error;
+  await createAdNotification(adId, 'approved', 'Votre publication a été approuvée et est maintenant visible sur la page /annonces.').catch(() => {});
 }
 
 export async function adminReject(adId: string, reason: string): Promise<void> {
@@ -377,6 +400,7 @@ export async function adminReject(adId: string, reason: string): Promise<void> {
     .update({ status: 'rejected', rejection_reason: reason })
     .eq('id', adId);
   if (error) throw error;
+  await createAdNotification(adId, 'rejected', reason || 'Votre publication n\'a pas été acceptée.').catch(() => {});
 }
 
 export async function adminSuspend(adId: string): Promise<void> {
@@ -385,6 +409,7 @@ export async function adminSuspend(adId: string): Promise<void> {
     .update({ status: 'suspended' })
     .eq('id', adId);
   if (error) throw error;
+  await createAdNotification(adId, 'suspended', 'Votre publication a été suspendue.').catch(() => {});
 }
 
 export async function adminToggleFeatured(adId: string, featured: boolean): Promise<void> {
@@ -413,7 +438,46 @@ export async function resolveReport(reportId: string): Promise<void> {
   if (error) throw error;
 }
 
-// ====== IMAGE UPLOAD ======
+// ====== PROVIDER NOTIFICATIONS ======
+
+export interface AdNotification {
+  id: string;
+  provider_id: string;
+  ad_id: string | null;
+  ad_title: string;
+  type: 'approved' | 'rejected' | 'suspended';
+  message: string | null;
+  read: boolean;
+  created_at: string;
+}
+
+export async function getProviderAdNotifications(providerId: string): Promise<AdNotification[]> {
+  const { data, error } = await supabase
+    .from('ad_notifications')
+    .select('*')
+    .eq('provider_id', providerId)
+    .order('created_at', { ascending: false })
+    .limit(20);
+  if (error) throw error;
+  return (data || []) as AdNotification[];
+}
+
+export async function markAdNotificationRead(notificationId: string): Promise<void> {
+  await supabase
+    .from('ad_notifications')
+    .update({ read: true })
+    .eq('id', notificationId);
+}
+
+export async function markAllAdNotificationsRead(providerId: string): Promise<void> {
+  await supabase
+    .from('ad_notifications')
+    .update({ read: true })
+    .eq('provider_id', providerId)
+    .eq('read', false);
+}
+
+// ====== IMAGE & PDF UPLOAD ======
 
 export async function uploadAdImage(file: File, providerId: string): Promise<string> {
   const ext = file.name.split('.').pop();
@@ -422,6 +486,22 @@ export async function uploadAdImage(file: File, providerId: string): Promise<str
   const { error } = await supabase.storage
     .from('provider-images')
     .upload(path, file, { upsert: true });
+
+  if (error) throw error;
+
+  const { data } = supabase.storage
+    .from('provider-images')
+    .getPublicUrl(path);
+
+  return data.publicUrl;
+}
+
+export async function uploadAdPdf(file: File, providerId: string): Promise<string> {
+  const path = `${providerId}/publications/${Date.now()}.pdf`;
+
+  const { error } = await supabase.storage
+    .from('provider-images')
+    .upload(path, file, { upsert: true, contentType: 'application/pdf' });
 
   if (error) throw error;
 

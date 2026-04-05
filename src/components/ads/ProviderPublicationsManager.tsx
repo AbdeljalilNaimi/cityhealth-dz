@@ -18,17 +18,21 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   BookOpen, Plus, Trash2, Loader2, Clock, CheckCircle, XCircle,
   Image as ImageIcon, FileText, Link as LinkIcon, Tag, Eye, Heart,
-  Info, Hash,
+  Info, Hash, Bell, Upload,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
   Ad,
+  AdNotification,
   createPublication,
   getProviderPublications,
   deleteAd,
   uploadAdImage,
+  uploadAdPdf,
+  getProviderAdNotifications,
+  markAllAdNotificationsRead,
 } from '@/services/adsService';
 import { cn } from '@/lib/utils';
 
@@ -135,6 +139,11 @@ export function ProviderPublicationsManager() {
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [pdfFileName, setPdfFileName] = useState<string>('');
+  const [notifications, setNotifications] = useState<AdNotification[]>([]);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const loadPublications = async () => {
     if (!provider?.id) return;
@@ -149,18 +158,40 @@ export function ProviderPublicationsManager() {
     }
   };
 
+  const loadNotifications = async () => {
+    if (!provider?.id) return;
+    setNotifLoading(true);
+    try {
+      const data = await getProviderAdNotifications(provider.id);
+      setNotifications(data);
+    } catch {
+      // non-critical
+    } finally {
+      setNotifLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadPublications();
+    loadNotifications();
   }, [provider?.id]);
 
   const openForm = () => {
     setForm(makeEmptyForm(provider?.specialty));
+    setPdfFileName('');
     setShowForm(true);
   };
 
   const closeForm = () => {
     setShowForm(false);
     setForm(makeEmptyForm(provider?.specialty));
+    setPdfFileName('');
+  };
+
+  const handleMarkAllRead = async () => {
+    if (!provider?.id) return;
+    await markAllAdNotificationsRead(provider.id).catch(() => {});
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -175,6 +206,27 @@ export function ProviderPublicationsManager() {
       toast.error("Erreur lors du téléchargement de l'image");
     } finally {
       setUploadingImage(false);
+    }
+  };
+
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !provider?.id) return;
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error('Le PDF doit être inférieur à 20 Mo');
+      return;
+    }
+    setUploadingPdf(true);
+    setPdfFileName(file.name);
+    try {
+      const url = await uploadAdPdf(file, provider.id);
+      setForm(prev => ({ ...prev, pdf_url: url }));
+      toast.success('PDF téléchargé');
+    } catch {
+      toast.error('Erreur lors du téléchargement du PDF');
+      setPdfFileName('');
+    } finally {
+      setUploadingPdf(false);
     }
   };
 
@@ -243,6 +295,13 @@ export function ProviderPublicationsManager() {
 
   const pendingCount = publications.filter(p => p.status === 'pending').length;
   const approvedCount = publications.filter(p => p.status === 'approved').length;
+  const unreadNotifCount = notifications.filter(n => !n.read).length;
+
+  const notifIconByType: Record<AdNotification['type'], typeof CheckCircle> = {
+    approved: CheckCircle,
+    rejected: XCircle,
+    suspended: XCircle,
+  };
 
   return (
     <>
@@ -258,11 +317,94 @@ export function ProviderPublicationsManager() {
                 Partagez vos publications médicales avec la communauté CityHealth — chaque soumission est validée par notre équipe.
               </CardDescription>
             </div>
-            <Button onClick={openForm} data-testid="button-new-publication">
-              <Plus className="h-4 w-4 mr-1.5" />
-              Nouvelle publication
-            </Button>
+            <div className="flex items-center gap-2">
+              {/* Notifications bell */}
+              <div className="relative">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9"
+                  onClick={() => {
+                    setShowNotifications(v => !v);
+                    if (!showNotifications && unreadNotifCount > 0) handleMarkAllRead();
+                  }}
+                  data-testid="button-publication-notifications"
+                  aria-label="Notifications"
+                >
+                  {notifLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Bell className="h-4 w-4" />
+                  )}
+                </Button>
+                {unreadNotifCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 w-4 bg-destructive rounded-full text-[10px] text-white flex items-center justify-center font-bold" data-testid="badge-unread-notifications">
+                    {unreadNotifCount > 9 ? '9+' : unreadNotifCount}
+                  </span>
+                )}
+              </div>
+              <Button onClick={openForm} data-testid="button-new-publication">
+                <Plus className="h-4 w-4 mr-1.5" />
+                Nouvelle publication
+              </Button>
+            </div>
           </div>
+
+          {/* Notifications panel */}
+          {showNotifications && (
+            <div className="mt-3 rounded-xl border bg-card shadow-sm overflow-hidden" data-testid="panel-notifications">
+              <div className="flex items-center justify-between px-4 py-2.5 border-b bg-muted/30">
+                <span className="text-sm font-medium flex items-center gap-1.5">
+                  <Bell className="h-3.5 w-3.5" />
+                  Notifications de modération
+                </span>
+                {notifications.some(n => !n.read) && (
+                  <button
+                    className="text-xs text-primary hover:underline"
+                    onClick={handleMarkAllRead}
+                    data-testid="button-mark-all-read"
+                  >
+                    Tout marquer comme lu
+                  </button>
+                )}
+              </div>
+              {notifications.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-5">Aucune notification</p>
+              ) : (
+                <div className="divide-y max-h-64 overflow-y-auto">
+                  {notifications.map(notif => {
+                    const Icon = notifIconByType[notif.type];
+                    const colorMap = {
+                      approved: 'text-emerald-600 dark:text-emerald-400',
+                      rejected: 'text-destructive',
+                      suspended: 'text-amber-600 dark:text-amber-400',
+                    };
+                    return (
+                      <div
+                        key={notif.id}
+                        className={cn('flex gap-3 px-4 py-3 text-sm', !notif.read && 'bg-primary/5')}
+                        data-testid={`notification-item-${notif.id}`}
+                      >
+                        <Icon className={cn('h-4 w-4 mt-0.5 shrink-0', colorMap[notif.type])} />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-[13px] line-clamp-1">{notif.ad_title}</p>
+                          {notif.message && (
+                            <p className="text-muted-foreground text-xs mt-0.5 line-clamp-2">{notif.message}</p>
+                          )}
+                          <p className="text-[11px] text-muted-foreground/60 mt-1">
+                            {format(new Date(notif.created_at), 'dd MMM yyyy HH:mm', { locale: fr })}
+                          </p>
+                        </div>
+                        {!notif.read && (
+                          <span className="h-2 w-2 rounded-full bg-primary mt-1.5 shrink-0" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
           {publications.length > 0 && (
             <div className="flex gap-3 pt-1 flex-wrap">
@@ -565,17 +707,52 @@ export function ProviderPublicationsManager() {
               )}
             </div>
 
-            {/* PDF URL */}
+            {/* PDF upload */}
             <div className="space-y-1.5">
-              <Label htmlFor="pub-pdf">Lien PDF / Article complet (optionnel)</Label>
-              <Input
-                id="pub-pdf"
-                placeholder="https://..."
-                type="url"
-                value={form.pdf_url}
-                onChange={e => setForm(prev => ({ ...prev, pdf_url: e.target.value }))}
-                data-testid="input-publication-pdf"
-              />
+              <Label>PDF / Article complet (optionnel)</Label>
+              {form.pdf_url ? (
+                <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                  <FileText className="h-5 w-5 text-primary shrink-0" />
+                  <span className="text-sm flex-1 truncate">{pdfFileName || 'PDF uploadé'}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground hover:text-destructive"
+                    onClick={() => { setForm(prev => ({ ...prev, pdf_url: '' })); setPdfFileName(''); }}
+                    data-testid="button-remove-pdf"
+                  >
+                    Retirer
+                  </Button>
+                </div>
+              ) : (
+                <label
+                  className={cn(
+                    'flex flex-col items-center justify-center gap-2 p-5 rounded-xl border-2 border-dashed cursor-pointer transition-colors',
+                    'border-border hover:border-primary/40 hover:bg-primary/5',
+                    uploadingPdf && 'pointer-events-none opacity-50',
+                  )}
+                  data-testid="label-publication-pdf"
+                >
+                  {uploadingPdf ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  ) : (
+                    <>
+                      <Upload className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Cliquez pour ajouter un PDF</span>
+                      <span className="text-xs text-muted-foreground/60">PDF uniquement — max 20 Mo</span>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    className="sr-only"
+                    onChange={handlePdfUpload}
+                    disabled={uploadingPdf}
+                    data-testid="input-publication-pdf"
+                  />
+                </label>
+              )}
             </div>
 
             {/* Expires at */}
@@ -606,7 +783,7 @@ export function ProviderPublicationsManager() {
               </Button>
               <Button
                 type="submit"
-                disabled={submitting || uploadingImage || !form.category}
+                disabled={submitting || uploadingImage || uploadingPdf || !form.category}
                 data-testid="button-submit-publication"
               >
                 {submitting ? (
