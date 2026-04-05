@@ -13,7 +13,7 @@ import {
   CalendarIcon, Clock, Mail, Phone as PhoneIcon, User, CheckCircle, 
   Loader2, AlertCircle, CalendarDays, ChevronLeft, ChevronRight, AlertTriangle
 } from 'lucide-react';
-import { useLocation } from 'wouter';
+import { useNavigate } from 'react-router-dom';
 import { useCreateAppointment, useRealtimeAvailability, type AvailabilitySlot } from '@/hooks/useAppointments';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useAuth } from '@/contexts/AuthContext';
@@ -238,7 +238,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ open, onOpenChange, 
   const [step, setStep] = useState<'details' | 'datetime' | 'confirm'>('details');
   const [showFullCalendar, setShowFullCalendar] = useState(false);
   
-  const [, navigate] = useLocation();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { t, language } = useLanguage();
   const { sendNotification } = useNotifications();

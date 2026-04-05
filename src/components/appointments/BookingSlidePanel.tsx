@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { useLocation } from 'wouter';
+import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
@@ -39,7 +39,7 @@ export function BookingSlidePanel({
   selectedTime,
   onSuccess,
 }: BookingSlidePanelProps) {
-  const [, navigate] = useLocation();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { user, profile } = useAuth();
   const createMutation = useCreateAppointment();
