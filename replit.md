@@ -33,10 +33,16 @@ CityHealth is a digital health platform for Sidi Bel Abbès, Algeria. It helps c
 - `firebase-functions/` — Firebase Cloud Function source
 
 ## Environment Variables
-The app uses these env vars (set as Replit secrets):
-- `VITE_SUPABASE_URL` — Supabase project URL
+The app uses these env vars (set as Replit env vars/secrets):
+- `VITE_SUPABASE_URL` — Supabase project URL (`https://dhbegdhoyhnrwmoktomi.supabase.co`)
 - `VITE_SUPABASE_PUBLISHABLE_KEY` — Supabase anon key
+- `SUPABASE_SERVICE_ROLE_KEY` — Supabase service role key (used by edge functions)
 - Firebase config is hardcoded in `src/lib/firebase.ts` (Firebase keys are safe for client-side use per Firebase docs)
+
+### Active Supabase Project
+- **Project ref**: `dhbegdhoyhnrwmoktomi` (migrated April 2026 from `qedotqjxndtmskcgrajt`)
+- **Region**: eu-west-1
+- All 25 migrations applied to this project, including `type`, `category`, `doi`, `pdf_url` columns on `ads` table
 
 ## Content System Architecture (April 2026)
 
@@ -48,9 +54,13 @@ The `ads` table uses a `type` column to distinguish two separate content systems
 
 ### Key files
 - `src/components/ads/ProviderAdsManager.tsx` — Annonces dashboard form & list
+- `src/components/ads/ProviderPublicationsManager.tsx` — Publications dashboard form & list
 - `src/components/ads/ProviderAnnoncesPublic.tsx` — Public view on provider profile
-- `src/services/adsService.ts` — `type`-filtered CRUD for annonces
+- `src/components/ads/AdDetailDialog.tsx` — Ad detail modal (handles both types)
+- `src/components/admin/AdsModeration.tsx` — Admin moderation (publications only)
+- `src/services/adsService.ts` — `type`-filtered CRUD for both annonces and publications
 - `supabase/migrations/20260405142105_add_type_to_ads.sql` — Adds `type` column
+- `supabase/migrations/20260405200000_add_publication_fields_to_ads.sql` — Adds category/doi/pdf_url
 
 ## Replit Migration Notes
 - Migrated from Lovable to Replit April 2026
