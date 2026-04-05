@@ -1,13 +1,11 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 import { Search, MapPin, Users, CalendarCheck, Star, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { supabase } from '@/integrations/supabase/client';
-import { collection, getDocs, query, limit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useRealtimeStats } from '@/hooks/useRealtimeStats';
 
 // Word animation variants
 const containerVariants = {
@@ -58,68 +56,12 @@ export const AntigravityHero = () => {
     t('homepage', 'emergency247'),
   ];
 
-  // Stats — initialized with curated fallbacks, then replaced by live data
-  const FALLBACK_PROVIDERS = 287;
-  const FALLBACK_CONSULTATIONS = 15420;
-  const FALLBACK_RATING = 4.7;
+  // Real-time stats: providers & consultations from Firebase, rating from Supabase
+  const { data: realtimeStats } = useRealtimeStats();
 
-  const [providerCount, setProviderCount] = useState(FALLBACK_PROVIDERS);
-  const [consultationCount, setConsultationCount] = useState(FALLBACK_CONSULTATIONS);
-  const [avgRating, setAvgRating] = useState(FALLBACK_RATING);
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      // Use Promise.allSettled so one failure doesn't block the others
-      const [fbProvidersRes, fbAppointmentsRes, fbReviewsRes, sbReviewsRes] = await Promise.allSettled([
-        // getDocs works for anonymous users; aggregation queries (getCountFromServer) require
-        // special Firebase rules — so we use getDocs with a cap instead
-        getDocs(query(collection(db, 'providers'), limit(1000))),
-        getDocs(query(collection(db, 'appointments'), limit(10000))),
-        getDocs(collection(db, 'reviews')),
-        supabase.from('provider_reviews').select('rating'),
-      ]);
-
-      // 1. Provider count — Firebase first, Supabase fallback
-      if (fbProvidersRes.status === 'fulfilled' && fbProvidersRes.value.size > 0) {
-        setProviderCount(fbProvidersRes.value.size);
-      } else if (fbProvidersRes.status === 'rejected') {
-        // Try Supabase providers_public as fallback
-        try {
-          const { count } = await supabase
-            .from('providers_public')
-            .select('id', { count: 'exact', head: true });
-          if (count && count > 0) setProviderCount(count);
-        } catch { /* keep initial fallback */ }
-      }
-
-      // 2. Consultations — Firebase appointments count
-      if (fbAppointmentsRes.status === 'fulfilled' && fbAppointmentsRes.value.size > 0) {
-        setConsultationCount(fbAppointmentsRes.value.size);
-      }
-
-      // 3. Average rating — Firebase reviews first, Supabase provider_reviews second
-      let ratingSet = false;
-      if (fbReviewsRes.status === 'fulfilled' && !fbReviewsRes.value.empty) {
-        const ratings = fbReviewsRes.value.docs
-          .map(d => d.data().rating)
-          .filter((r): r is number => typeof r === 'number' && r >= 1 && r <= 5);
-        if (ratings.length > 0) {
-          const avg = ratings.reduce((s, r) => s + r, 0) / ratings.length;
-          setAvgRating(Math.round(avg * 10) / 10);
-          ratingSet = true;
-        }
-      }
-      if (!ratingSet && sbReviewsRes.status === 'fulfilled') {
-        const rows = sbReviewsRes.value.data ?? [];
-        if (rows.length > 0) {
-          const avg = rows.reduce((s, r) => s + r.rating, 0) / rows.length;
-          setAvgRating(Math.round(avg * 10) / 10);
-        }
-      }
-    };
-
-    fetchStats();
-  }, []);
+  const providerCount = realtimeStats?.providerCount ?? 287;
+  const consultationCount = realtimeStats?.consultationCount ?? 15420;
+  const avgRating = realtimeStats?.averageRating ?? 4.7;
 
   const stats = [
     { value: `${providerCount}+`, label: t('homepage', 'practitioners'), icon: Users },

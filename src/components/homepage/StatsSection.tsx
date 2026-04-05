@@ -5,7 +5,7 @@ import CounterAnimation from '@/components/CounterAnimation';
 import { SectionHeader } from './SectionHeader';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { usePlatformRatingStats } from '@/hooks/usePlatformRatings';
+import { useRealtimeStats } from '@/hooks/useRealtimeStats';
 
 // Import stat images
 import doctorsTeamImg from '@/assets/stats/doctors-team.jpg';
@@ -24,16 +24,17 @@ interface Stat {
 export const StatsSection = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { t } = useLanguage();
-  const { data: ratingStats } = usePlatformRatingStats();
+  const { data: liveStats } = useRealtimeStats();
 
-  const liveRating = ratingStats && ratingStats.totalRatings > 0
-    ? ratingStats.averageRating
-    : 4.7;
-  
+  const providerCount = liveStats?.providerCount ?? 287;
+  const consultationCount = liveStats?.consultationCount ?? 15420;
+  const avgRating = liveStats?.averageRating ?? 4.7;
+  const totalRatings = liveStats?.totalRatings ?? 0;
+
   const stats: Stat[] = [
     {
       image: doctorsTeamImg,
-      value: 287,
+      value: providerCount,
       suffix: '',
       label: t('homepage', 'activeDoctors'),
       description: t('homepage', 'activeDoctorsDesc'),
@@ -47,18 +48,18 @@ export const StatsSection = () => {
     },
     {
       image: happyPatientsImg,
-      value: 15420,
+      value: consultationCount,
       suffix: '',
       label: t('homepage', 'appointments'),
       description: t('homepage', 'appointmentsDesc'),
     },
     {
       image: ratingStarsImg,
-      value: liveRating,
+      value: avgRating,
       suffix: '/5',
       label: t('homepage', 'averageRatingLabel'),
-      description: ratingStats && ratingStats.totalRatings > 0
-        ? `Basé sur ${ratingStats.totalRatings} évaluation${ratingStats.totalRatings > 1 ? 's' : ''}`
+      description: totalRatings > 0
+        ? `Basé sur ${totalRatings} évaluation${totalRatings > 1 ? 's' : ''}`
         : t('homepage', 'averageRatingDesc'),
     },
   ];
