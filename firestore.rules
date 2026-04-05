@@ -230,6 +230,16 @@ service cloud.firestore {
     }
     
     // ============================================
+    // PLATFORM STATS - Publicly readable aggregate counters
+    // ============================================
+    match /platform/{docId} {
+      // Anyone (including anonymous visitors) can read the stats document
+      allow read: if docId == 'stats';
+      // Only authenticated users (providers/admins) can update the counters
+      allow write: if isAuthenticated();
+    }
+
+    // ============================================
     // PROVIDER DRAFTS - For registration flow
     // ============================================
     match /providerDrafts/{draftId} {

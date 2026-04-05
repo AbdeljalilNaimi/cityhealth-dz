@@ -4,13 +4,15 @@ import {
   getDocs, 
   getDoc,
   addDoc, 
-  updateDoc, 
+  updateDoc,
+  setDoc,
   query, 
   where, 
   orderBy,
   Timestamp,
   onSnapshot,
-  arrayUnion
+  arrayUnion,
+  increment
 } from 'firebase/firestore';
 import { z } from 'zod';
 import { db } from '@/lib/firebase';
@@ -176,7 +178,15 @@ export const confirmAppointment = async (id: string): Promise<void> => {
 
 // Complete an appointment (provider action)
 export const completeAppointment = async (id: string): Promise<void> => {
-  return updateAppointmentStatus(id, 'completed');
+  await updateAppointmentStatus(id, 'completed');
+  // Increment the publicly-readable /platform/stats counter
+  // setDoc with merge:true creates the document if it doesn't exist
+  try {
+    const statsRef = doc(db, 'platform', 'stats');
+    await setDoc(statsRef, { completedConsultations: increment(1) }, { merge: true });
+  } catch (e) {
+    console.warn('Could not update platform stats counter:', e);
+  }
 };
 
 // Reschedule an appointment (provider action)
