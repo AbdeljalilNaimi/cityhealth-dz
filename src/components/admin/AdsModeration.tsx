@@ -353,14 +353,14 @@ export function AdsModeration() {
                     <Tag className="h-3 w-3" />{selectedAd.category}
                   </span>
                 )}
-                {(selectedAd as any).keywords && (
+                {selectedAd.keywords && (
                   <span className="flex items-center gap-1 text-xs bg-muted text-muted-foreground rounded-full px-2.5 py-1">
-                    <Hash className="h-3 w-3" />{String((selectedAd as any).keywords).split(',').slice(0, 3).map((k: string) => k.trim()).join(', ')}
+                    <Hash className="h-3 w-3" />{selectedAd.keywords.split(',').slice(0, 3).map((k) => k.trim()).join(', ')}
                   </span>
                 )}
-                {(selectedAd as any).doi && (
+                {selectedAd.doi && (
                   <span className="flex items-center gap-1 text-xs bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 rounded-full px-2.5 py-1">
-                    <LinkIcon className="h-3 w-3" />DOI: {(selectedAd as any).doi}
+                    <LinkIcon className="h-3 w-3" />DOI: {selectedAd.doi}
                   </span>
                 )}
                 {selectedAd.pdf_url && (
@@ -604,13 +604,13 @@ function PublicationsTable({
                   <div className="min-w-0">
                     <p className="font-medium text-sm truncate max-w-[180px]">{ad.title}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      {(ad as any).category && (
+                      {ad.category && (
                         <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                          <Tag className="h-2.5 w-2.5" />{(ad as any).category}
+                          <Tag className="h-2.5 w-2.5" />{ad.category}
                         </span>
                       )}
                       {ad.pdf_url && <FileText className="h-2.5 w-2.5 text-muted-foreground/50" />}
-                      {(ad as any).doi && <LinkIcon className="h-2.5 w-2.5 text-muted-foreground/50" />}
+                      {ad.doi && <LinkIcon className="h-2.5 w-2.5 text-muted-foreground/50" />}
                     </div>
                   </div>
                 </div>

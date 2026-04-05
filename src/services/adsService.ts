@@ -383,49 +383,51 @@ async function createAdNotification(
   });
 }
 
+// ─── Admin moderation — all routed through SECURITY DEFINER RPCs ───
+// The moderator secret is verified server-side; direct anon status
+// mutations are blocked by a DB trigger.
+
+const MODERATOR_SECRET = import.meta.env.VITE_MODERATOR_SECRET as string;
+
 export async function adminApprove(adId: string): Promise<void> {
-  const { error } = await supabase
-    .from('ads')
-    .update({ status: 'approved', rejection_reason: null })
-    .eq('id', adId);
+  const { error } = await supabase.rpc('admin_approve_publication', {
+    p_ad_id: adId,
+    p_secret: MODERATOR_SECRET,
+  });
   if (error) throw error;
-  await createAdNotification(adId, 'approved',
-    'Votre publication a été approuvée et est maintenant visible sur la page /annonces.',
-  ).catch(() => {});
 }
 
 export async function adminReject(adId: string, reason: string): Promise<void> {
-  const { error } = await supabase
-    .from('ads')
-    .update({ status: 'rejected', rejection_reason: reason })
-    .eq('id', adId);
+  const { error } = await supabase.rpc('admin_reject_publication', {
+    p_ad_id: adId,
+    p_reason: reason || 'Non conforme aux règles de la plateforme',
+    p_secret: MODERATOR_SECRET,
+  });
   if (error) throw error;
-  await createAdNotification(adId, 'rejected',
-    reason || "Votre publication n'a pas été acceptée.",
-  ).catch(() => {});
 }
 
 export async function adminSuspend(adId: string): Promise<void> {
-  const { error } = await supabase
-    .from('ads')
-    .update({ status: 'suspended' })
-    .eq('id', adId);
+  const { error } = await supabase.rpc('admin_suspend_publication', {
+    p_ad_id: adId,
+    p_secret: MODERATOR_SECRET,
+  });
   if (error) throw error;
-  await createAdNotification(adId, 'suspended',
-    'Votre publication a été suspendue.',
-  ).catch(() => {});
 }
 
 export async function deleteAd(adId: string): Promise<void> {
-  const { error } = await supabase.from('ads').delete().eq('id', adId);
+  const { error } = await supabase.rpc('admin_delete_publication', {
+    p_ad_id: adId,
+    p_secret: MODERATOR_SECRET,
+  });
   if (error) throw error;
 }
 
 export async function adminToggleFeatured(adId: string, featured: boolean): Promise<void> {
-  const { error } = await supabase
-    .from('ads')
-    .update({ is_featured: featured })
-    .eq('id', adId);
+  const { error } = await supabase.rpc('admin_toggle_featured_pub', {
+    p_ad_id: adId,
+    p_featured: featured,
+    p_secret: MODERATOR_SECRET,
+  });
   if (error) throw error;
 }
 
