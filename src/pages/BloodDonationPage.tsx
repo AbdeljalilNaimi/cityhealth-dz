@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
+import { BackButton } from '@/components/ui/BackButton';
 import { 
   Droplet, 
   Hospital, 
@@ -310,7 +311,10 @@ export default function BloodDonationPage() {
   
   return (
     <div className={cn("min-h-screen bg-background", isRTL && "rtl")}>
-      
+      <div className="absolute top-4 left-4 z-50">
+        <BackButton fallback="/" />
+      </div>
+
       {/* ===== PREMIUM HERO SECTION ===== */}
       <section className="relative overflow-hidden bg-gradient-to-br from-destructive/90 via-destructive/80 to-rose-600/90 pt-24 pb-16">
         {/* Decorative blobs */}

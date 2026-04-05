@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { BackButton } from '@/components/ui/BackButton';
 
 const EmailVerifiedPage = () => {
   const navigate = useNavigate();
@@ -18,6 +19,9 @@ const EmailVerifiedPage = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
+      <div className="absolute top-4 left-4">
+        <BackButton fallback="/citizen/login" />
+      </div>
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center space-y-6 max-w-md">
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200 }} className="mx-auto h-20 w-20 rounded-full bg-emerald-100 flex items-center justify-center">
           <CheckCircle2 className="h-10 w-10 text-emerald-600" />

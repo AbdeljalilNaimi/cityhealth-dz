@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { BackButton } from '@/components/ui/BackButton';
 
 const rules = [
   { label: '8 caractères minimum', test: (p: string) => p.length >= 8 },
@@ -109,6 +110,9 @@ const ResetPasswordPage = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+      <div className="absolute top-4 left-4">
+        <BackButton fallback="/forgot-password" />
+      </div>
       <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="w-full max-w-md">
         <div className="bg-card rounded-2xl border shadow-sm p-8 space-y-6">
           <div className="text-center">

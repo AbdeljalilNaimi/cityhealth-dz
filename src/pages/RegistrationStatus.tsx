@@ -1,4 +1,5 @@
 import { Clock, CheckCircle, AlertCircle, FileText, ArrowRight, Home, Mail, Phone, Loader2 } from 'lucide-react';
+import { BackButton } from '@/components/ui/BackButton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -124,6 +125,10 @@ export default function RegistrationStatus() {
   return (
     <div className={`min-h-screen bg-gradient-to-b from-background via-background to-secondary/10 py-12 px-4 ${isRTL ? 'rtl' : 'ltr'}`}>
       <div className="max-w-2xl mx-auto">
+        <div className="mb-6">
+          <BackButton fallback="/" />
+        </div>
+
         {/* Status Card */}
         <Card className="shadow-xl border-0 bg-card/80 backdrop-blur overflow-hidden">
           <div className={`h-2 ${getStatusBarColor()}`} />

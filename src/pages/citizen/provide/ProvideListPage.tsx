@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
+import { BackButton } from '@/components/ui/BackButton';
 import { Button } from '@/components/ui/button';
 import { OfferList } from '@/components/provide/OfferList';
 import { usePublicOffers } from '@/hooks/useProvide';
@@ -47,6 +48,9 @@ const ProvideListPage = () => {
 
   return (
     <div className="container-wide section-spacing-sm">
+      <div className="mb-4">
+        <BackButton fallback="/" />
+      </div>
       <div className="flex items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold">{t('offers', 'communityAid')}</h1>

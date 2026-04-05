@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Search, Filter, TrendingUp, Clock, Star, Loader2, Megaphone, SlidersHorizontal } from 'lucide-react';
+import { BackButton } from '@/components/ui/BackButton';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -91,6 +92,9 @@ export default function AdsPage() {
         {/* Hero header */}
         <div className="bg-gradient-to-br from-primary/5 via-background to-background border-b">
           <div className="container mx-auto px-4 py-10">
+            <div className="mb-4">
+              <BackButton fallback="/" />
+            </div>
             <div className="flex items-center gap-3 mb-2">
               <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
                 <Megaphone className="h-5 w-5 text-primary" />

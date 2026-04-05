@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { BackButton } from '@/components/ui/BackButton';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -267,6 +268,10 @@ export default function CitizenProfilePage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 pt-20 pb-8 max-w-5xl">
+        <div className="mb-4">
+          <BackButton fallback="/citizen/dashboard" />
+        </div>
+
         {/* Welcome Banner */}
         {user?.uid && (
           <ProfileWelcomeBanner userId={user.uid} score={scoreData.totalScore} />

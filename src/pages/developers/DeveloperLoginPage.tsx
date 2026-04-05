@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Footer from '@/components/Footer';
+import { BackButton } from '@/components/ui/BackButton';
 
 export default function DeveloperLoginPage() {
   const navigate = useNavigate();
@@ -108,6 +109,7 @@ export default function DeveloperLoginPage() {
       {/* Right form panel */}
       <div className="flex-1 flex items-center justify-center p-6 bg-background">
         <div className="w-full max-w-sm space-y-8">
+          <BackButton fallback="/developers" />
           <div className="lg:hidden flex items-center gap-2 mb-2">
             <Code2 className="h-5 w-5 text-primary" />
             <span className="font-bold text-foreground">CityHealth API</span>

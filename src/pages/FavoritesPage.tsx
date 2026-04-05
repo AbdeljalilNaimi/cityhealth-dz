@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Heart, MapPin, Phone, Star, Clock, Calendar, Trash2, Search, Filter } from 'lucide-react';
+import { BackButton } from '@/components/ui/BackButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -77,6 +78,9 @@ const FavoritesPage = () => {
       {/* Header */}
       <section ref={headerRef} className="pt-24 pb-20 px-6">
         <div className="max-w-6xl mx-auto">
+          <div className="mb-4">
+            <BackButton fallback="/profile" />
+          </div>
           <div className="flex items-center gap-3 mb-6 animate-float">
             <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center animate-glow-pulse">
               <Heart className="text-primary" size={24} />

@@ -1,0 +1,97 @@
+Add **return (back) buttons** to all relevant pages that currently lack them.
+
+* **Scope**
+
+  * Review all routes and identify pages where a return/back button is necessary
+  * Exclude pages where navigation is already واضح أو غير مطلوب
+
+* **Routes to Analyze**
+
+  ```
+  /auth
+  /protected
+  /
+  /provider/register
+  /provider/login
+  /provider/dashboard
+  /citizen/login
+  /provider/:id
+  /search
+  /map/providers
+  /blood-donation
+  /providers/:id
+  /citizen/register
+  /email-verified
+  /forgot-password
+  /reset-password
+  /citizen/dashboard
+  /profile
+  /favorites
+  /citizen/appointments
+  /citizen/appointments/history
+  /citizen/appointments/new
+  /citizen/provide
+  /citizen/provide/mine
+  /citizen/provide/new
+  /citizen/provide/edit/:offerId
+  /dashboard
+  /provider/register/*
+  /provider/profile
+  /provider/welcome
+  /provider
+  /registration-status
+  /registration-thank-you
+  /admin/login
+  /admin/dashboard
+  /admin/migrate
+  /admin/profile
+  /admin
+  /providers
+  /contact
+  /emergency
+  /ai-health-chat
+  /medical-assistant
+  /community
+  /emergency-card/:token
+  /map
+  /map/emergency
+  /map/blood
+  /docs
+  /docs/:sectionId/:pageId
+  /privacy
+  /terms
+  /faq
+  /tarifs
+  /annonces
+  /research
+  /research/:articleId
+  /why
+  /how
+  /carte
+  /providers-map
+  /urgences
+  /developers
+  /developers/login
+  /developers/register
+  /developers/dashboard
+  /developers/profile
+  /developers/docs
+  /dev-tools
+  ```
+
+* **Implementation Rules**
+
+  * Add a consistent **return button component** across the app
+  * Button behavior:
+
+    * Navigate to previous page if history exists
+    * Otherwise fallback to a logical default route (home or parent section)
+  * Ensure compatibility with protected routes and auth flows
+  * Maintain consistent UI/UX placement and styling
+
+* **Validation**
+
+  * Confirm all applicable pages include the return button
+  * Verify correct navigation behavior in all scenarios (direct access, refresh, deep links)
+
+Goal: ensure consistent and reliable backward navigation across the entire application.

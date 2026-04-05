@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { BackButton } from '@/components/ui/BackButton';
 import { SearchInterface } from '@/components/search/SearchInterface';
 import { AdvancedFilters } from '@/components/search/AdvancedFilters';
 import { SearchResults } from '@/components/search/SearchResults';
@@ -270,6 +271,9 @@ const SearchPage = () => {
 
   return (
     <div className="min-h-screen bg-background pt-16">
+      <div className="px-4 pt-3 pb-1">
+        <BackButton fallback="/" />
+      </div>
       {/* Development mode data source indicator */}
       {import.meta.env.DEV && usingFallback && (
         <div className="card-status-warning border-b px-4 py-2 flex items-center justify-center gap-2 text-sm">

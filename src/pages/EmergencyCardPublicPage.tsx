@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { BackButton } from '@/components/ui/BackButton';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { getEmergencyCardByToken, logCardConsultation, EmergencyHealthCard } from '@/services/emergencyCardService';
@@ -162,6 +163,10 @@ export default function EmergencyCardPublicPage() {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="max-w-lg mx-auto px-6 pt-4">
+        <BackButton fallback="/" />
       </div>
 
       <div className="max-w-lg mx-auto p-6 space-y-6">

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarDays, Search, Clock, History, Archive, AlertTriangle, Filter, ArrowUpDown } from 'lucide-react';
+import { BackButton } from '@/components/ui/BackButton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -77,6 +78,9 @@ export default function CitizenAppointmentsPage() {
 
   return (
     <div className="container-wide section-spacing-sm">
+      <div className="mb-4">
+        <BackButton fallback="/citizen/dashboard" />
+      </div>
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">

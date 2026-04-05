@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { BackButton } from '@/components/ui/BackButton';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { toast } from 'sonner';
@@ -557,6 +558,8 @@ export default function DevToolsPage() {
 
   return (
     <div className="min-h-screen bg-background p-6 md:p-12 max-w-2xl mx-auto space-y-6">
+      <BackButton fallback="/admin/dashboard" />
+
       {/* Existing Dev Tools Card */}
       <Card className="border-destructive/30">
         <CardHeader>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Mail, Phone, MapPin, Clock, Send, MessageSquare, Code2, Shield, CheckCircle2, Linkedin, Github } from 'lucide-react';
+import { BackButton } from '@/components/ui/BackButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -125,6 +126,9 @@ const ContactPage = () => {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <ToastContainer toasts={toasts} />
+      <div className="absolute top-4 left-4 z-50">
+        <BackButton fallback="/" />
+      </div>
 
       {/* Decorative blobs */}
       <div className="absolute top-20 -left-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none" />

@@ -9,6 +9,7 @@ import {
   FileText, Home, Building2, ArrowRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { BackButton } from '@/components/ui/BackButton';
 
 const VERIFICATION_STEPS = [
   {
@@ -54,6 +55,10 @@ export default function RegistrationThankYou() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-primary/5 py-12 px-4">
       <div className="max-w-2xl mx-auto">
+        <div className="mb-6">
+          <BackButton fallback="/registration-status" />
+        </div>
+
         {/* Success Header */}
         <div className="text-center mb-12">
           <div className="relative inline-block mb-6">

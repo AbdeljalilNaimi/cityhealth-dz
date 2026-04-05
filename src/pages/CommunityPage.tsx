@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CommunityFeed } from '@/components/community/CommunityFeed';
+import { BackButton } from '@/components/ui/BackButton';
 
 import { AnnouncementBanner } from '@/components/community/AnnouncementBanner';
 import { MessageSquare, Bell } from 'lucide-react';
@@ -31,6 +32,10 @@ const CommunityPage = () => {
   return (
     <main className="min-h-screen bg-background pt-20 pb-12">
       <div className="max-w-3xl mx-auto px-4">
+        <div className="mb-4">
+          <BackButton fallback="/" />
+        </div>
+
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
