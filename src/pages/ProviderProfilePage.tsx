@@ -682,46 +682,146 @@ const ProviderProfilePage = () => {
               </Card>
             )}
 
-            {/* Clinic: Doctor Roster (Enhanced) */}
-            {resolvedType === 'clinic' && provider.doctorRoster?.length > 0 && (
-              <Card className="glass-card overflow-hidden animate-fade-in" style={{ animationDelay: '130ms' }}>
-                <div className="h-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20" />
-                <CardHeader className="py-4">
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-emerald-600" />
-                    Médecins affiliés
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {provider.doctorRoster.map((doc: { name: string; specialty: string; consultationDays?: string; phone?: string }, idx: number) => (
-                      <div key={idx} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-sm">{doc.name}</span>
-                            <Badge variant="outline" className="text-xs">{doc.specialty}</Badge>
-                          </div>
-                          {(doc.consultationDays || doc.phone) && (
-                            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                              {doc.consultationDays && (
-                                <span className="flex items-center gap-1">
-                                  <Calendar className="h-3 w-3" /> {doc.consultationDays}
-                                </span>
+            {/* Équipe Médicale — clinic / hospital / birth_hospital */}
+            {(['clinic', 'hospital', 'birth_hospital'] as ProviderType[]).includes(resolvedType) && (() => {
+              const TEAM_DAY_LABELS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+
+              // Prefer rich teamMembers format, fall back to legacy doctorRoster
+              const hasTeamMembers = Array.isArray(provider.teamMembers) && provider.teamMembers.length > 0;
+              const visibleMembers = hasTeamMembers
+                ? provider.teamMembers.filter((m: { status: string }) => m.status !== 'inactive')
+                : [];
+              const hasLegacyRoster = !hasTeamMembers && Array.isArray(provider.doctorRoster) && provider.doctorRoster.length > 0;
+
+              if (visibleMembers.length === 0 && !hasLegacyRoster) return null;
+
+              return (
+                <Card className="glass-card overflow-hidden animate-fade-in" style={{ animationDelay: '130ms' }}>
+                  <div className="h-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20" />
+                  <CardHeader className="py-4">
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5 text-emerald-600" />
+                      Équipe Médicale
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {hasTeamMembers ? (
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {visibleMembers.map((member: {
+                          id: string;
+                          name: string;
+                          specialty: string;
+                          phone?: string;
+                          email?: string;
+                          status: 'active' | 'on_leave' | 'inactive';
+                          gardes?: { id: string; type: string; label: string; startTime: string; endTime: string; days: number[] }[];
+                        }) => {
+                          const initials = member.name.split(' ').map((w: string) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
+                          const activeGardes = member.gardes?.filter(g => g.days?.length > 0) ?? [];
+                          return (
+                            <div
+                              key={member.id}
+                              className="flex flex-col gap-3 p-4 rounded-xl border bg-muted/20 hover:bg-muted/40 transition-colors"
+                            >
+                              {/* Header row */}
+                              <div className="flex items-start gap-3">
+                                {/* Avatar */}
+                                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-sm font-semibold">
+                                  {initials}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-semibold text-sm leading-tight">{member.name}</span>
+                                    {member.status === 'on_leave' && (
+                                      <Badge variant="outline" className="text-xs px-1.5 py-0 border-amber-300 text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400">
+                                        En congé
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <span className="text-xs text-muted-foreground">{member.specialty}</span>
+                                </div>
+                              </div>
+
+                              {/* Gardes / Availability */}
+                              {activeGardes.length > 0 && (
+                                <div className="space-y-2">
+                                  <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                                    <Clock className="h-3 w-3" /> Disponibilités
+                                  </p>
+                                  {activeGardes.map(garde => (
+                                    <div key={garde.id} className="space-y-1">
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400">{garde.label}</span>
+                                        {garde.type !== '24h' && garde.startTime && garde.endTime && (
+                                          <span className="text-xs text-muted-foreground">{garde.startTime} – {garde.endTime}</span>
+                                        )}
+                                      </div>
+                                      <div className="flex gap-1 flex-wrap">
+                                        {TEAM_DAY_LABELS.map((label, idx) => (
+                                          <span
+                                            key={idx}
+                                            className={cn(
+                                              "text-[10px] px-1.5 py-0.5 rounded font-medium",
+                                              garde.days.includes(idx)
+                                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400"
+                                                : "bg-muted/40 text-muted-foreground/40"
+                                            )}
+                                          >
+                                            {label}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
                               )}
-                              {doc.phone && (
-                                <a href={`tel:${doc.phone}`} className="flex items-center gap-1 text-primary hover:underline">
-                                  <Phone className="h-3 w-3" /> {doc.phone}
+
+                              {/* Phone */}
+                              {member.phone && (
+                                <a
+                                  href={`tel:${member.phone}`}
+                                  className="flex items-center gap-1.5 text-xs text-primary hover:underline w-fit"
+                                >
+                                  <Phone className="h-3 w-3" /> {member.phone}
                                 </a>
                               )}
                             </div>
-                          )}
-                        </div>
+                          );
+                        })}
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                    ) : (
+                      /* Legacy doctorRoster fallback */
+                      <div className="space-y-2">
+                        {provider.doctorRoster.map((doc: { name: string; specialty: string; consultationDays?: string; phone?: string }, idx: number) => (
+                          <div key={idx} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-medium text-sm">{doc.name}</span>
+                                <Badge variant="outline" className="text-xs">{doc.specialty}</Badge>
+                              </div>
+                              {(doc.consultationDays || doc.phone) && (
+                                <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                                  {doc.consultationDays && (
+                                    <span className="flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" /> {doc.consultationDays}
+                                    </span>
+                                  )}
+                                  {doc.phone && (
+                                    <a href={`tel:${doc.phone}`} className="flex items-center gap-1 text-primary hover:underline">
+                                      <Phone className="h-3 w-3" /> {doc.phone}
+                                    </a>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })()}
 
             {/* Clinic: Payment Methods */}
             {resolvedType === 'clinic' && provider.paymentMethods?.length > 0 && (
