@@ -212,8 +212,8 @@ export default function ProviderDashboard() {
       .eq('provider_id', providerData.id)
       .eq('type', 'annonce')
       .eq('status', 'approved')
-      .then(({ data }) => {
-        if (!data) return;
+      .then(({ data, error }) => {
+        if (error || !data) return;
         const active = data.filter(a => !a.expires_at || a.expires_at > now).length;
         const expired = data.filter(a => a.expires_at && a.expires_at <= now).length;
         setAnnoncesActiveCount(active);

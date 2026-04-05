@@ -13,3 +13,7 @@ ALTER TABLE public.ads
   DROP CONSTRAINT IF EXISTS ads_type_check;
 ALTER TABLE public.ads
   ADD CONSTRAINT ads_type_check CHECK (type IN ('annonce', 'publication'));
+
+-- Index for frequent filter patterns on type+provider_id+status
+CREATE INDEX IF NOT EXISTS ads_type_provider_status_idx
+  ON public.ads (type, provider_id, status);
