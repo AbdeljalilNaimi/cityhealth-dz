@@ -361,52 +361,59 @@ export async function incrementViews(adId: string): Promise<void> {
   }
 }
 
-// ====== ADMIN — server-side enforced via RPC ======
+// ====== ADMIN — server-side enforced via Edge Function ======
 
 /**
- * Call the secure `moderate_publication` RPC function.
- * The RPC is SECURITY DEFINER and verifies the moderator token server-side.
- * The token is embedded in the Postgres function body (not accessible via SQL).
+ * Call the `moderate-publication` Supabase Edge Function.
+ * The function is SECURITY DEFINER (uses service role) and verifies
+ * admin identity via Firebase ID token before performing any operation.
+ * No privileged secret is exposed in the frontend.
  */
-async function callModerationRpc(
+async function callModerationEdgeFunction(
   action: 'approve' | 'reject' | 'suspend' | 'delete',
   adId: string,
+  firebaseIdToken: string,
   reason?: string,
 ): Promise<void> {
-  const token = import.meta.env.VITE_MODERATOR_SECRET;
-  if (!token) throw new Error('MODERATOR_NOT_CONFIGURED');
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const edgeFunctionUrl = `${supabaseUrl}/functions/v1/moderate-publication`;
 
-  const { data, error } = await supabase.rpc('moderate_publication', {
-    p_action: action,
-    p_ad_id: adId,
-    p_reason: reason || null,
-    p_moderator_token: token,
+  const response = await fetch(edgeFunctionUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': anonKey,
+      'x-firebase-token': firebaseIdToken,
+    },
+    body: JSON.stringify({ action, ad_id: adId, reason: reason || null }),
   });
 
-  if (error) {
-    if (error.message.includes('UNAUTHORIZED')) throw new Error('UNAUTHORIZED');
-    if (error.message.includes('AD_NOT_FOUND')) throw new Error('AD_NOT_FOUND');
-    throw error;
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    const errMsg = (errData as { error?: string }).error || 'MODERATION_FAILED';
+    if (errMsg.includes('Unauthorized') || response.status === 403) throw new Error('UNAUTHORIZED');
+    throw new Error(errMsg);
   }
 
-  const result = data as { success: boolean; action: string } | null;
+  const result = await response.json();
   if (!result?.success) throw new Error('MODERATION_FAILED');
 }
 
-export async function adminApprove(adId: string): Promise<void> {
-  await callModerationRpc('approve', adId);
+export async function adminApprove(adId: string, firebaseIdToken: string): Promise<void> {
+  await callModerationEdgeFunction('approve', adId, firebaseIdToken);
 }
 
-export async function adminReject(adId: string, reason: string): Promise<void> {
-  await callModerationRpc('reject', adId, reason);
+export async function adminReject(adId: string, reason: string, firebaseIdToken: string): Promise<void> {
+  await callModerationEdgeFunction('reject', adId, firebaseIdToken, reason);
 }
 
-export async function adminSuspend(adId: string): Promise<void> {
-  await callModerationRpc('suspend', adId);
+export async function adminSuspend(adId: string, firebaseIdToken: string): Promise<void> {
+  await callModerationEdgeFunction('suspend', adId, firebaseIdToken);
 }
 
-export async function deleteAd(adId: string): Promise<void> {
-  await callModerationRpc('delete', adId);
+export async function deleteAd(adId: string, firebaseIdToken: string): Promise<void> {
+  await callModerationEdgeFunction('delete', adId, firebaseIdToken);
 }
 
 export async function adminToggleFeatured(adId: string, featured: boolean): Promise<void> {
