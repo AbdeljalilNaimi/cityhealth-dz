@@ -155,6 +155,44 @@ const SearchPage = () => {
       results = results.filter(provider => provider.emergency);
     }
 
+    // Wheelchair accessible filter
+    if (filters.wheelchairAccessible) {
+      results = results.filter(provider => provider.accessible === true);
+    }
+
+    // Insurance accepted filter
+    if (filters.insuranceAccepted) {
+      results = results.filter(provider => {
+        const insurances = provider.insurances || (provider as any).insuranceAccepted;
+        return Array.isArray(insurances) && insurances.length > 0;
+      });
+    }
+
+    // Availability filter
+    if (filters.availability === 'now') {
+      results = results.filter(provider => provider.isOpen === true);
+    }
+
+    // Location filter — match provider city, area, or address
+    if (filters.location.trim()) {
+      const loc = filters.location.trim().toLowerCase();
+      results = results.filter(provider =>
+        provider.city.toLowerCase().includes(loc) ||
+        provider.area.toLowerCase().includes(loc) ||
+        provider.address.toLowerCase().includes(loc)
+      );
+    }
+
+    // Price range filter
+    const [minPrice, maxPrice] = filters.priceRange;
+    if (minPrice > 0 || maxPrice < 500) {
+      results = results.filter(provider => {
+        const fee = (provider as any).consultationFee;
+        if (fee == null) return true; // include providers with no fee listed
+        return fee >= minPrice && fee <= maxPrice;
+      });
+    }
+
     // Equipment brand filter
     if (filters.equipmentBrands.length > 0) {
       results = results.filter(provider => {
@@ -242,7 +280,10 @@ const SearchPage = () => {
             (filters.wheelchairAccessible ? 1 : 0) +
             (filters.insuranceAccepted ? 1 : 0) +
             (filters.equipmentBrands.length > 0 ? 1 : 0) +
-            (filters.cnasOnly ? 1 : 0)
+            (filters.cnasOnly ? 1 : 0) +
+            (filters.availability !== 'any' ? 1 : 0) +
+            (filters.location.trim() ? 1 : 0) +
+            (filters.priceRange[0] > 0 || filters.priceRange[1] < 500 ? 1 : 0)
           }
         />
       );
