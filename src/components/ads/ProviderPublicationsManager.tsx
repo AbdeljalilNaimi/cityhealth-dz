@@ -28,7 +28,7 @@ import {
   AdNotification,
   createPublication,
   getProviderPublications,
-  deleteAd,
+  deleteProviderAd,
   uploadAdImage,
   uploadAdPdf,
   getProviderAdNotifications,
@@ -283,7 +283,7 @@ export function ProviderPublicationsManager() {
   const handleDelete = async (id: string) => {
     setDeletingId(id);
     try {
-      await deleteAd(id);
+      await deleteProviderAd(id);
       toast.success('Publication supprimée');
       loadPublications();
     } catch {
@@ -301,6 +301,7 @@ export function ProviderPublicationsManager() {
     approved: CheckCircle,
     rejected: XCircle,
     suspended: XCircle,
+    submitted: Clock,
   };
 
   return (
@@ -374,10 +375,11 @@ export function ProviderPublicationsManager() {
                 <div className="divide-y max-h-64 overflow-y-auto">
                   {notifications.map(notif => {
                     const Icon = notifIconByType[notif.type];
-                    const colorMap = {
+                    const colorMap: Record<AdNotification['type'], string> = {
                       approved: 'text-emerald-600 dark:text-emerald-400',
                       rejected: 'text-destructive',
                       suspended: 'text-amber-600 dark:text-amber-400',
+                      submitted: 'text-primary',
                     };
                     return (
                       <div

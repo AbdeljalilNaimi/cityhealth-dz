@@ -160,7 +160,7 @@ export type Database = {
           provider_id: string
           ad_id: string | null
           ad_title: string
-          type: 'approved' | 'rejected' | 'suspended'
+          type: 'approved' | 'rejected' | 'suspended' | 'submitted'
           message: string | null
           read: boolean
           created_at: string
@@ -170,7 +170,7 @@ export type Database = {
           provider_id: string
           ad_id?: string | null
           ad_title: string
-          type: 'approved' | 'rejected' | 'suspended'
+          type: 'approved' | 'rejected' | 'suspended' | 'submitted'
           message?: string | null
           read?: boolean
           created_at?: string
@@ -180,7 +180,7 @@ export type Database = {
           provider_id?: string
           ad_id?: string | null
           ad_title?: string
-          type?: 'approved' | 'rejected' | 'suspended'
+          type?: 'approved' | 'rejected' | 'suspended' | 'submitted'
           message?: string | null
           read?: boolean
           created_at?: string

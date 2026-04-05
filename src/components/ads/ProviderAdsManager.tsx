@@ -16,7 +16,7 @@ import { format, differenceInDays, isPast } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
 import {
-  Ad, createAd, deleteAd, getProviderAds,
+  Ad, createAd, deleteProviderAd, getProviderAds,
 } from '@/services/adsService';
 
 interface ProviderAdsManagerProps {
@@ -143,7 +143,7 @@ export function ProviderAdsManager({
   const handleDelete = async (adId: string) => {
     setDeletingId(adId);
     try {
-      await deleteAd(adId);
+      await deleteProviderAd(adId);
       if (justPublishedId === adId) setJustPublishedId(null);
       toast.success('Annonce supprimée');
       loadAds();

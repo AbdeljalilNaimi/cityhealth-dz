@@ -130,7 +130,7 @@ export async function updateAd(id: string, updates: Partial<CreateAdInput>): Pro
   if (error) throw error;
 }
 
-export async function deleteAd(id: string): Promise<void> {
+export async function deleteProviderAd(id: string): Promise<void> {
   const { error } = await supabase.from('ads').delete().eq('id', id);
   if (error) throw error;
 }
@@ -361,55 +361,52 @@ export async function incrementViews(adId: string): Promise<void> {
   }
 }
 
-// ====== ADMIN ======
+// ====== ADMIN — server-side enforced via RPC ======
 
-async function createAdNotification(
+/**
+ * Call the secure `moderate_publication` RPC function.
+ * The RPC is SECURITY DEFINER and verifies the moderator token server-side.
+ * The token is embedded in the Postgres function body (not accessible via SQL).
+ */
+async function callModerationRpc(
+  action: 'approve' | 'reject' | 'suspend' | 'delete',
   adId: string,
-  type: 'approved' | 'rejected' | 'suspended',
-  message?: string,
+  reason?: string,
 ): Promise<void> {
-  // Fetch the ad to get provider_id and title
-  const { data: ad } = await supabase
-    .from('ads')
-    .select('provider_id, title')
-    .eq('id', adId)
-    .single();
-  if (!ad) return;
+  const token = import.meta.env.VITE_MODERATOR_SECRET;
+  if (!token) throw new Error('MODERATOR_NOT_CONFIGURED');
 
-  await supabase.from('ad_notifications').insert({
-    provider_id: ad.provider_id,
-    ad_id: adId,
-    ad_title: ad.title,
-    type,
-    message: message || null,
+  const { data, error } = await supabase.rpc('moderate_publication', {
+    p_action: action,
+    p_ad_id: adId,
+    p_reason: reason || null,
+    p_moderator_token: token,
   });
+
+  if (error) {
+    if (error.message.includes('UNAUTHORIZED')) throw new Error('UNAUTHORIZED');
+    if (error.message.includes('AD_NOT_FOUND')) throw new Error('AD_NOT_FOUND');
+    throw error;
+  }
+
+  const result = data as { success: boolean; action: string } | null;
+  if (!result?.success) throw new Error('MODERATION_FAILED');
 }
 
 export async function adminApprove(adId: string): Promise<void> {
-  const { error } = await supabase
-    .from('ads')
-    .update({ status: 'approved', rejection_reason: null })
-    .eq('id', adId);
-  if (error) throw error;
-  await createAdNotification(adId, 'approved', 'Votre publication a été approuvée et est maintenant visible sur la page /annonces.').catch(() => {});
+  await callModerationRpc('approve', adId);
 }
 
 export async function adminReject(adId: string, reason: string): Promise<void> {
-  const { error } = await supabase
-    .from('ads')
-    .update({ status: 'rejected', rejection_reason: reason })
-    .eq('id', adId);
-  if (error) throw error;
-  await createAdNotification(adId, 'rejected', reason || 'Votre publication n\'a pas été acceptée.').catch(() => {});
+  await callModerationRpc('reject', adId, reason);
 }
 
 export async function adminSuspend(adId: string): Promise<void> {
-  const { error } = await supabase
-    .from('ads')
-    .update({ status: 'suspended' })
-    .eq('id', adId);
-  if (error) throw error;
-  await createAdNotification(adId, 'suspended', 'Votre publication a été suspendue.').catch(() => {});
+  await callModerationRpc('suspend', adId);
+}
+
+export async function deleteAd(adId: string): Promise<void> {
+  await callModerationRpc('delete', adId);
 }
 
 export async function adminToggleFeatured(adId: string, featured: boolean): Promise<void> {
@@ -445,7 +442,7 @@ export interface AdNotification {
   provider_id: string;
   ad_id: string | null;
   ad_title: string;
-  type: 'approved' | 'rejected' | 'suspended';
+  type: 'approved' | 'rejected' | 'suspended' | 'submitted';
   message: string | null;
   read: boolean;
   created_at: string;
