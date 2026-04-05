@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useLocation } from 'wouter';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
@@ -38,6 +39,7 @@ export function BookingSlidePanel({
   selectedTime,
   onSuccess,
 }: BookingSlidePanelProps) {
+  const [, navigate] = useLocation();
   const isMobile = useIsMobile();
   const { user, profile } = useAuth();
   const createMutation = useCreateAppointment();
@@ -50,6 +52,14 @@ export function BookingSlidePanel({
 
   const handleSubmit = () => {
     if (!canSubmit || !provider || !selectedDate || !selectedTime) return;
+
+    // Auth gate: unauthenticated users are sent to login before any Firestore call
+    if (!user) {
+      onOpenChange(false);
+      toast.info('Veuillez vous connecter pour prendre un rendez-vous.');
+      navigate('/login');
+      return;
+    }
 
     const [hours, minutes] = selectedTime.split(':');
     const dt = new Date(selectedDate);
@@ -72,7 +82,12 @@ export function BookingSlidePanel({
           onSuccess?.();
         },
         onError: (error: any) => {
-          toast.error(error?.message || 'Erreur lors de la réservation');
+          console.error('Booking submission error:', error);
+          if (error?.code === 'auth/unauthenticated') {
+            toast.error('Connexion requise pour prendre un rendez-vous.');
+          } else {
+            toast.error('Une erreur est survenue, veuillez réessayer.');
+          }
         },
       }
     );

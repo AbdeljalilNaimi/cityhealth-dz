@@ -77,9 +77,14 @@ export const useCreateAppointment = () => {
       notes?: string;
       urgency?: 'urgent' | 'routine';
     }) => {
+      if (!user?.uid) {
+        const err = new Error('Connexion requise pour prendre un rendez-vous.');
+        (err as any).code = 'auth/unauthenticated';
+        throw err;
+      }
       return createAppointment({
         ...data,
-        patientId: user?.uid || 'anonymous',
+        patientId: user.uid,
         status: 'pending',
       });
     },

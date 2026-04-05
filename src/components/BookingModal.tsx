@@ -13,6 +13,7 @@ import {
   CalendarIcon, Clock, Mail, Phone as PhoneIcon, User, CheckCircle, 
   Loader2, AlertCircle, CalendarDays, ChevronLeft, ChevronRight, AlertTriangle
 } from 'lucide-react';
+import { useLocation } from 'wouter';
 import { useCreateAppointment, useRealtimeAvailability, type AvailabilitySlot } from '@/hooks/useAppointments';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useAuth } from '@/contexts/AuthContext';
@@ -237,6 +238,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({ open, onOpenChange, 
   const [step, setStep] = useState<'details' | 'datetime' | 'confirm'>('details');
   const [showFullCalendar, setShowFullCalendar] = useState(false);
   
+  const [, navigate] = useLocation();
   const { user } = useAuth();
   const { t, language } = useLanguage();
   const { sendNotification } = useNotifications();
@@ -300,6 +302,14 @@ export const BookingModal: React.FC<BookingModalProps> = ({ open, onOpenChange, 
 
   const confirm = () => {
     if (!selectedDate || !selectedTime || !name || !phone) return;
+
+    // Auth gate: unauthenticated users are sent to login instead of hitting Firestore
+    if (!user) {
+      onOpenChange(false);
+      toast.info('Veuillez vous connecter pour prendre un rendez-vous.');
+      navigate('/login');
+      return;
+    }
     
     const [hours, minutes] = selectedTime.split(':');
     const appointmentDate = new Date(selectedDate);
@@ -356,7 +366,13 @@ export const BookingModal: React.FC<BookingModalProps> = ({ open, onOpenChange, 
         },
         onError: (error: any) => {
           console.error('Booking submission error:', error);
-          toast.error(error?.message || 'Erreur lors de la réservation. Vérifiez que les règles Firestore sont déployées.');
+          if (error?.code === 'auth/unauthenticated') {
+            toast.error('Connexion requise pour prendre un rendez-vous.');
+          } else if (error?.message?.toLowerCase().includes('passé') || error?.message?.toLowerCase().includes('past')) {
+            toast.error(error.message);
+          } else {
+            toast.error('Une erreur est survenue, veuillez réessayer.');
+          }
         }
       }
     );
