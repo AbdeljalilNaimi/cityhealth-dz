@@ -42,7 +42,7 @@ interface AuthContextType {
   user: FirebaseUser | null;
   supabaseUser: SupabaseUser | null;
   profile: UserProfile | null;
-  session: FirebaseUser | null;
+  firebaseSession: FirebaseUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   isCitizen: boolean;
@@ -76,8 +76,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const isSigningUpRef = useRef(false);
+  // Live refs so auth listeners always see current values without stale closures
+  const liveUserRef = useRef<FirebaseUser | null>(null);
+  const liveSupabaseUserRef = useRef<SupabaseUser | null>(null);
+  const liveProfileRef = useRef<UserProfile | null>(null);
 
   const checkIsSigningUp = () => isSigningUpRef.current || _isSigningUp;
+
+  // Helper: set profile state and keep liveProfileRef in sync
+  const setProfileSynced = (p: UserProfile | null) => {
+    liveProfileRef.current = p;
+    setProfile(p);
+  };
 
   // ─── Citizen profile from Supabase ───
   const fetchCitizenProfile = async (sbUser: SupabaseUser) => {
@@ -91,7 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
 
       const p = data;
-      setProfile({
+      setProfileSynced({
         id: sbUser.id,
         email: sbUser.email || '',
         full_name: p?.full_name || sbUser.user_metadata?.full_name || null,
@@ -110,7 +120,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (err) {
       console.error('Error fetching citizen profile:', err);
       // Still set a basic profile so the user isn't stuck
-      setProfile({
+      setProfileSynced({
         id: sbUser.id,
         email: sbUser.email || '',
         full_name: sbUser.user_metadata?.full_name || null,
@@ -140,7 +150,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           full_name: null, avatar_url: null,
           created_at: serverTimestamp(), updated_at: serverTimestamp()
         });
-        setProfile({ id: fbUser.uid, email: fbUser.email || '', full_name: null, avatar_url: null, userType, roles: [] });
+        setProfileSynced({ id: fbUser.uid, email: fbUser.email || '', full_name: null, avatar_url: null, userType, roles: [] });
         return;
       }
 
@@ -164,7 +174,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (!provSnap.empty) verificationStatus = provSnap.docs[0].data().verificationStatus;
       }
 
-      setProfile({
+      setProfileSynced({
         id: pd.id, email: fbUser.email || '',
         full_name: pd.full_name, avatar_url: pd.avatar_url,
         userType, roles,
@@ -175,7 +185,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
     } catch (err) {
       console.error('Error fetching firebase profile:', err);
-      setProfile(null);
+      setProfileSynced(null);
     }
   };
 
@@ -184,16 +194,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (session?.user) {
+          liveSupabaseUserRef.current = session.user;
           setSupabaseUser(session.user);
           // Use setTimeout to avoid Supabase deadlock
           setTimeout(() => fetchCitizenProfile(session.user), 0);
         } else {
-          // Only clear if no Firebase user is active
-          if (!user) {
-            setSupabaseUser(null);
-            if (profile?.userType === 'citizen') setProfile(null);
-          } else {
-            setSupabaseUser(null);
+          liveSupabaseUserRef.current = null;
+          setSupabaseUser(null);
+          // Only clear profile if no Firebase user is active (use ref for live value)
+          if (!liveUserRef.current) {
+            if (liveProfileRef.current?.userType === 'citizen') {
+              setProfileSynced(null);
+            }
           }
         }
         setIsLoading(false);
@@ -202,6 +214,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
+        liveSupabaseUserRef.current = session.user;
         setSupabaseUser(session.user);
         fetchCitizenProfile(session.user);
       }
@@ -218,17 +231,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (fbUser) {
         try { await fbUser.reload(); } catch {
           await firebaseSignOut(firebaseAuth);
+          liveUserRef.current = null;
           setUser(null);
-          if (profile?.userType !== 'citizen') setProfile(null);
+          if (liveProfileRef.current?.userType !== 'citizen') {
+            setProfileSynced(null);
+          }
           setIsLoading(false);
           return;
         }
+        liveUserRef.current = fbUser;
         setUser(fbUser);
         setTimeout(() => fetchFirebaseProfile(fbUser), 0);
       } else {
+        liveUserRef.current = null;
         setUser(null);
-        // Only clear profile if no Supabase citizen is active
-        if (!supabaseUser) setProfile(null);
+        // Only clear profile if no Supabase citizen is active (use ref for live value)
+        if (!liveSupabaseUserRef.current) {
+          setProfileSynced(null);
+        }
       }
       setIsLoading(false);
     });
@@ -357,16 +377,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     try {
       // Sign out from both
-      const isCitizenSession = !!supabaseUser;
+      const isCitizenSession = !!liveSupabaseUserRef.current;
       if (isCitizenSession) {
         await supabase.auth.signOut();
+        liveSupabaseUserRef.current = null;
         setSupabaseUser(null);
       }
-      if (user) {
+      if (liveUserRef.current) {
         await firebaseSignOut(firebaseAuth);
+        liveUserRef.current = null;
         setUser(null);
       }
-      setProfile(null);
+      setProfileSynced(null);
       toast.success('Déconnexion réussie');
     } catch (error: any) {
       logError(error, 'logout');
@@ -431,7 +453,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         user,
         supabaseUser,
         profile,
-        session: user,
+        firebaseSession: user,
         isAuthenticated,
         isLoading,
         isCitizen, isProvider, isAdmin,

@@ -242,9 +242,9 @@ const AppRoutes = () => {
             path="/citizen/provide/mine" 
             element={
               <PageTransition>
-                <ProviderRouteGuard>
+                <CitizenGuard>
                   <MyOffersPage />
-                </ProviderRouteGuard>
+                </CitizenGuard>
               </PageTransition>
             } 
           />
@@ -252,9 +252,9 @@ const AppRoutes = () => {
             path="/citizen/provide/new" 
             element={
               <PageTransition>
-                <ProviderRouteGuard>
+                <CitizenGuard>
                   <CreateOfferPage />
-                </ProviderRouteGuard>
+                </CitizenGuard>
               </PageTransition>
             } 
           />
@@ -262,9 +262,9 @@ const AppRoutes = () => {
             path="/citizen/provide/edit/:offerId" 
             element={
               <PageTransition>
-                <ProviderRouteGuard>
+                <CitizenGuard>
                   <EditOfferPage />
-                </ProviderRouteGuard>
+                </CitizenGuard>
               </PageTransition>
             } 
           />
@@ -308,11 +308,9 @@ const AppRoutes = () => {
           path="/provider/welcome" 
           element={
             <PageTransition>
-              <ProtectedRoute>
-                <ProviderProvider>
-                  <ProviderWelcomePage />
-                </ProviderProvider>
-              </ProtectedRoute>
+              <ProviderRouteGuard>
+                <ProviderWelcomePage />
+              </ProviderRouteGuard>
             </PageTransition>
           } 
         />
@@ -321,9 +319,9 @@ const AppRoutes = () => {
           path="/registration-status" 
           element={
             <PageTransition>
-              <ProtectedRoute>
+              <ProviderRouteGuard>
                 <RegistrationStatus />
-              </ProtectedRoute>
+              </ProviderRouteGuard>
             </PageTransition>
           } 
         />

@@ -48,7 +48,7 @@ const AccessDenied = ({ requiredRole }: { requiredRole: UserRole }) => {
 };
 
 export const ProtectedRoute = ({ children, requireRole }: ProtectedRouteProps) => {
-  const { user, isAuthenticated, isLoading, hasRole, profile } = useAuth();
+  const { isAuthenticated, isLoading, hasRole, profile } = useAuth();
   const { t } = useLanguage();
 
   if (isLoading) {
@@ -60,7 +60,7 @@ export const ProtectedRoute = ({ children, requireRole }: ProtectedRouteProps) =
     );
   }
 
-  if (!isAuthenticated || !user) {
+  if (!isAuthenticated) {
     return <Navigate to="/citizen/login" replace />;
   }
 
