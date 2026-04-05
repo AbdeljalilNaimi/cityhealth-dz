@@ -40,7 +40,7 @@ export const AntigravityHeader = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { language, setLanguage, t } = useLanguage();
-  const { user, logout, profile, isProvider, isAdmin, isCitizen } = useAuth();
+  const { user, supabaseUser, logout, profile, isProvider, isAdmin, isCitizen, isAuthenticated } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
