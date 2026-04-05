@@ -612,15 +612,15 @@ export const AntigravityHeader = () => {
               <Separator className="my-3" />
 
               {/* Auth section */}
-              {user ? (
+              {isAuthenticated ? (
                 <div className="px-6 space-y-1">
                   <div className="flex items-center gap-3 py-2">
                     <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-sm font-medium text-primary">{user.email?.[0]?.toUpperCase()}</span>
+                      <span className="text-sm font-medium text-primary">{(profile?.email || supabaseUser?.email || user?.email)?.[0]?.toUpperCase()}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{profile?.full_name || user.email}</p>
-                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                      <p className="text-sm font-medium truncate">{profile?.full_name || profile?.email || supabaseUser?.email || user?.email}</p>
+                      <p className="text-xs text-muted-foreground truncate">{profile?.email || supabaseUser?.email || user?.email}</p>
                     </div>
                   </div>
 
