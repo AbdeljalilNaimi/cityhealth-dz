@@ -21,6 +21,14 @@ import {
 import { Appointment } from '@/types/appointments';
 import { useAuth } from '@/contexts/AuthContext';
 
+class UnauthenticatedError extends Error {
+  readonly code = 'auth/unauthenticated' as const;
+  constructor(message: string) {
+    super(message);
+    this.name = 'UnauthenticatedError';
+  }
+}
+
 // Query keys factory
 export const appointmentKeys = {
   all: ['appointments'] as const,
@@ -78,9 +86,7 @@ export const useCreateAppointment = () => {
       urgency?: 'urgent' | 'routine';
     }) => {
       if (!user?.uid) {
-        const err = new Error('Connexion requise pour prendre un rendez-vous.');
-        (err as any).code = 'auth/unauthenticated';
-        throw err;
+        throw new UnauthenticatedError('Connexion requise pour prendre un rendez-vous.');
       }
       return createAppointment({
         ...data,
