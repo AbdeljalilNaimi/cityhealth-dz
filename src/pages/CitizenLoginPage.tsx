@@ -39,7 +39,7 @@ const CitizenLoginPage = () => {
 
   useEffect(() => {
     if (isAuthenticated && profile?.userType === 'citizen') {
-      navigate('/citizen/dashboard');
+      navigate('/profile');
     } else if (isAuthenticated && profile?.userType) {
       toast.error(t('loginPage', 'notCitizenAccount'));
     }
