@@ -243,12 +243,21 @@ service cloud.firestore {
         request.resource.data.keys().hasOnly(['completedConsultations']) &&
         request.resource.data.completedConsultations is number;
 
-      // Providers and admins can increment the counter.
-      // Field-level diff ensures only completedConsultations can be changed —
-      // prevents tampering with other fields.
-      allow update: if docId == 'stats' && (isProvider() || isAdmin()) &&
-        request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['completedConsultations']);
+      // Admins can freely update the stats document (e.g. manual correction).
+      // Providers can only increment completedConsultations by exactly 1:
+      //   - must only touch the completedConsultations field
+      //   - new value must be a number
+      //   - new value must equal current value + 1 (monotonic increment only)
+      // This prevents providers from setting arbitrary numbers or decrementing.
+      allow update: if docId == 'stats' && (
+        isAdmin() ||
+        (isProvider() &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['completedConsultations']) &&
+          request.resource.data.completedConsultations is number &&
+          request.resource.data.completedConsultations ==
+            resource.data.completedConsultations + 1)
+      );
 
       // Only admins can delete the document
       allow delete: if isAdmin();
