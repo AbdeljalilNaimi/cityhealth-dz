@@ -27,12 +27,13 @@ interface ProviderAdsManagerProps {
   providerType?: string;
   providerCity?: string;
   isVerified: boolean;
+  onStatsChange?: (activeCount: number, expiredCount: number) => void;
 }
 
 const MAX_ADS = 5;
 
 export function ProviderAdsManager({
-  providerId, providerName, providerAvatar, providerType, providerCity, isVerified,
+  providerId, providerName, providerAvatar, providerType, providerCity, isVerified, onStatsChange,
 }: ProviderAdsManagerProps) {
   const [ads, setAds] = useState<Ad[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -48,7 +49,7 @@ export function ProviderAdsManager({
     expires_at: '',
   });
 
-  const activeCount = ads.filter(a => a.status === 'approved').length;
+  const activeCount = ads.filter(a => a.status === 'approved' && (!a.expires_at || !isPast(new Date(a.expires_at)))).length;
 
   const expiringAds = ads.filter(ad => {
     if (!ad.expires_at || ad.status !== 'approved') return false;
@@ -66,6 +67,10 @@ export function ProviderAdsManager({
     try {
       const data = await getProviderAds(providerId);
       setAds(data);
+
+      const active = data.filter(a => a.status === 'approved' && (!a.expires_at || !isPast(new Date(a.expires_at))));
+      const expired = data.filter(a => a.expires_at && isPast(new Date(a.expires_at)) && a.status === 'approved');
+      onStatsChange?.(active.length, expired.length);
 
       const expiring = data.filter(ad => {
         if (!ad.expires_at || ad.status !== 'approved') return false;

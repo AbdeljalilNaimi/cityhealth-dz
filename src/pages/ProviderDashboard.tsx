@@ -199,6 +199,14 @@ export default function ProviderDashboard() {
   const [offerCategory, setOfferCategory] = useState<ProvideCategory | undefined>();
   const [deletingOfferId, setDeletingOfferId] = useState<string | null>(null);
 
+  // Annonces stats for tab badge
+  const [annoncesActiveCount, setAnnoncesActiveCount] = useState(0);
+  const [annoncesExpiredCount, setAnnoncesExpiredCount] = useState(0);
+  const handleAnnoncesStatsChange = (active: number, expired: number) => {
+    setAnnoncesActiveCount(active);
+    setAnnoncesExpiredCount(expired);
+  };
+
   // ===== Quote Requests State (Equipment providers) =====
   const [quoteRequests, setQuoteRequests] = useState<any[]>([]);
   const [quotesLoading, setQuotesLoading] = useState(false);
@@ -1089,10 +1097,20 @@ export default function ProviderDashboard() {
               </TabsTrigger>
             )}
             {!isBloodCabin && (
-              <TabsTrigger value="ads" disabled={isPending}>
+              <TabsTrigger value="ads" disabled={isPending} className="relative">
                 <Megaphone className="h-4 w-4 mr-1.5" />
                 <span className="hidden sm:inline">Annonces</span>
                 {isPending && <Lock className="h-3 w-3 ml-1" />}
+                {!isPending && annoncesExpiredCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-destructive text-white text-[9px] flex items-center justify-center font-bold leading-none" data-testid="badge-annonces-expired">
+                    {annoncesExpiredCount}
+                  </span>
+                )}
+                {!isPending && annoncesExpiredCount === 0 && annoncesActiveCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-primary text-white text-[9px] flex items-center justify-center font-bold leading-none" data-testid="badge-annonces-active">
+                    {annoncesActiveCount}
+                  </span>
+                )}
               </TabsTrigger>
             )}
             <TabsTrigger value="publications" disabled={isPending}>
@@ -2779,6 +2797,7 @@ export default function ProviderDashboard() {
                 providerType={providerData?.type}
                 providerCity={providerData?.city}
                 isVerified={isVerified}
+                onStatsChange={handleAnnoncesStatsChange}
               />
             </TabsContent>
           )}

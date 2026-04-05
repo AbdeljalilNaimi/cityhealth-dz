@@ -38,6 +38,20 @@ The app uses these env vars (set as Replit secrets):
 - `VITE_SUPABASE_PUBLISHABLE_KEY` — Supabase anon key
 - Firebase config is hardcoded in `src/lib/firebase.ts` (Firebase keys are safe for client-side use per Firebase docs)
 
+## Content System Architecture (April 2026)
+
+### Annonces vs Publications
+The `ads` table uses a `type` column to distinguish two separate content systems:
+
+- **Annonces** (`type = 'annonce'`): Provider-created posts (Titre, Description courte ≤200, Description complète, Date d'expiration). Direct publish — no admin approval. Appear only on the provider's public profile under the `Annonces` section. Managed via `ProviderAdsManager` in the dashboard `Annonces` tab.
+- **Publications** (`type = 'publication'`): Rich content (Titre, Catégorie, Résumé, Contenu, Mots-clés, DOI, PDF, Image). Require admin approval. Appear in `/annonces` public page after approval. Managed in the dashboard `Mes Publications` tab.
+
+### Key files
+- `src/components/ads/ProviderAdsManager.tsx` — Annonces dashboard form & list
+- `src/components/ads/ProviderAnnoncesPublic.tsx` — Public view on provider profile
+- `src/services/adsService.ts` — `type`-filtered CRUD for annonces
+- `supabase/migrations/20260405142105_add_type_to_ads.sql` — Adds `type` column
+
 ## Replit Migration Notes
 - Migrated from Lovable to Replit April 2026
 - Removed `lovable-tagger` Vite plugin (Lovable-only)

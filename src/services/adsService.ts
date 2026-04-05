@@ -12,6 +12,7 @@ export interface Ad {
   short_description: string;
   full_description: string;
   image_url: string;
+  type: 'annonce' | 'publication';
   status: 'pending' | 'approved' | 'rejected' | 'suspended';
   is_featured: boolean;
   is_verified_provider: boolean;
@@ -56,11 +57,12 @@ export async function createAd(input: CreateAdInput): Promise<Ad> {
     throw new Error('PROFANITY_DETECTED');
   }
 
-  // Check active ads limit (max 5)
+  // Check active annonces limit (max 5)
   const { count } = await supabase
     .from('ads')
     .select('*', { count: 'exact', head: true })
     .eq('provider_id', input.provider_id)
+    .eq('type', 'annonce')
     .in('status', ['pending', 'approved']);
 
   if ((count ?? 0) >= 5) {
@@ -72,6 +74,7 @@ export async function createAd(input: CreateAdInput): Promise<Ad> {
     .insert({
       ...input,
       image_url: input.image_url || '',
+      type: 'annonce',
       status: 'approved',
       is_featured: false,
       views_count: 0,
@@ -113,6 +116,7 @@ export async function getApprovedAds(filters: AdFilters = {}): Promise<Ad[]> {
   let query = supabase
     .from('ads')
     .select('*')
+    .eq('type', 'publication')
     .eq('status', 'approved')
     .or(`expires_at.is.null,expires_at.gt.${now}`);
 
@@ -148,6 +152,7 @@ export async function getProviderAds(providerId: string): Promise<Ad[]> {
     .from('ads')
     .select('*')
     .eq('provider_id', providerId)
+    .eq('type', 'annonce')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -160,6 +165,7 @@ export async function getActiveProviderAds(providerId: string): Promise<Ad[]> {
     .from('ads')
     .select('*')
     .eq('provider_id', providerId)
+    .eq('type', 'annonce')
     .eq('status', 'approved')
     .or(`expires_at.is.null,expires_at.gt.${now}`)
     .order('created_at', { ascending: false });

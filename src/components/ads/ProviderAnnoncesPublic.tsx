@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Megaphone, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Megaphone, Calendar, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -37,12 +36,19 @@ export function ProviderAnnoncesPublic({
 
   const isNew = (ad: Ad) => differenceInDays(new Date(), new Date(ad.created_at)) <= 7;
 
+  const hasNew = ads.some(ad => differenceInDays(new Date(), new Date(ad.created_at)) <= 7);
+
   return (
-    <Card className="glass-card overflow-hidden animate-fade-in" style={{ animationDelay: '350ms' }}>
+    <Card className="glass-card overflow-hidden animate-fade-in border-primary/20" style={{ animationDelay: '350ms' }}>
       <div className={cn('h-1.5 bg-gradient-to-r', gradientClass)} />
       <CardHeader className="py-4">
         <CardTitle className="flex items-center gap-2">
-          <Megaphone className={cn('h-5 w-5', iconColorClass)} />
+          <div className="relative">
+            <Megaphone className={cn('h-5 w-5', iconColorClass)} />
+            {hasNew && (
+              <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            )}
+          </div>
           Annonces
           <Badge
             variant="secondary"
@@ -51,6 +57,12 @@ export function ProviderAnnoncesPublic({
           >
             {ads.length}
           </Badge>
+          {hasNew && (
+            <Badge className="text-xs px-1.5 py-0 h-4 bg-emerald-500 text-white gap-1 ml-auto" data-testid="badge-annonces-new">
+              <Sparkles className="h-2.5 w-2.5" />
+              Nouveau
+            </Badge>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0 space-y-3">

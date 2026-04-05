@@ -174,6 +174,7 @@ export type Database = {
           short_description: string
           status: string
           title: string
+          type: string
           updated_at: string
           views_count: number
         }
@@ -182,7 +183,7 @@ export type Database = {
           expires_at?: string | null
           full_description: string
           id?: string
-          image_url: string
+          image_url?: string
           is_featured?: boolean
           is_verified_provider?: boolean
           likes_count?: number
@@ -196,6 +197,7 @@ export type Database = {
           short_description: string
           status?: string
           title: string
+          type?: string
           updated_at?: string
           views_count?: number
         }
@@ -218,6 +220,7 @@ export type Database = {
           short_description?: string
           status?: string
           title?: string
+          type?: string
           updated_at?: string
           views_count?: number
         }
