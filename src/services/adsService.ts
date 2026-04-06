@@ -226,7 +226,6 @@ export async function getProviderAds(providerId: string): Promise<Ad[]> {
     .from('ads')
     .select('*')
     .eq('provider_id', providerId)
-    .eq('type', 'annonce')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -239,7 +238,6 @@ export async function getActiveProviderAds(providerId: string): Promise<Ad[]> {
     .from('ads')
     .select('*')
     .eq('provider_id', providerId)
-    .eq('type', 'annonce')
     .eq('status', 'approved')
     .or(`expires_at.is.null,expires_at.gt.${now}`)
     .order('created_at', { ascending: false });
