@@ -13,7 +13,7 @@ import {
   Hospital, Baby, Droplets, RadioTower, Wrench, Shield,
   Megaphone, ExternalLink, Sparkles, Accessibility, MessageSquare,
   Car, Footprints, X, Loader2, Route, BedDouble, HeartPulse, Scissors, Video, Home as HomeIcon, ClipboardList, AlertTriangle, ShieldCheck,
-  Package, ShoppingBag, RefreshCw, Truck, FileText, Search as SearchIcon, Users, UserCheck
+  Package, ShoppingBag, RefreshCw, Truck, FileText, Search as SearchIcon, Users, UserCheck, Mail
 } from "lucide-react";
 import { useProvider } from "@/hooks/useProviders";
 import { useFavorites, useToggleFavorite } from "@/hooks/useFavorites";
