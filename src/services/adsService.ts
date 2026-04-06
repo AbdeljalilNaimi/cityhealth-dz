@@ -88,7 +88,6 @@ export async function createAd(input: CreateAdInput): Promise<Ad> {
     .from('ads')
     .select('*', { count: 'exact', head: true })
     .eq('provider_id', input.provider_id)
-    .eq('type', 'annonce')
     .in('status', ['pending', 'approved']);
 
   if ((count ?? 0) >= 5) {
@@ -156,16 +155,11 @@ export async function createPublication(input: CreatePublicationInput): Promise<
     short_description: input.short_description,
     full_description: input.full_description,
     image_url: input.image_url ?? '',
-    type: 'publication',
     status: 'pending',
     is_featured: false,
     views_count: 0,
     likes_count: 0,
     saves_count: 0,
-    category: input.category,
-    doi: input.doi ?? null,
-    pdf_url: input.pdf_url ?? null,
-    keywords: input.keywords ?? null,
     expires_at: input.expires_at ?? null,
   };
 
@@ -374,7 +368,7 @@ async function createAdNotification(
     .eq('id', adId)
     .single();
   if (!ad) return;
-  await supabase.from('ad_notifications').insert({
+  await (supabase.from as any)('ad_notifications').insert({
     provider_id: ad.provider_id,
     ad_id: adId,
     ad_title: ad.title,
@@ -463,8 +457,7 @@ export interface AdNotification {
 }
 
 export async function getProviderAdNotifications(providerId: string): Promise<AdNotification[]> {
-  const { data, error } = await supabase
-    .from('ad_notifications')
+  const { data, error } = await (supabase.from as any)('ad_notifications')
     .select('*')
     .eq('provider_id', providerId)
     .order('created_at', { ascending: false })
@@ -474,15 +467,13 @@ export async function getProviderAdNotifications(providerId: string): Promise<Ad
 }
 
 export async function markAdNotificationRead(notificationId: string): Promise<void> {
-  await supabase
-    .from('ad_notifications')
+  await (supabase.from as any)('ad_notifications')
     .update({ read: true })
     .eq('id', notificationId);
 }
 
 export async function markAllAdNotificationsRead(providerId: string): Promise<void> {
-  await supabase
-    .from('ad_notifications')
+  await (supabase.from as any)('ad_notifications')
     .update({ read: true })
     .eq('provider_id', providerId)
     .eq('read', false);
