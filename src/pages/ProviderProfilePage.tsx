@@ -687,9 +687,9 @@ const ProviderProfilePage = () => {
               const TEAM_DAY_LABELS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 
               // Prefer rich teamMembers format, fall back to legacy doctorRoster
-              const hasTeamMembers = Array.isArray(provider.teamMembers) && provider.teamMembers.length > 0;
+              const hasTeamMembers = Array.isArray((provider as any).teamMembers) && (provider as any).teamMembers.length > 0;
               const visibleMembers = hasTeamMembers
-                ? provider.teamMembers.filter((m: { status: string }) => m.status !== 'inactive')
+                ? (provider as any).teamMembers.filter((m: { status: string }) => m.status !== 'inactive')
                 : [];
               const hasLegacyRoster = !hasTeamMembers && Array.isArray(provider.doctorRoster) && provider.doctorRoster.length > 0;
 

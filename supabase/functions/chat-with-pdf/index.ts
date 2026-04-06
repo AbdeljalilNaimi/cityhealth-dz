@@ -44,8 +44,8 @@ serve(async (req) => {
       );
     }
 
-    const pdfBytes = new Uint8Array(await pdfResp.arrayBuffer());
-    const pdfBase64 = encode(pdfBytes);
+    const pdfBuffer = await pdfResp.arrayBuffer();
+    const pdfBase64 = encode(new Uint8Array(pdfBuffer) as unknown as ArrayBuffer);
 
     // 1. Default prompt (for clinics / providers)
     let systemInstruction = `Tu es l'assistant virtuel professionnel d'un fournisseur de santé sur la plateforme CityHealth. 

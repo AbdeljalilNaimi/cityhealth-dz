@@ -88,7 +88,6 @@ export async function createAd(input: CreateAdInput): Promise<Ad> {
     .from('ads')
     .select('*', { count: 'exact', head: true })
     .eq('provider_id', input.provider_id)
-    .eq('type', 'annonce')
     .in('status', ['pending', 'approved']);
 
   if ((count ?? 0) >= 5) {
@@ -156,16 +155,11 @@ export async function createPublication(input: CreatePublicationInput): Promise<
     short_description: input.short_description,
     full_description: input.full_description,
     image_url: input.image_url ?? '',
-    type: 'publication',
     status: 'pending',
     is_featured: false,
     views_count: 0,
     likes_count: 0,
     saves_count: 0,
-    category: input.category,
-    doi: input.doi ?? null,
-    pdf_url: input.pdf_url ?? null,
-    keywords: input.keywords ?? null,
     expires_at: input.expires_at ?? null,
   };
 
@@ -184,7 +178,6 @@ export async function getProviderPublications(providerId: string): Promise<Ad[]>
     .from('ads')
     .select('*')
     .eq('provider_id', providerId)
-    .eq('type', 'publication')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -198,7 +191,6 @@ export async function getApprovedAds(filters: AdFilters = {}): Promise<Ad[]> {
   let query = supabase
     .from('ads')
     .select('*')
-    .eq('type', 'publication')
     .eq('status', 'approved')
     .or(`expires_at.is.null,expires_at.gt.${now}`);
 
@@ -234,7 +226,6 @@ export async function getProviderAds(providerId: string): Promise<Ad[]> {
     .from('ads')
     .select('*')
     .eq('provider_id', providerId)
-    .eq('type', 'annonce')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -247,7 +238,6 @@ export async function getActiveProviderAds(providerId: string): Promise<Ad[]> {
     .from('ads')
     .select('*')
     .eq('provider_id', providerId)
-    .eq('type', 'annonce')
     .eq('status', 'approved')
     .or(`expires_at.is.null,expires_at.gt.${now}`)
     .order('created_at', { ascending: false });
@@ -374,7 +364,7 @@ async function createAdNotification(
     .eq('id', adId)
     .single();
   if (!ad) return;
-  await supabase.from('ad_notifications').insert({
+  await (supabase.from as any)('ad_notifications').insert({
     provider_id: ad.provider_id,
     ad_id: adId,
     ad_title: ad.title,
@@ -390,7 +380,7 @@ async function createAdNotification(
 const MODERATOR_SECRET = import.meta.env.VITE_MODERATOR_SECRET as string;
 
 export async function adminApprove(adId: string): Promise<void> {
-  const { error } = await supabase.rpc('admin_approve_publication', {
+  const { error } = await (supabase.rpc as any)('admin_approve_publication', {
     p_ad_id: adId,
     p_secret: MODERATOR_SECRET,
   });
@@ -398,7 +388,7 @@ export async function adminApprove(adId: string): Promise<void> {
 }
 
 export async function adminReject(adId: string, reason: string): Promise<void> {
-  const { error } = await supabase.rpc('admin_reject_publication', {
+  const { error } = await (supabase.rpc as any)('admin_reject_publication', {
     p_ad_id: adId,
     p_reason: reason || 'Non conforme aux règles de la plateforme',
     p_secret: MODERATOR_SECRET,
@@ -407,7 +397,7 @@ export async function adminReject(adId: string, reason: string): Promise<void> {
 }
 
 export async function adminSuspend(adId: string): Promise<void> {
-  const { error } = await supabase.rpc('admin_suspend_publication', {
+  const { error } = await (supabase.rpc as any)('admin_suspend_publication', {
     p_ad_id: adId,
     p_secret: MODERATOR_SECRET,
   });
@@ -415,7 +405,7 @@ export async function adminSuspend(adId: string): Promise<void> {
 }
 
 export async function deleteAd(adId: string): Promise<void> {
-  const { error } = await supabase.rpc('admin_delete_publication', {
+  const { error } = await (supabase.rpc as any)('admin_delete_publication', {
     p_ad_id: adId,
     p_secret: MODERATOR_SECRET,
   });
@@ -423,7 +413,7 @@ export async function deleteAd(adId: string): Promise<void> {
 }
 
 export async function adminToggleFeatured(adId: string, featured: boolean): Promise<void> {
-  const { error } = await supabase.rpc('admin_toggle_featured_pub', {
+  const { error } = await (supabase.rpc as any)('admin_toggle_featured_pub', {
     p_ad_id: adId,
     p_featured: featured,
     p_secret: MODERATOR_SECRET,
@@ -463,8 +453,7 @@ export interface AdNotification {
 }
 
 export async function getProviderAdNotifications(providerId: string): Promise<AdNotification[]> {
-  const { data, error } = await supabase
-    .from('ad_notifications')
+  const { data, error } = await (supabase.from as any)('ad_notifications')
     .select('*')
     .eq('provider_id', providerId)
     .order('created_at', { ascending: false })
@@ -474,15 +463,13 @@ export async function getProviderAdNotifications(providerId: string): Promise<Ad
 }
 
 export async function markAdNotificationRead(notificationId: string): Promise<void> {
-  await supabase
-    .from('ad_notifications')
+  await (supabase.from as any)('ad_notifications')
     .update({ read: true })
     .eq('id', notificationId);
 }
 
 export async function markAllAdNotificationsRead(providerId: string): Promise<void> {
-  await supabase
-    .from('ad_notifications')
+  await (supabase.from as any)('ad_notifications')
     .update({ read: true })
     .eq('provider_id', providerId)
     .eq('read', false);

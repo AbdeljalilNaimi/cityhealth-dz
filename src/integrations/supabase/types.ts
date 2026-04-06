@@ -154,53 +154,16 @@ export type Database = {
           },
         ]
       }
-      ad_notifications: {
-        Row: {
-          id: string
-          provider_id: string
-          ad_id: string | null
-          ad_title: string
-          type: 'approved' | 'rejected' | 'suspended' | 'submitted'
-          message: string | null
-          read: boolean
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          provider_id: string
-          ad_id?: string | null
-          ad_title: string
-          type: 'approved' | 'rejected' | 'suspended' | 'submitted'
-          message?: string | null
-          read?: boolean
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          provider_id?: string
-          ad_id?: string | null
-          ad_title?: string
-          type?: 'approved' | 'rejected' | 'suspended' | 'submitted'
-          message?: string | null
-          read?: boolean
-          created_at?: string
-        }
-        Relationships: []
-      }
       ads: {
         Row: {
-          category: string | null
           created_at: string
-          doi: string | null
           expires_at: string | null
           full_description: string
           id: string
           image_url: string
           is_featured: boolean
           is_verified_provider: boolean
-          keywords: string | null
           likes_count: number
-          pdf_url: string | null
           provider_avatar: string | null
           provider_city: string | null
           provider_id: string
@@ -211,23 +174,18 @@ export type Database = {
           short_description: string
           status: string
           title: string
-          type: string
           updated_at: string
           views_count: number
         }
         Insert: {
-          category?: string | null
           created_at?: string
-          doi?: string | null
           expires_at?: string | null
           full_description: string
           id?: string
-          image_url?: string
+          image_url: string
           is_featured?: boolean
           is_verified_provider?: boolean
-          keywords?: string | null
           likes_count?: number
-          pdf_url?: string | null
           provider_avatar?: string | null
           provider_city?: string | null
           provider_id: string
@@ -238,23 +196,18 @@ export type Database = {
           short_description: string
           status?: string
           title: string
-          type?: string
           updated_at?: string
           views_count?: number
         }
         Update: {
-          category?: string | null
           created_at?: string
-          doi?: string | null
           expires_at?: string | null
           full_description?: string
           id?: string
           image_url?: string
           is_featured?: boolean
           is_verified_provider?: boolean
-          keywords?: string | null
           likes_count?: number
-          pdf_url?: string | null
           provider_avatar?: string | null
           provider_city?: string | null
           provider_id?: string
@@ -265,7 +218,6 @@ export type Database = {
           short_description?: string
           status?: string
           title?: string
-          type?: string
           updated_at?: string
           views_count?: number
         }
