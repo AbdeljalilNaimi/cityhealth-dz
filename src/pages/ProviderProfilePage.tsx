@@ -695,18 +695,33 @@ const ProviderProfilePage = () => {
 
               if (visibleMembers.length === 0 && !hasLegacyRoster) return null;
 
+              const isSingleMember = hasTeamMembers && visibleMembers.length === 1;
+              const isSmallTeam = hasTeamMembers && visibleMembers.length <= 3;
+
               return (
                 <Card className="glass-card overflow-hidden animate-fade-in" style={{ animationDelay: '130ms' }}>
-                  <div className="h-1 bg-gradient-to-r from-emerald-500/20 to-teal-500/20" />
-                  <CardHeader className="py-4">
-                    <CardTitle className="flex items-center gap-2">
-                      <Users className="h-5 w-5 text-emerald-600" />
-                      Équipe Médicale
-                    </CardTitle>
+                  <div className="h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
+                  <CardHeader className="py-4 pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2.5">
+                        <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
+                          <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                        </div>
+                        Équipe Médicale
+                      </CardTitle>
+                      {hasTeamMembers && (
+                        <Badge variant="secondary" className="text-xs font-medium">
+                          {visibleMembers.length} membre{visibleMembers.length > 1 ? 's' : ''}
+                        </Badge>
+                      )}
+                    </div>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-2">
                     {hasTeamMembers ? (
-                      <div className="grid gap-3 sm:grid-cols-2">
+                      <div className={cn(
+                        "grid gap-3",
+                        isSingleMember ? "grid-cols-1 max-w-md" : isSmallTeam ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2 lg:grid-cols-3"
+                      )}>
                         {visibleMembers.map((member: {
                           id: string;
                           name: string;
@@ -718,42 +733,56 @@ const ProviderProfilePage = () => {
                         }) => {
                           const initials = member.name.split(' ').map((w: string) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
                           const activeGardes = member.gardes?.filter(g => g.days?.length > 0) ?? [];
+                          const isOnLeave = member.status === 'on_leave';
                           return (
                             <div
                               key={member.id}
-                              className="flex flex-col gap-3 p-4 rounded-xl border bg-muted/20 hover:bg-muted/40 transition-colors"
+                              className={cn(
+                                "group relative flex flex-col gap-3 p-4 rounded-xl border transition-all duration-200",
+                                isOnLeave
+                                  ? "bg-amber-50/50 dark:bg-amber-950/10 border-amber-200/50 dark:border-amber-800/30"
+                                  : "bg-card hover:bg-muted/30 hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-800/50"
+                              )}
                             >
+                              {/* Status indicator dot */}
+                              <div className={cn(
+                                "absolute top-3 right-3 w-2 h-2 rounded-full",
+                                isOnLeave ? "bg-amber-400" : "bg-emerald-500"
+                              )} />
+
                               {/* Header row */}
-                              <div className="flex items-start gap-3">
-                                {/* Avatar */}
-                                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-sm font-semibold">
+                              <div className="flex items-center gap-3">
+                                <div className={cn(
+                                  "flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold shadow-sm",
+                                  isOnLeave
+                                    ? "bg-gradient-to-br from-amber-400 to-amber-500 text-white"
+                                    : "bg-gradient-to-br from-emerald-500 to-teal-600 text-white"
+                                )}>
                                   {initials}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="font-semibold text-sm leading-tight">{member.name}</span>
-                                    {member.status === 'on_leave' && (
-                                      <Badge variant="outline" className="text-xs px-1.5 py-0 border-amber-300 text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400">
-                                        En congé
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  <span className="text-xs text-muted-foreground">{member.specialty}</span>
+                                  <p className="font-semibold text-sm leading-tight truncate">{member.name}</p>
+                                  <p className="text-xs text-muted-foreground mt-0.5">{member.specialty}</p>
+                                  {isOnLeave && (
+                                    <Badge variant="outline" className="mt-1 text-[10px] px-1.5 py-0 border-amber-300 text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400">
+                                      En congé
+                                    </Badge>
+                                  )}
                                 </div>
                               </div>
 
                               {/* Gardes / Availability */}
                               {activeGardes.length > 0 && (
-                                <div className="space-y-2">
-                                  <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                                <div className="space-y-2 pt-1 border-t border-border/50">
+                                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 pt-2">
                                     <Clock className="h-3 w-3" /> Disponibilités
                                   </p>
                                   {activeGardes.map(garde => (
-                                    <div key={garde.id} className="space-y-1">
+                                    <div key={garde.id} className="space-y-1.5">
                                       <div className="flex items-center gap-2 flex-wrap">
                                         <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400">{garde.label}</span>
                                         {garde.type !== '24h' && garde.startTime && garde.endTime && (
-                                          <span className="text-xs text-muted-foreground">{garde.startTime} – {garde.endTime}</span>
+                                          <span className="text-[11px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">{garde.startTime} – {garde.endTime}</span>
                                         )}
                                       </div>
                                       <div className="flex gap-1 flex-wrap">
@@ -761,10 +790,10 @@ const ProviderProfilePage = () => {
                                           <span
                                             key={idx}
                                             className={cn(
-                                              "text-[10px] px-1.5 py-0.5 rounded font-medium",
+                                              "text-[10px] px-1.5 py-0.5 rounded-md font-medium transition-colors",
                                               garde.days.includes(idx)
-                                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400"
-                                                : "bg-muted/40 text-muted-foreground/40"
+                                                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 ring-1 ring-emerald-200/50 dark:ring-emerald-700/30"
+                                                : "bg-muted/30 text-muted-foreground/30"
                                             )}
                                           >
                                             {label}
@@ -776,14 +805,26 @@ const ProviderProfilePage = () => {
                                 </div>
                               )}
 
-                              {/* Phone */}
-                              {member.phone && (
-                                <a
-                                  href={`tel:${member.phone}`}
-                                  className="flex items-center gap-1.5 text-xs text-primary hover:underline w-fit"
-                                >
-                                  <Phone className="h-3 w-3" /> {member.phone}
-                                </a>
+                              {/* Contact */}
+                              {(member.phone || member.email) && (
+                                <div className="flex items-center gap-3 pt-1 border-t border-border/50 mt-auto">
+                                  {member.phone && (
+                                    <a
+                                      href={`tel:${member.phone}`}
+                                      className="flex items-center gap-1.5 text-xs text-primary hover:underline"
+                                    >
+                                      <Phone className="h-3 w-3" /> {member.phone}
+                                    </a>
+                                  )}
+                                  {member.email && (
+                                    <a
+                                      href={`mailto:${member.email}`}
+                                      className="flex items-center gap-1.5 text-xs text-primary hover:underline"
+                                    >
+                                      <Mail className="h-3 w-3" /> Email
+                                    </a>
+                                  )}
+                                </div>
                               )}
                             </div>
                           );
@@ -792,30 +833,36 @@ const ProviderProfilePage = () => {
                     ) : (
                       /* Legacy doctorRoster fallback */
                       <div className="space-y-2">
-                        {provider.doctorRoster.map((doc: { name: string; specialty: string; consultationDays?: string; phone?: string }, idx: number) => (
-                          <div key={idx} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-medium text-sm">{doc.name}</span>
-                                <Badge variant="outline" className="text-xs">{doc.specialty}</Badge>
+                        {provider.doctorRoster.map((doc: { name: string; specialty: string; consultationDays?: string; phone?: string }, idx: number) => {
+                          const docInitials = doc.name.split(' ').map((w: string) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
+                          return (
+                            <div key={idx} className="flex items-center gap-3 p-3 rounded-xl border bg-card hover:bg-muted/30 transition-colors">
+                              <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold">
+                                {docInitials}
                               </div>
-                              {(doc.consultationDays || doc.phone) && (
-                                <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                                  {doc.consultationDays && (
-                                    <span className="flex items-center gap-1">
-                                      <Calendar className="h-3 w-3" /> {doc.consultationDays}
-                                    </span>
-                                  )}
-                                  {doc.phone && (
-                                    <a href={`tel:${doc.phone}`} className="flex items-center gap-1 text-primary hover:underline">
-                                      <Phone className="h-3 w-3" /> {doc.phone}
-                                    </a>
-                                  )}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-semibold text-sm">{doc.name}</span>
+                                  <Badge variant="outline" className="text-xs">{doc.specialty}</Badge>
                                 </div>
-                              )}
+                                {(doc.consultationDays || doc.phone) && (
+                                  <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                                    {doc.consultationDays && (
+                                      <span className="flex items-center gap-1">
+                                        <Calendar className="h-3 w-3" /> {doc.consultationDays}
+                                      </span>
+                                    )}
+                                    {doc.phone && (
+                                      <a href={`tel:${doc.phone}`} className="flex items-center gap-1 text-primary hover:underline">
+                                        <Phone className="h-3 w-3" /> {doc.phone}
+                                      </a>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </CardContent>
