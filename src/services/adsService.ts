@@ -178,7 +178,6 @@ export async function getProviderPublications(providerId: string): Promise<Ad[]>
     .from('ads')
     .select('*')
     .eq('provider_id', providerId)
-    .eq('type', 'publication')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
