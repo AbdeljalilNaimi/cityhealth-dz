@@ -191,7 +191,6 @@ export async function getApprovedAds(filters: AdFilters = {}): Promise<Ad[]> {
   let query = supabase
     .from('ads')
     .select('*')
-    .eq('type', 'publication')
     .eq('status', 'approved')
     .or(`expires_at.is.null,expires_at.gt.${now}`);
 
