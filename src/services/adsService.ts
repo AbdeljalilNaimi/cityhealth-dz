@@ -390,7 +390,7 @@ async function createAdNotification(
 const MODERATOR_SECRET = import.meta.env.VITE_MODERATOR_SECRET as string;
 
 export async function adminApprove(adId: string): Promise<void> {
-  const { error } = await supabase.rpc('admin_approve_publication', {
+  const { error } = await (supabase.rpc as any)('admin_approve_publication', {
     p_ad_id: adId,
     p_secret: MODERATOR_SECRET,
   });
@@ -398,7 +398,7 @@ export async function adminApprove(adId: string): Promise<void> {
 }
 
 export async function adminReject(adId: string, reason: string): Promise<void> {
-  const { error } = await supabase.rpc('admin_reject_publication', {
+  const { error } = await (supabase.rpc as any)('admin_reject_publication', {
     p_ad_id: adId,
     p_reason: reason || 'Non conforme aux règles de la plateforme',
     p_secret: MODERATOR_SECRET,
@@ -407,7 +407,7 @@ export async function adminReject(adId: string, reason: string): Promise<void> {
 }
 
 export async function adminSuspend(adId: string): Promise<void> {
-  const { error } = await supabase.rpc('admin_suspend_publication', {
+  const { error } = await (supabase.rpc as any)('admin_suspend_publication', {
     p_ad_id: adId,
     p_secret: MODERATOR_SECRET,
   });
@@ -415,7 +415,7 @@ export async function adminSuspend(adId: string): Promise<void> {
 }
 
 export async function deleteAd(adId: string): Promise<void> {
-  const { error } = await supabase.rpc('admin_delete_publication', {
+  const { error } = await (supabase.rpc as any)('admin_delete_publication', {
     p_ad_id: adId,
     p_secret: MODERATOR_SECRET,
   });
@@ -423,7 +423,7 @@ export async function deleteAd(adId: string): Promise<void> {
 }
 
 export async function adminToggleFeatured(adId: string, featured: boolean): Promise<void> {
-  const { error } = await supabase.rpc('admin_toggle_featured_pub', {
+  const { error } = await (supabase.rpc as any)('admin_toggle_featured_pub', {
     p_ad_id: adId,
     p_featured: featured,
     p_secret: MODERATOR_SECRET,
